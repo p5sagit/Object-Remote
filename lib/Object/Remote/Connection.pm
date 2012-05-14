@@ -31,9 +31,7 @@ has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 
 has local_objects_by_id => (is => 'ro', default => sub { {} });
 
-has remote_objects_by_id => (
-  is => 'ro', default => sub { { NULL => bless({}, 'Object::Remote::Null') } }
-);
+has remote_objects_by_id => (is => 'ro', default => sub { {} });
 
 has _json => (
   is => 'lazy',
@@ -49,6 +47,7 @@ sub _build__json {
   JSON::PP->new->filter_json_single_key_object(
     __remote_object__ => sub {
       my $id = shift;
+      return bless({}, 'Object::Remote::Null') if $id eq 'NULL';
       (
         $remotes->{$id}
         or Object::Remote->new(connection => $self, id => $id)
@@ -82,7 +81,7 @@ sub send {
 sub send_discard {
   my ($self, $type, @call) = @_;
 
-  unshift @call, $type => { __remote_object => 'NULL' };
+  unshift @call, $type => { __remote_object__ => 'NULL' };
 
   $self->_send(\@call);
 }
@@ -155,6 +154,7 @@ sub receive_free {
 
 sub receive_call {
   my ($self, $future, $id, @rest) = @_;
+  $future->{method} = 'call_discard';
   my $local = $self->local_objects_by_id->{$id}
     or do { $future->fail("No such object $id"); return };
   $self->_invoke($future, $local, @rest);
@@ -162,6 +162,7 @@ sub receive_call {
 
 sub receive_class_call {
   my ($self, $future, $class, @rest) = @_;
+  $future->{method} = 'call_discard';
   eval { use_module($class) }
     or do { $future->fail("Error loading ${class}: $@"); return };
   $self->_invoke($future, $class, @rest);

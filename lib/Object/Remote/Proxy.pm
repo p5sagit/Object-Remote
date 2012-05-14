@@ -5,7 +5,7 @@ use strictures 1;
 sub AUTOLOAD {
   my $self = shift;
   (my $method) = (our $AUTOLOAD =~ /([^:]+)$/);
-  $self->{remote}->call($method => @_);
+  $self->{remote}->${\$self->{method}}($method => @_);
 }
 
 sub DESTROY { }

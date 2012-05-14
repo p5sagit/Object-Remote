@@ -9,10 +9,8 @@ has connection => (is => 'ro', required => 1);
 
 has id => (is => 'rwp');
 
-has proxy => (is => 'lazy', weak_ref => 1);
-
-sub _build_proxy {
-  bless({ remote => $_[0] }, 'Object::Remote::Proxy');
+sub proxy {
+  bless({ remote => $_[0], method => 'call' }, 'Object::Remote::Proxy');
 }
 
 sub BUILD {
@@ -38,6 +36,11 @@ sub current_loop {
 sub call {
   my ($self, $method, @args) = @_;
   $self->_await($self->connection->send(call => $self->id, $method, @args));
+}
+
+sub call_discard {
+  my ($self, $method, @args) = @_;
+  $self->connection->send_discard(call => $self->id, $method, @args);
 }
 
 sub _await {
