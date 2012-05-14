@@ -163,15 +163,21 @@ sub receive_free {
 
 sub receive_call {
   my ($self, $future, $id, @rest) = @_;
-  $future->{method} = 'call_discard';
+  $future->{method} = 'call_discard_free';
   my $local = $self->local_objects_by_id->{$id}
     or do { $future->fail("No such object $id"); return };
   $self->_invoke($future, $local, @rest);
 }
 
+sub receive_call_free {
+  my ($self, $future, $id, @rest) = @_;
+  $self->receive_call($future, $id, @rest);
+  $self->receive_free($id);
+}
+
 sub receive_class_call {
   my ($self, $future, $class, @rest) = @_;
-  $future->{method} = 'call_discard';
+  $future->{method} = 'call_discard_free';
   eval { use_module($class) }
     or do { $future->fail("Error loading ${class}: $@"); return };
   $self->_invoke($future, $class, @rest);

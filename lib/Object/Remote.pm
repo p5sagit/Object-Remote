@@ -47,6 +47,12 @@ sub call_discard {
   $self->connection->send_discard(call => $self->id, $method, @args);
 }
 
+sub call_discard_free {
+  my ($self, $method, @args) = @_;
+  $self->disarm_free;
+  $self->connection->send_discard(call_free => $self->id, $method, @args);
+}
+
 sub _await {
   my ($self, $future) = @_;
   my $loop = $self->current_loop;
