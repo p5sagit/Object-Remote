@@ -12,7 +12,7 @@ has id => (is => 'rwp');
 has proxy => (is => 'lazy', weak_ref => 1);
 
 sub _build_proxy {
-  bless({ handle => $_[0] }, 'Object::Remote::Proxy');
+  bless({ remote => $_[0] }, 'Object::Remote::Proxy');
 }
 
 sub BUILD {
@@ -36,7 +36,7 @@ sub current_loop {
 }
 
 sub call {
-  my ($self, $id, $method, @args) = @_;
+  my ($self, $method, @args) = @_;
   $self->_await($self->connection->send(call => $self->id, $method, @args));
 }
 

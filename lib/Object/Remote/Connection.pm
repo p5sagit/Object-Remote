@@ -1,6 +1,7 @@
 package Object::Remote::Connection;
 
 use CPS::Future;
+use Object::Remote::Null;
 use Object::Remote;
 use IO::Handle;
 use Module::Runtime qw(use_module);
@@ -30,7 +31,9 @@ has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 
 has local_objects_by_id => (is => 'ro', default => sub { {} });
 
-has remote_objects_by_id => (is => 'ro', default => sub { {} });
+has remote_objects_by_id => (
+  is => 'ro', default => sub { { NULL => bless({}, 'Object::Remote::Null') } }
+);
 
 has _json => (
   is => 'lazy',
@@ -76,20 +79,31 @@ sub send {
   return $future;
 }
 
+sub send_discard {
+  my ($self, $type, @call) = @_;
+
+  unshift @call, $type => { __remote_object => 'NULL' };
+
+  $self->_send(\@call);
+}
+
 sub _send {
   my ($self, $to_send) = @_;
 
-  print { $self->send_to_fh } $self->_serialize($to_send);
+  print { $self->send_to_fh } $self->_serialize($to_send)."\n";
 }
 
 sub _serialize {
   my ($self, $data) = @_;
   local our @New_Ids;
-  eval { return $self->_encode($self->_deobjectify($data)) };
-  my $err = $@; # won't get here if the eval doesn't die
-  # don't keep refs to new things
-  delete @{$self->local_objects_by_id}{@New_Ids};
-  die "Error serializing: $err";
+  return eval {
+    $self->_encode($self->_deobjectify($data))
+  } or do {
+    my $err = $@; # won't get here if the eval doesn't die
+    # don't keep refs to new things
+    delete @{$self->local_objects_by_id}{@New_Ids};
+    die "Error serializing: $err";
+  };
 }
 
 sub _deobjectify {
@@ -116,7 +130,7 @@ sub _deobjectify {
 sub _receive_data_from {
   my ($self, $fh) = @_;
   my $rb = $self->_receive_data_buffer;
-  if (sysread($self->read_fh, $$rb, 1024, length($$rb)) > 0) {
+  if (sysread($fh, $$rb, 1024, length($$rb)) > 0) {
     while ($$rb =~ s/^(.*)\n//) {
       $self->_receive($1);
     }
@@ -134,7 +148,8 @@ sub _receive {
 
 sub receive_free {
   my ($self, $id) = @_;
-  delete $self->local_objects_by_id->{$id};
+  delete $self->local_objects_by_id->{$id}
+    or warn "Free: no such object $id";
   return;
 }
 

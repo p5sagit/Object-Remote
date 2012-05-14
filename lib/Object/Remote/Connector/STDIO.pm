@@ -12,9 +12,9 @@ sub connect {
   # only potentially bloody confusing but results in warnings like:
   # "Filehandle STDOUT reopened as STDIN only for input"
   close STDIN or die "Closing stdin: $!";
-  open STDIN, '<', File::Spec->dev_null or die "Re-opening stdin: $!";
+  open STDIN, '<', File::Spec->devnull or die "Re-opening stdin: $!";
   close STDOUT or die "Closing stdout: $!";
-  open STDOUT, '>', File::Spec->dev_null or die "Re-opening stdout: $!";
+  open STDOUT, '>', File::Spec->devnull or die "Re-opening stdout: $!";
   Object::Remote::Connection->new(
     send_to_fh => $stdout,
     receive_from_fh => $stdin
