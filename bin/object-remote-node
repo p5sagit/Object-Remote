@@ -4,6 +4,12 @@ use strictures 1;
 use Object::Remote::Connector::STDIO;
 use Object::Remote;
 
+#$Object::Remote::Connection::DEBUG = 1;
+
 my $c = Object::Remote::Connector::STDIO->new->connect;
 
-Object::Remote->current_loop->run;
+my $loop = Object::Remote->current_loop;
+
+$c->on_close(sub { $loop->stop });
+
+$loop->run;

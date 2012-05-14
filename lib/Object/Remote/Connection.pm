@@ -9,6 +9,8 @@ use Scalar::Util qw(weaken blessed refaddr);
 use JSON::PP qw(encode_json);
 use Moo;
 
+our $DEBUG;
+
 has send_to_fh => (
   is => 'ro', required => 1,
   trigger => sub { $_[1]->autoflush(1) },
@@ -26,6 +28,8 @@ has receive_from_fh => (
                     );
   },
 );
+
+has on_close => (is => 'rw', default => sub {});
 
 has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 
@@ -96,7 +100,9 @@ sub _serialize {
   my ($self, $data) = @_;
   local our @New_Ids;
   return eval {
-    $self->_encode($self->_deobjectify($data))
+    my $flat = $self->_encode($self->_deobjectify($data));
+    warn "$$ >>> ${flat}\n" if $DEBUG;
+    $flat;
   } or do {
     my $err = $@; # won't get here if the eval doesn't die
     # don't keep refs to new things
@@ -133,15 +139,18 @@ sub _receive_data_from {
     while ($$rb =~ s/^(.*)\n//) {
       $self->_receive($1);
     }
+  } else {
+    $self->on_close->();
   }
 }
 
 sub _receive {
-  my ($self, $data) = @_;
-  my ($type, @rest) = eval { @{$self->_deserialize($data)} }
-    or do { warn "Deserialize failed for ${data}: $@"; return };
+  my ($self, $flat) = @_;
+  warn "$$ <<< $flat\n" if $DEBUG;
+  my ($type, @rest) = eval { @{$self->_deserialize($flat)} }
+    or do { warn "Deserialize failed for ${flat}: $@"; return };
   eval { $self->${\"receive_${type}"}(@rest); 1 }
-    or do { warn "Receive failed for ${data}: $@"; return };
+    or do { warn "Receive failed for ${flat}: $@"; return };
   return;
 }
 
@@ -170,7 +179,7 @@ sub receive_class_call {
 
 sub _invoke {
   my ($self, $future, $local, $method, @args) = @_;
-  eval { $future->done($local->$method(@args)); 1 }
+  eval { $future->done(scalar $local->$method(@args)); 1 }
     or do { $future->fail($@); return; };
   return;
 }

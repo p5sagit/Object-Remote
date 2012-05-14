@@ -6,7 +6,7 @@ use Moo;
 
 sub connect {
   # XXX bin/ is wrong but meh, fix later
-  my $pid = open2(my $its_stdin, my $its_stdout, 'bin/object-remote-node')
+  my $pid = open2(my $its_stdout, my $its_stdin, 'bin/object-remote-node')
     or die "Couldn't start local node: $!";
   Object::Remote::Connection->new(
     send_to_fh => $its_stdin,

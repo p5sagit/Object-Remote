@@ -9,6 +9,10 @@ has connection => (is => 'ro', required => 1);
 
 has id => (is => 'rwp');
 
+has disarmed_free => (is => 'rwp');
+
+sub disarm_free { $_[0]->_set_disarmed_free(1); $_[0] }
+
 sub proxy {
   bless({ remote => $_[0], method => 'call' }, 'Object::Remote::Proxy');
 }
@@ -23,7 +27,7 @@ sub BUILD {
           class_call => $args->{class},
           $args->{constructor}||'new', @{$args->{args}||[]}
         )
-      )
+      )->{remote}->disarm_free->id
     );
   }
   $self->connection->register_remote($self);
@@ -48,12 +52,12 @@ sub _await {
   my $loop = $self->current_loop;
   $future->on_ready(sub { $loop->stop });
   $loop->run;
-  $future->get;
+  ($future->get)[0];
 }
 
 sub DEMOLISH {
   my ($self, $gd) = @_;
-  return if $gd;
+  return if $gd or $self->disarmed_free;
   $self->connection->send_free($self->id);
 }
 
