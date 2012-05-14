@@ -1,0 +1,9 @@
+#!/usr/bin/env perl
+
+use strictures 1;
+use Object::Remote::Connector::STDIO;
+use Object::Remote;
+
+my $c = Object::Remote::Connector::STDIO->new->connect;
+
+Object::Remote->current_loop->run;
