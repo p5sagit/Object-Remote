@@ -1,6 +1,6 @@
 package Object::Remote::Connection;
 
-use CPS::Future;
+use Object::Remote::Future;
 use Object::Remote::Null;
 use Object::Remote;
 use IO::Handle;
@@ -156,7 +156,7 @@ sub _receive_data_from {
       $self->_receive($1);
     }
   } else {
-    $self->on_close->();
+    $self->on_close->done();
   }
 }
 
@@ -201,6 +201,12 @@ sub receive_class_call {
 
 sub _invoke {
   my ($self, $future, $local, $ctx, $method, @args) = @_;
+  if ($method =~ /^start::/) {
+    my $f = $local->$method(@args);
+    $f->on_done(sub { undef($f); $future->done(@_) });
+    $f->on_fail(sub { undef($f); $future->fail(@_) });
+    return;
+  }
   my $do = sub { $local->$method(@args) };
   eval {
     $future->done(

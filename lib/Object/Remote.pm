@@ -3,6 +3,7 @@ package Object::Remote;
 use Object::Remote::MiniLoop;
 use Object::Remote::Proxy;
 use Scalar::Util qw(weaken blessed);
+use Object::Remote::Future;
 use Module::Runtime qw(use_module);
 use Moo;
 
@@ -40,7 +41,7 @@ sub BUILD {
     die "No id supplied and no class either" unless $args->{class};
     ref($_) eq 'HASH' and $_ = [ %$_ ] for $args->{args};
     $self->_set_id(
-      $self->_await(
+      await_future(
         $self->connection->send(
           class_call => $args->{class}, 0,
           $args->{constructor}||'new', @{$args->{args}||[]}
@@ -57,9 +58,10 @@ sub current_loop {
 
 sub call {
   my ($self, $method, @args) = @_;
-  $self->_await(
-    $self->connection->send(call => $self->id, wantarray, $method, @args)
-  );
+  my $w = wantarray;
+  future {
+    $self->connection->send(call => $self->id, $w, $method, @args)
+  };
 }
 
 sub call_discard {
@@ -71,14 +73,6 @@ sub call_discard_free {
   my ($self, $method, @args) = @_;
   $self->disarm_free;
   $self->connection->send_discard(call_free => $self->id, $method, @args);
-}
-
-sub _await {
-  my ($self, $future) = @_;
-  my $loop = $self->current_loop;
-  $future->on_ready(sub { $loop->stop });
-  $loop->run;
-  wantarray ? $future->get : ($future->get)[0];
 }
 
 sub DEMOLISH {
