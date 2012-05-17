@@ -12,4 +12,8 @@ sub _open2_for {
   return ($its_stdin, $its_stdout, $pid);
 }
 
+push @Object::Remote::Connection::Guess, sub {
+  if (($_[0]||'') eq '-') { __PACKAGE__->new->connect }
+};
+
 1;

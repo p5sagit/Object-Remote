@@ -62,6 +62,20 @@ sub _build__json {
   );
 }
 
+BEGIN {
+  unshift our @Guess, sub { blessed($_[0]) ? $_[0] : undef };
+  eval { require Object::Remote::Connector::Local };
+  eval { require Object::Remote::Connector::SSH };
+}
+
+sub new_from_spec {
+  my ($class, $spec) = @_;
+  foreach my $poss (do { our @Guess }) {
+    if (my $obj = $poss->($spec)) { return $obj }
+  }
+  die "Couldn't figure out what to do with ${spec}";
+}
+
 sub register_remote {
   my ($self, $remote) = @_;
   weaken($self->remote_objects_by_id->{$remote->id} = $remote);
@@ -173,7 +187,7 @@ sub receive_call {
 
 sub receive_call_free {
   my ($self, $future, $id, @rest) = @_;
-  $self->receive_call($future, $id, @rest);
+  $self->receive_call($future, $id, undef, @rest);
   $self->receive_free($id);
 }
 
@@ -186,9 +200,16 @@ sub receive_class_call {
 }
 
 sub _invoke {
-  my ($self, $future, $local, $method, @args) = @_;
-  eval { $future->done(scalar $local->$method(@args)); 1 }
-    or do { $future->fail($@); return; };
+  my ($self, $future, $local, $ctx, $method, @args) = @_;
+  my $do = sub { $local->$method(@args) };
+  eval {
+    $future->done(
+      defined($ctx)
+        ? ($ctx ? $do->() : scalar($do->()))
+        : do { $do->(); () }
+    );
+    1;
+  } or do { $future->fail($@); return; };
   return;
 }
 

@@ -1,6 +1,6 @@
 package Object::Remote::Role::Connector;
 
-use Object::Remote::Connection;
+use Module::Runtime qw(use_module);
 use Moo::Role;
 
 requires '_open2_for';
@@ -13,7 +13,7 @@ sub connect {
   unless ($line eq "Shere\n") {
     die "New remote container did not send Shere - got ${line}";
   }
-  return Object::Remote::Connection->new(\%args);
+  return use_module('Object::Remote::Connection')->new(\%args);
 }
 
 1;

@@ -2,10 +2,27 @@ package Object::Remote;
 
 use Object::Remote::MiniLoop;
 use Object::Remote::Proxy;
-use Scalar::Util qw(weaken);
+use Scalar::Util qw(weaken blessed);
+use Module::Runtime qw(use_module);
 use Moo;
 
-has connection => (is => 'ro', required => 1);
+sub new::on {
+  my ($class, $on, @args) = @_;
+  __PACKAGE__->new(
+    connection => $on,
+    class => $class,
+    args => \@args
+  )->proxy;
+}
+
+has connection => (
+  is => 'ro', required => 1,
+  coerce => sub {
+    blessed($_[0])
+      ? $_[0]
+      : use_module('Object::Remote::Connection')->new_from_spec($_[0])
+  },
+);
 
 has id => (is => 'rwp');
 
@@ -25,7 +42,7 @@ sub BUILD {
     $self->_set_id(
       $self->_await(
         $self->connection->send(
-          class_call => $args->{class},
+          class_call => $args->{class}, 0,
           $args->{constructor}||'new', @{$args->{args}||[]}
         )
       )->{remote}->disarm_free->id
@@ -40,7 +57,9 @@ sub current_loop {
 
 sub call {
   my ($self, $method, @args) = @_;
-  $self->_await($self->connection->send(call => $self->id, $method, @args));
+  $self->_await(
+    $self->connection->send(call => $self->id, wantarray, $method, @args)
+  );
 }
 
 sub call_discard {
@@ -59,7 +78,7 @@ sub _await {
   my $loop = $self->current_loop;
   $future->on_ready(sub { $loop->stop });
   $loop->run;
-  ($future->get)[0];
+  wantarray ? $future->get : ($future->get)[0];
 }
 
 sub DEMOLISH {
