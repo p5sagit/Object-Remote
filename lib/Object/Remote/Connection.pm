@@ -31,6 +31,8 @@ has receive_from_fh => (
 
 has on_close => (is => 'rw', default => sub {});
 
+has child_pid => (is => 'ro');
+
 has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 
 has local_objects_by_id => (is => 'ro', default => sub { {} });

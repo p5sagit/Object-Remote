@@ -12,4 +12,6 @@ my $loop = Object::Remote->current_loop;
 
 $c->on_close(sub { $loop->stop });
 
+print { $c->send_to_fh } "Shere\n";
+
 $loop->run;

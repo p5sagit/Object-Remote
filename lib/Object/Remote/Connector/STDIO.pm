@@ -15,7 +15,7 @@ sub connect {
   open STDIN, '<', File::Spec->devnull or die "Re-opening stdin: $!";
   close STDOUT or die "Closing stdout: $!";
   open STDOUT, '>', File::Spec->devnull or die "Re-opening stdout: $!";
-  Object::Remote::Connection->new(
+  return Object::Remote::Connection->new(
     send_to_fh => $stdout,
     receive_from_fh => $stdin
   );
