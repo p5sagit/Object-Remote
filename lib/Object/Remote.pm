@@ -21,6 +21,7 @@ sub BUILD {
   my ($self, $args) = @_;
   unless ($self->id) {
     die "No id supplied and no class either" unless $args->{class};
+    ref($_) eq 'HASH' and $_ = [ %$_ ] for $args->{args};
     $self->_set_id(
       $self->_await(
         $self->connection->send(
