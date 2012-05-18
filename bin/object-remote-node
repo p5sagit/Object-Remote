@@ -9,6 +9,8 @@ use CPS::Future;
 
 my $c = Object::Remote::Connector::STDIO->new->connect;
 
+$c->_set_is_ready(1);
+
 my $loop = Object::Remote->current_loop;
 
 my $f = CPS::Future->new;

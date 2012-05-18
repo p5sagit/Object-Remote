@@ -33,7 +33,7 @@ package start;
 
 sub AUTOLOAD {
   my $invocant = shift;
-  my ($method) = our $AUTOLOAD =~ /([^:]+)$/;
+  my ($method) = our $AUTOLOAD =~ /^start::(.+)$/;
   if (ref($invocant) eq 'ARRAY') {
     return [ map $_->${\"start::${method}"}, @$invocant ];
   }

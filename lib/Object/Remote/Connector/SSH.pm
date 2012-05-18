@@ -2,6 +2,7 @@ package Object::Remote::Connector::SSH;
 
 use Object::Remote::FatNode;
 use Object::Remote::ModuleSender;
+use Object::Remote::Handle;
 use IPC::Open2;
 use Moo;
 
@@ -18,7 +19,7 @@ sub _open2_for {
 around connect => sub {
   my ($orig, $self) = (shift, shift);
   my $conn = $self->$orig(@_);
-  Object::Remote->new(
+  Object::Remote::Handle->new(
     connection => $conn,
     class => 'Object::Remote::ModuleLoader',
     args => { module_sender => Object::Remote::ModuleSender->new }
