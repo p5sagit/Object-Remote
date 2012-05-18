@@ -15,7 +15,7 @@ $SIG{INT} = sub { warn "SIGINT\n" };
 
 #{ no warnings 'once'; $Object::Remote::Connection::DEBUG = 1; }
 
-my $eval = Eval::WithLexicals->new::on($ARGV[0]);
+my $eval = Eval::WithLexicals->new::on($ARGV[0]||'-');
 
 my $read = Term::ReadLine->new('Perl REPL');
 while (1) {
