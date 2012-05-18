@@ -2,6 +2,7 @@ package Object::Remote::Connection;
 
 use Object::Remote::Future;
 use Object::Remote::Null;
+use Object::Remote::Handle;
 use Object::Remote;
 use IO::Handle;
 use Module::Runtime qw(use_module);
@@ -56,7 +57,7 @@ sub _build__json {
       return bless({}, 'Object::Remote::Null') if $id eq 'NULL';
       (
         $remotes->{$id}
-        or Object::Remote->new(connection => $self, id => $id)
+        or Object::Remote::Handle->new(connection => $self, id => $id)
       )->proxy;
     }
   );

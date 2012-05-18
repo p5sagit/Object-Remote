@@ -21,17 +21,17 @@ my $ml = Object::Remote->new(
   args => { module_sender => $ms },
 );
 
-my $proxy = Object::Remote->new(
+my $counter = Object::Remote->new(
   connection => $connection,
   class => 'ORTestClass'
-)->proxy;
+);
 
-isnt($$, $proxy->pid, 'Different pid on the other side');
+isnt($$, $counter->pid, 'Different pid on the other side');
 
-is($proxy->counter, 0, 'Counter at 0');
+is($counter->counter, 0, 'Counter at 0');
 
-is($proxy->increment, 1, 'Increment to 1');
+is($counter->increment, 1, 'Increment to 1');
 
-is($proxy->counter, 1, 'Counter at 1');
+is($counter->counter, 1, 'Counter at 1');
 
 done_testing;
