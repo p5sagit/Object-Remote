@@ -6,7 +6,7 @@ use base qw(Exporter);
 
 use CPS::Future;
 
-our @EXPORT = qw(future await_future);
+our @EXPORT = qw(future await_future await_all);
 
 sub future (&) {
   my $f = $_[0]->(CPS::Future->new);
@@ -22,6 +22,11 @@ sub await_future {
   $f->on_ready(sub { $loop->stop });
   $loop->run;
   return wantarray ? $f->get : ($f->get)[0];
+}
+
+sub await_all {
+  await_future(CPS::Future->needs_all(@_));
+  map $_->get, @_;
 }
 
 package start;
@@ -44,17 +49,6 @@ sub AUTOLOAD {
     return $f;
   }
   return $res;
-}
-
-package await;
-
-sub AUTOLOAD {
-  my $invocant = shift;
-  my ($method) = our $AUTOLOAD =~ /([^:]+)$/;
-  my @invocants = (ref($invocant) eq 'ARRAY' ? @$invocant : $invocant);
-  my @futures = map $_->${\"start::${method}"}, @$invocant;
-  Object::Remote::Future::await_future(CPS::Future->needs_all(@futures));
-  return map $_->get, @futures;
 }
 
 1;

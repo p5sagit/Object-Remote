@@ -59,6 +59,7 @@ sub current_loop {
 sub call {
   my ($self, $method, @args) = @_;
   my $w = wantarray;
+  $method = "start::${method}" if (caller(0)||'') eq 'start';
   future {
     $self->connection->send(call => $self->id, $w, $method, @args)
   };

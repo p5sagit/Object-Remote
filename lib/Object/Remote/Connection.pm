@@ -204,6 +204,7 @@ sub _invoke {
   if ($method =~ /^start::/) {
     my $f = $local->$method(@args);
     $f->on_done(sub { undef($f); $future->done(@_) });
+    return unless $f;
     $f->on_fail(sub { undef($f); $future->fail(@_) });
     return;
   }
