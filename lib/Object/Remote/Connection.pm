@@ -137,7 +137,7 @@ sub _serialize {
     my $flat = $self->_encode($self->_deobjectify($data));
     warn "$$ >>> ${flat}\n" if $DEBUG;
     $flat;
-  } or do {
+  } || do {
     my $err = $@; # won't get here if the eval doesn't die
     # don't keep refs to new things
     delete @{$self->local_objects_by_id}{@New_Ids};
