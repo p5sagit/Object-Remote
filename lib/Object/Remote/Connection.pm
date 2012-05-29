@@ -75,6 +75,7 @@ sub _build__json {
 BEGIN {
   unshift our @Guess, sub { blessed($_[0]) ? $_[0] : undef };
   eval { require Object::Remote::Connector::Local };
+  eval { require Object::Remote::Connector::LocalSudo };
   eval { require Object::Remote::Connector::SSH };
 }
 
