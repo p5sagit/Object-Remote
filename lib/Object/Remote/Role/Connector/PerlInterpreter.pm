@@ -8,17 +8,22 @@ use Moo::Role;
 
 with 'Object::Remote::Role::Connector';
 
-around connect => sub {
-  my ($orig, $self) = (shift, shift);
-  my $conn = $self->$orig(@_);
+has module_sender => (is => 'lazy');
+
+sub _build_module_sender {
   my ($hook) =
     grep {blessed($_) && $_->isa('Object::Remote::ModuleLoader::Hook') }
       @INC;
-  my $sender = $hook ? $hook->sender : Object::Remote::ModuleSender->new;
+  return $hook ? $hook->sender : Object::Remote::ModuleSender->new;
+}
+
+around connect => sub {
+  my ($orig, $self) = (shift, shift);
+  my $conn = $self->$orig(@_);
   Object::Remote::Handle->new(
     connection => $conn,
     class => 'Object::Remote::ModuleLoader',
-    args => { module_sender => $sender }
+    args => { module_sender => $self->module_sender }
   )->disarm_free;
   return $conn;
 };

@@ -9,17 +9,13 @@ $ENV{PERL5LIB} = join(
   ':', ($ENV{PERL5LIB} ? $ENV{PERL5LIB} : ()), qw(lib)
 );
 
-my $connection = Object::Remote::Connector::Local->new->connect;
-
 my $ms = Object::Remote::ModuleSender->new(
   dir_list => [ 't/lib' ]
 );
 
-my $ml = Object::Remote->new(
-  connection => $connection,
-  class => 'Object::Remote::ModuleLoader',
-  args => { module_sender => $ms },
-);
+my $connection = Object::Remote::Connector::Local->new(
+                   module_sender => $ms,
+                 )->connect;
 
 my $counter = Object::Remote->new(
   connection => $connection,
