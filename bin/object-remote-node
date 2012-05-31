@@ -5,8 +5,6 @@ use Object::Remote::Connector::STDIO;
 use Object::Remote;
 use CPS::Future;
 
-#$Object::Remote::Connection::DEBUG = 1;
-
 my $c = Object::Remote::Connector::STDIO->new->connect;
 
 $c->_set_is_ready(1);
