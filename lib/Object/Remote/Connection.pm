@@ -10,7 +10,7 @@ use Scalar::Util qw(weaken blessed refaddr);
 use JSON::PP qw(encode_json);
 use Moo;
 
-our $DEBUG;
+our $DEBUG = !!$ENV{OBJECT_REMOTE_DEBUG};
 
 has send_to_fh => (
   is => 'ro', required => 1,
