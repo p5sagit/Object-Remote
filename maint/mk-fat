@@ -11,5 +11,6 @@ __DATA__
 ';
   fatpack file;
   cat bin/object-remote-node
-)>lib/Object/Remote/FatNode.pm
+)>FatNode.pm.new
+mv FatNode.pm.new lib/Object/Remote/FatNode.pm
 rm -r fatlib
