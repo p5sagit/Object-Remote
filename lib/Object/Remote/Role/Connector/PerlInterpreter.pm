@@ -3,7 +3,7 @@ package Object::Remote::Role::Connector::PerlInterpreter;
 use IPC::Open2;
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
-use Object::Remote::FatNode;
+use Scalar::Util qw(blessed);
 use Moo::Role;
 
 with 'Object::Remote::Role::Connector';
@@ -11,10 +11,14 @@ with 'Object::Remote::Role::Connector';
 around connect => sub {
   my ($orig, $self) = (shift, shift);
   my $conn = $self->$orig(@_);
+  my ($hook) =
+    grep {blessed($_) && $_->isa('Object::Remote::ModuleLoader::Hook') }
+      @INC;
+  my $sender = $hook ? $hook->sender : Object::Remote::ModuleSender->new;
   Object::Remote::Handle->new(
     connection => $conn,
     class => 'Object::Remote::ModuleLoader',
-    args => { module_sender => Object::Remote::ModuleSender->new }
+    args => { module_sender => $sender }
   )->disarm_free;
   return $conn;
 };
@@ -28,7 +32,9 @@ sub _open2_for {
     my $foreign_stdin,
     $self->_perl_command(@_),
   ) or die "Failed to run perl at '$_[0]': $!";
-  print $foreign_stdin $Object::Remote::FatNode::DATA, "__END__\n";
+  require Object::Remote::FatNode;
+  print $foreign_stdin $Object::Remote::FatNode::DATA, "__END__\n"
+    or die "Failed to send fatpacked data to new node on '$_[0]': $!";
   return ($foreign_stdin, $foreign_stdout, $pid);
 }
 
