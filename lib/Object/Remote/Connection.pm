@@ -3,6 +3,7 @@ package Object::Remote::Connection;
 use Object::Remote::Future;
 use Object::Remote::Null;
 use Object::Remote::Handle;
+use Object::Remote::CodeContainer;
 use Object::Remote;
 use IO::Handle;
 use Module::Runtime qw(use_module);
@@ -57,17 +58,25 @@ has _json => (
   },
 );
 
+sub _id_to_remote_object {
+  my ($self, $id) = @_;
+  return bless({}, 'Object::Remote::Null') if $id eq 'NULL';
+  (
+    $self->remote_objects_by_id->{$id}
+    or Object::Remote::Handle->new(connection => $self, id => $id)
+  )->proxy;
+}
+
 sub _build__json {
   weaken(my $self = shift);
-  my $remotes = $self->remote_objects_by_id;
   JSON::PP->new->filter_json_single_key_object(
     __remote_object__ => sub {
-      my $id = shift;
-      return bless({}, 'Object::Remote::Null') if $id eq 'NULL';
-      (
-        $remotes->{$id}
-        or Object::Remote::Handle->new(connection => $self, id => $id)
-      )->proxy;
+      $self->_id_to_remote_object(@_);
+    }
+  )->filter_json_single_key_object(
+    __remote_code__ => sub {
+      my $code_container = $self->_id_to_remote_object(@_);
+      sub { $code_container->call(@_) };
     }
   );
 }
@@ -165,6 +174,11 @@ sub _deobjectify {
       return +{ map +($_ => $self->_deobjectify($data->{$_})), keys %$data };
     } elsif ($ref eq 'ARRAY') {
       return [ map $self->_deobjectify($_), @$data ];
+    } elsif ($ref eq 'CODE') {
+      my $id = $self->_local_object_to_id(
+                 Object::Remote::CodeContainer->new(code => $data)
+               );
+      return +{ __remote_code__ => $id };
     } else {
       die "Can't collapse reftype $ref";
     }

@@ -25,4 +25,10 @@ is($remote->increment, 1, 'Increment to 1');
 
 is($remote->counter, 1, 'Counter at 1');
 
+my $x = 0;
+
+is($remote->call_callback(27, sub { $x++ }), 27, "Callback ok");
+
+is($x, 1, "Callback called callback");
+
 done_testing;
