@@ -44,6 +44,8 @@ sub _open2_for {
   my $self = shift;
   my ($foreign_stdin, $foreign_stdout, $pid) = $self->_start_perl(@_);
   require Object::Remote::FatNode;
+  print $foreign_stdin 'BEGIN { $ENV{OBJECT_REMOTE_DEBUG} = 1 }'."\n"
+    if $ENV{OBJECT_REMOTE_DEBUG};
   print $foreign_stdin $Object::Remote::FatNode::DATA, "__END__\n"
     or die "Failed to send fatpacked data to new node on '$_[0]': $!";
   return ($foreign_stdin, $foreign_stdout, $pid);
