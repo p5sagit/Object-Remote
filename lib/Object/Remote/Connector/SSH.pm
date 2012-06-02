@@ -11,11 +11,6 @@ around _perl_command => sub {
   return 'ssh', $target, $self->$orig($target);
 };
 
-sub _ssh_object_for {
-  my ($self, $on) = @_;
-  $self->ssh_masters->{$on} ||= Net::OpenSSH->new($on);
-}
-
 push @Object::Remote::Connection::Guess, sub { 
   for ($_[0]) {
     # 0-9 a-z _ - first char, those or . subsequent - hostnamish
