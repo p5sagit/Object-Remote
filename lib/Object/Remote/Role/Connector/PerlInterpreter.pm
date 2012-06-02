@@ -30,13 +30,19 @@ around connect => sub {
 
 sub _perl_command { 'perl', '-' }
 
-sub _open2_for {
+sub _start_perl {
   my $self = shift;
   my $pid = open2(
     my $foreign_stdout,
     my $foreign_stdin,
     $self->_perl_command(@_),
   ) or die "Failed to run perl at '$_[0]': $!";
+  return ($foreign_stdin, $foreign_stdout, $pid);
+}
+
+sub _open2_for {
+  my $self = shift;
+  my ($foreign_stdin, $foreign_stdout, $pid) = $self->_start_perl(@_);
   require Object::Remote::FatNode;
   print $foreign_stdin $Object::Remote::FatNode::DATA, "__END__\n"
     or die "Failed to send fatpacked data to new node on '$_[0]': $!";

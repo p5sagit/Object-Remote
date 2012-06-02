@@ -11,6 +11,8 @@ around _perl_command => sub {
   return 'ssh', $target, $self->$orig($target);
 };
 
+no warnings 'once';
+
 push @Object::Remote::Connection::Guess, sub { 
   for ($_[0]) {
     # 0-9 a-z _ - first char, those or . subsequent - hostnamish
