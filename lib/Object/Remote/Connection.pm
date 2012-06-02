@@ -146,15 +146,20 @@ sub _serialize {
   };
 }
 
+sub _local_object_to_id {
+  my ($self, $object) = @_;
+  my $id = refaddr($object);
+  $self->local_objects_by_id->{$id} ||= do {
+    push our(@New_Ids), $id;
+    $object;
+  };
+  return $id;
+}
+
 sub _deobjectify {
   my ($self, $data) = @_;
   if (blessed($data)) {
-    my $id = refaddr($data);
-    $self->local_objects_by_id->{$id} ||= do {
-      push our(@New_Ids), $id;
-      $data;
-    };
-    return +{ __remote_object__ => $id };
+    return +{ __remote_object__ => $self->_local_object_to_id($data) };
   } elsif (my $ref = ref($data)) {
     if ($ref eq 'HASH') {
       return +{ map +($_ => $self->_deobjectify($data->{$_})), keys %$data };
