@@ -31,7 +31,7 @@ has receive_from_fh => (
   },
 );
 
-has on_close => (is => 'rw', default => sub {});
+has on_close => (is => 'rw', default => sub { CPS::Future->new });
 
 has child_pid => (is => 'ro');
 
@@ -49,6 +49,8 @@ has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 has local_objects_by_id => (is => 'ro', default => sub { {} });
 
 has remote_objects_by_id => (is => 'ro', default => sub { {} });
+
+has outstanding_futures => (is => 'ro', default => sub { {} });
 
 has _json => (
   is => 'lazy',
@@ -118,6 +120,10 @@ sub send {
   my ($self, $type, @call) = @_;
 
   unshift @call, $type => my $future = CPS::Future->new;
+
+  my $outstanding = $self->outstanding_futures;
+  $outstanding->{$future} = $future;
+  $future->on_ready(sub { delete $outstanding->{$future} });
 
   $self->_send(\@call);
 
@@ -202,6 +208,14 @@ sub _receive_data_from {
       }
     }
   } else {
+    Object::Remote->current_loop
+                  ->unwatch_io(
+                      handle => $self->receive_from_fh,
+                      on_read_ready => 1
+                    );
+    my $outstanding = $self->outstanding_futures;
+    $_->fail("Connection lost") for values %$outstanding;
+    %$outstanding = ();
     $self->on_close->done();
   }
 }
