@@ -9,23 +9,22 @@ extends 'Object::Remote::Connector::Local';
 has password_callback => (is => 'ro');
 
 sub _sudo_perl_command {
-  my ($self, $stderr_fdno, $target_user) = @_;
+  my ($self, $target_user) = @_;
   return
     'sudo', '-S', '-u', $target_user, '-p', "[sudo] password please\n",
     'perl', '-MPOSIX=dup2',
-            '-e', 'print STDERR "GO\n"; dup2(shift(@ARGV), 2); exec(@ARGV);',
-    $stderr_fdno, $self->_perl_command($target_user);
+            '-e', 'print STDERR "GO\n"; exec(@ARGV);',
+    $self->_perl_command($target_user);
 }
 
 sub _start_perl {
   my $self = shift;
-  open my $stderr_dup, '>&', \*STDERR or die "Couldn't dup STDERR: $!";
   my $sudo_stderr = gensym;
   my $pid = open3(
     my $foreign_stdin,
     my $foreign_stdout,
     $sudo_stderr,
-    $self->_sudo_perl_command(fileno($stderr_dup), @_)
+    $self->_sudo_perl_command(@_)
   ) or die "open3 failed: $!";
   chomp(my $line = <$sudo_stderr>);
   if ($line eq "GO") {
@@ -44,6 +43,21 @@ sub _start_perl {
   } else {
     die "Got inexplicable line ${line} trying to sudo";
   };
+  Object::Remote->current_loop
+                ->watch_io(
+                    handle => $sudo_stderr,
+                    on_read_ready => sub {
+                      if (sysread($sudo_stderr, my $buf, 1024) > 0) {
+                        print STDERR $buf;
+                      } else {
+                        Object::Remote->current_loop
+                                      ->unwatch_io(
+                                          handle => $sudo_stderr,
+                                          on_read_ready => 1
+                                        );
+                      }
+                    }
+                  );
   return ($foreign_stdin, $foreign_stdout, $pid);
 };
 
