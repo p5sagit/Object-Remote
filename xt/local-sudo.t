@@ -23,4 +23,6 @@ my $remote_user = $remote->user;
 like $remote_user, qr/^\d+$/, 'returned an int';
 isnt $remote_user, $<, 'ran as different user';
 
+$remote->send_err;
+
 done_testing;
