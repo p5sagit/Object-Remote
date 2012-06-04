@@ -2,14 +2,12 @@ package Object::Remote;
 
 use Object::Remote::MiniLoop;
 use Object::Remote::Handle;
+use Module::Runtime qw(use_module);
 
 sub new::on {
   my ($class, $on, @args) = @_;
-  Object::Remote::Handle->new(
-    connection => $on,
-    class => $class,
-    args => \@args
-  )->proxy;
+  my $conn = use_module('Object::Remote::Connection')->new_from_spec($on);
+  return $conn->new_remote(class => $class, args => \@args);
 }
 
 sub new {

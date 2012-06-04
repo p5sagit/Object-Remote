@@ -92,10 +92,18 @@ BEGIN {
 
 sub new_from_spec {
   my ($class, $spec) = @_;
+  return $spec if blessed $spec;
   foreach my $poss (do { our @Guess }) {
     if (my $obj = $poss->($spec)) { return $obj }
   }
   die "Couldn't figure out what to do with ${spec}";
+}
+
+sub new_remote {
+  my ($self, @args) = @_;
+  Object::Remote::Handle->new(
+    connection => $self, @args
+  )->proxy;
 }
 
 sub register_remote {
