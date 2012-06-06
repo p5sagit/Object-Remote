@@ -6,13 +6,18 @@ use Module::Runtime qw(use_module);
 
 sub new::on {
   my ($class, $on, @args) = @_;
-  my $conn = use_module('Object::Remote::Connection')->new_from_spec($on);
+  my $conn = __PACKAGE__->connect($on);
   return $conn->new_remote(class => $class, args => \@args);
 }
 
 sub new {
   shift;
   Object::Remote::Handle->new(@_)->proxy;
+}
+
+sub connect {
+  my ($class, $to) = @_;
+  use_module('Object::Remote::Connection')->new_from_spec($to);
 }
 
 sub current_loop {

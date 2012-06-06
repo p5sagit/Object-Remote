@@ -2,21 +2,17 @@ use strictures 1;
 use Test::More;
 use Sys::Hostname qw(hostname);
 
-use Object::Remote::Connector::Local;
 use Object::Remote;
 
 $ENV{PERL5LIB} = join(
   ':', ($ENV{PERL5LIB} ? $ENV{PERL5LIB} : ()), qw(lib t/lib)
 );
 
-my $connection = Object::Remote::Connector::Local->new->connect;
+my $connection = Object::Remote->connect('-');
 
 #$Object::Remote::Connection::DEBUG = 1;
 
-my $remote = Object::Remote->new(
-  connection => $connection,
-  class => 'ORTestClass'
-);
+my $remote = ORTestClass->new::on($connection);
 
 isnt($$, $remote->pid, 'Different pid on the other side');
 

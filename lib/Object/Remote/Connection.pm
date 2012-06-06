@@ -106,6 +106,13 @@ sub new_remote {
   )->proxy;
 }
 
+sub connect {
+  my ($self, $to) = @_;
+  return await_future($self->send(
+    class_call => 'Object::Remote', 0, connect => $to
+  ));
+}
+
 sub get_remote_sub {
   my ($self, $sub) = @_;
   my ($pkg, $name) = $sub =~ m/^(.*)::([^:]+)$/;
