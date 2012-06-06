@@ -8,7 +8,7 @@ with 'Object::Remote::Role::Connector::PerlInterpreter';
 
 around _perl_command => sub {
   my ($orig, $self, $target) = @_;
-  return 'ssh', $target, $self->$orig($target);
+  return 'ssh', '-A', $target, $self->$orig($target);
 };
 
 no warnings 'once';
