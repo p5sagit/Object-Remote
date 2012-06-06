@@ -106,6 +106,12 @@ sub new_remote {
   )->proxy;
 }
 
+sub get_remote_sub {
+  my ($self, $sub) = @_;
+  my ($pkg, $name) = $sub =~ m/^(.*)::([^:]+)$/;
+  return await_future($self->send(class_call => $pkg, 0, can => $name));
+}
+
 sub register_remote {
   my ($self, $remote) = @_;
   weaken($self->remote_objects_by_id->{$remote->id} = $remote);
