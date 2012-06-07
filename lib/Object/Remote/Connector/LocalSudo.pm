@@ -35,11 +35,14 @@ sub _start_perl {
       unless $cb;
     print $foreign_stdin $cb->($line, @_), "\n";
     chomp($line = <$sudo_stderr>);
-    die "sent password and expected newline from sudo, got ${line}"
-      if $line;
-    chomp($line = <$sudo_stderr>);
-    die "sent password but next line was ${line}"
-      unless $line eq "GO";
+    if ($line and $line ne 'GO') {
+      die "sent password and expected newline from sudo, got ${line}";
+    }
+    elsif (not $line) {
+      chomp($line = <$sudo_stderr>);
+      die "sent password but next line was ${line}"
+        unless $line eq "GO";
+    }
   } else {
     die "Got inexplicable line ${line} trying to sudo";
   };
