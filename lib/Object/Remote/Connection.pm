@@ -41,9 +41,15 @@ sub _build_ready_future { CPS::Future->new }
 
 has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 
-has local_objects_by_id => (is => 'ro', default => sub { {} });
+has local_objects_by_id => (
+  is => 'ro', default => sub { {} },
+  coerce => sub { +{ %{$_[0]} } }, # shallow clone on the way in
+);
 
-has remote_objects_by_id => (is => 'ro', default => sub { {} });
+has remote_objects_by_id => (
+  is => 'ro', default => sub { {} },
+  coerce => sub { +{ %{$_[0]} } }, # shallow clone on the way in
+);
 
 has outstanding_futures => (is => 'ro', default => sub { {} });
 
@@ -95,7 +101,7 @@ sub new_from_spec {
   die "Couldn't figure out what to do with ${spec}";
 }
 
-sub new_remote {
+sub remote_object {
   my ($self, @args) = @_;
   Object::Remote::Handle->new(
     connection => $self, @args
@@ -109,7 +115,7 @@ sub connect {
   ));
 }
 
-sub get_remote_sub {
+sub remote_sub {
   my ($self, $sub) = @_;
   my ($pkg, $name) = $sub =~ m/^(.*)::([^:]+)$/;
   return await_future($self->send(class_call => $pkg, 0, can => $name));

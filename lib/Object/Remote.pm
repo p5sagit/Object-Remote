@@ -7,7 +7,7 @@ use Module::Runtime qw(use_module);
 sub new::on {
   my ($class, $on, @args) = @_;
   my $conn = __PACKAGE__->connect($on);
-  return $conn->new_remote(class => $class, args => \@args);
+  return $conn->remote_object(class => $class, args => \@args);
 }
 
 sub new {

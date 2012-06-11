@@ -29,7 +29,7 @@ is($remote->call_callback(27, sub { $x++ }), 27, "Callback ok");
 is($x, 1, "Callback called callback");
 
 is(
-  $connection->get_remote_sub('Sys::Hostname::hostname')->(),
+  $connection->remote_sub('Sys::Hostname::hostname')->(),
   hostname(),
   'Remote sub call ok'
 );
