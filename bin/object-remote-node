@@ -7,7 +7,7 @@ use CPS::Future;
 
 my $c = Object::Remote::Connector::STDIO->new->connect;
 
-$c->_set_is_ready(1);
+$c->ready_future->done;
 
 my $loop = Object::Remote->current_loop;
 

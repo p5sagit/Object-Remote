@@ -35,11 +35,6 @@ has on_close => (is => 'rw', default => sub { CPS::Future->new });
 
 has child_pid => (is => 'ro');
 
-has is_ready => (is => 'rwp', trigger => sub {
-  my ($self, $value) = @_;
-  $self->ready_future->done if $value;
-});
-
 has ready_future => (is => 'lazy');
 
 sub _build_ready_future { CPS::Future->new }
@@ -127,7 +122,6 @@ sub register_remote {
 
 sub await_ready {
   my ($self) = @_;
-  return if $self->is_ready;
   await_future($self->ready_future);
 }
 
@@ -162,7 +156,7 @@ sub send_discard {
 sub _send {
   my ($self, $to_send) = @_;
 
-  $self->await_ready unless $self->is_ready;
+  $self->await_ready;
 
   print { $self->send_to_fh } $self->_serialize($to_send)."\n";
 }
@@ -216,7 +210,7 @@ sub _deobjectify {
 sub _receive_data_from {
   my ($self, $fh) = @_;
   my $rb = $self->_receive_data_buffer;
-  my $ready = $self->is_ready;
+  my $ready = $self->ready_future->is_ready;
   if (sysread($fh, $$rb, 1024, length($$rb)) > 0) {
     while ($$rb =~ s/^(.*)\n//) {
       if ($ready) {
@@ -225,7 +219,7 @@ sub _receive_data_from {
         my $line = $1;
         die "New remote container did not send Shere - got ${line}"
           unless $line eq "Shere";
-        $self->_set_is_ready($ready = 1);
+        $self->ready_future->done;
       }
     }
   } else {
