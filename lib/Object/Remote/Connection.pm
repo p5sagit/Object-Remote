@@ -83,6 +83,7 @@ BEGIN {
   eval { require Object::Remote::Connector::Local };
   eval { require Object::Remote::Connector::LocalSudo };
   eval { require Object::Remote::Connector::SSH };
+  eval { require Object::Remote::Connector::UNIX };
 }
 
 sub new_from_spec {
@@ -211,7 +212,9 @@ sub _receive_data_from {
   my ($self, $fh) = @_;
   my $rb = $self->_receive_data_buffer;
   my $ready = $self->ready_future->is_ready;
-  if (sysread($fh, $$rb, 1024, length($$rb)) > 0) {
+  my $len = sysread($fh, $$rb, 1024, length($$rb));
+  my $err = defined($len) ? undef : ": $!";
+  if (defined($len) and $len > 0) {
     while ($$rb =~ s/^(.*)\n//) {
       if ($ready) {
         $self->_receive($1);
@@ -229,7 +232,7 @@ sub _receive_data_from {
                       on_read_ready => 1
                     );
     my $outstanding = $self->outstanding_futures;
-    $_->fail("Connection lost") for values %$outstanding;
+    $_->fail("Connection lost${err}") for values %$outstanding;
     %$outstanding = ();
     $self->on_close->done();
   }

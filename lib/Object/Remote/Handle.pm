@@ -27,7 +27,9 @@ sub proxy {
 
 sub BUILD {
   my ($self, $args) = @_;
-  unless ($self->id) {
+  if ($self->id) {
+    $self->disarm_free;
+  } else {
     die "No id supplied and no class either" unless $args->{class};
     ref($_) eq 'HASH' and $_ = [ %$_ ] for $args->{args};
     $self->_set_id(
