@@ -50,6 +50,21 @@ sub loop_once {
   }
 }
 
+sub want_run {
+  my ($self) = @_;
+  $self->{want_running}++;
+}
+
+sub run_while_wanted {
+  my ($self) = @_;
+  $self->loop_once while $self->{want_running};
+}
+
+sub want_stop {
+  my ($self) = @_;
+  $self->{want_running}-- if $self->{want_running};
+}
+
 sub run {
   my ($self) = @_;
   local $self->{is_running} = 1;

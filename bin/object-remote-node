@@ -13,10 +13,11 @@ my $loop = Object::Remote->current_loop;
 
 my $f = CPS::Future->new;
 
-$f->on_ready(sub { $loop->stop });
+$f->on_ready(sub { $loop->want_stop });
 
 $c->on_close($f);
 
 print { $c->send_to_fh } "Shere\n";
 
-$loop->run;
+$loop->want_run;
+$loop->run_while_wanted;
