@@ -129,15 +129,19 @@ sub send_class_call {
 sub register_class_call_handler {
   my ($self) = @_;
   $self->local_objects_by_id->{'class_call_handler'} ||= do {
-    my $o = Object::Remote::CodeContainer->new(
-      code => sub {
-        my ($class, $method) = (shift, shift);
-        use_module($class)->$method(@_);
-      }
-    );
+    my $o = $self->new_class_call_handler;
     $self->_local_object_to_id($o);
     $o;
   };
+}
+
+sub new_class_call_handler {
+  Object::Remote::CodeContainer->new(
+    code => sub {
+      my ($class, $method) = (shift, shift);
+      use_module($class)->$method(@_);
+    }
+  );
 }
 
 sub register_remote {
