@@ -128,13 +128,16 @@ sub send_class_call {
 
 sub register_class_call_handler {
   my ($self) = @_;
-  $self->local_objects_by_id->{'class_call_handler'}
-    = Object::Remote::CodeContainer->new(
-        code => sub {
-          my ($class, $method) = (shift, shift);
-          use_module($class)->$method(@_);
-        }
-      );
+  $self->local_objects_by_id->{'class_call_handler'} ||= do {
+    my $o = Object::Remote::CodeContainer->new(
+      code => sub {
+        my ($class, $method) = (shift, shift);
+        use_module($class)->$method(@_);
+      }
+    );
+    $self->_local_object_to_id($o);
+    $o;
+  };
 }
 
 sub register_remote {
@@ -188,7 +191,7 @@ sub _send {
 
 sub _serialize {
   my ($self, $data) = @_;
-  local our @New_Ids;
+  local our @New_Ids = (-1);
   return eval {
     my $flat = $self->_encode($self->_deobjectify($data));
     warn "$$ >>> ${flat}\n" if $DEBUG;
@@ -205,7 +208,7 @@ sub _local_object_to_id {
   my ($self, $object) = @_;
   my $id = refaddr($object);
   $self->local_objects_by_id->{$id} ||= do {
-    push our(@New_Ids), $id;
+    push our(@New_Ids), $id if @New_Ids;
     $object;
   };
   return $id;

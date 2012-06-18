@@ -32,6 +32,10 @@ has connection_args => (
  is => 'ro', default => sub { [] }
 );
 
+has connection_callback => (
+  is => 'ro', default => sub { sub { shift } }
+);
+
 sub BUILD {
   Object::Remote->current_loop->want_run;
 }
@@ -50,7 +54,7 @@ sub _listen_ready {
     send_to_fh => $new,
     on_close => $f, # and so will die $c
     @{$self->connection_args}
-  );
+  )->${\$self->connection_callback};
   $f->on_ready(sub { undef($c) });
   $c->ready_future->done;
   print $new "Shere\n" or die "Couldn't send to new socket: $!";
