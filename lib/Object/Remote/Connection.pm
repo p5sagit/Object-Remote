@@ -294,15 +294,6 @@ sub receive_call_free {
   $self->receive_free($id);
 }
 
-sub receive_class_call {
-  my ($self, $future_id, $class, @rest) = @_;
-  my $future = $self->_id_to_remote_object($future_id);
-  $future->{method} = 'call_discard_free';
-  eval { use_module($class) }
-    or do { $future->fail("Error loading ${class}: $@"); return };
-  $self->_invoke($future, $class, @rest);
-}
-
 sub _invoke {
   my ($self, $future, $local, $ctx, $method, @args) = @_;
   if ($method =~ /^start::/) {

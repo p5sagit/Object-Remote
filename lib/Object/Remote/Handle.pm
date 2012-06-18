@@ -34,8 +34,8 @@ sub BUILD {
     ref($_) eq 'HASH' and $_ = [ %$_ ] for $args->{args};
     $self->_set_id(
       await_future(
-        $self->connection->send(
-          class_call => $args->{class}, 0,
+        $self->connection->send_class_call(
+          0, $args->{class},
           $args->{constructor}||'new', @{$args->{args}||[]}
         )
       )->{remote}->disarm_free->id
