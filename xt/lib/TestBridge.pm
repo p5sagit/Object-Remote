@@ -6,7 +6,7 @@ use Object::Remote;
 
 has object => (is => 'lazy');
 
-sub _build_object { TestClass->new::on('root@') }
+sub _build_object { TestClass->new::on('-') }
 
 sub result { (shift)->object->result }
 

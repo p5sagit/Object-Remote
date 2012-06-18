@@ -131,7 +131,7 @@ sub register_class_call_handler {
   $self->local_objects_by_id->{'class_call_handler'}
     = Object::Remote::CodeContainer->new(
         code => sub {
-          my ($class, $method) = splice @_, 0, 2;
+          my ($class, $method) = (shift, shift);
           use_module($class)->$method(@_);
         }
       );

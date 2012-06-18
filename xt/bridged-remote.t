@@ -9,7 +9,7 @@ use TestClass;
 use Object::Remote;
 
 is exception {
-  my $bridge = TestBridge->new::on('localhost');
+  my $bridge = TestBridge->new::on('-');
   is $bridge->result, 23;
 }, undef, 'no error during bridge access';
 
