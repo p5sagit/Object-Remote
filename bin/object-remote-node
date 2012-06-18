@@ -7,6 +7,8 @@ use CPS::Future;
 
 my $c = Object::Remote::Connector::STDIO->new->connect;
 
+$c->register_class_call_handler;
+
 $c->ready_future->done;
 
 my $loop = Object::Remote->current_loop;

@@ -110,15 +110,31 @@ sub remote_object {
 
 sub connect {
   my ($self, $to) = @_;
-  return await_future($self->send(
-    class_call => 'Object::Remote', 0, connect => $to
-  ));
+  return await_future(
+    $self->send_class_call(0, 'Object::Remote', connect => $to)
+  );
 }
 
 sub remote_sub {
   my ($self, $sub) = @_;
   my ($pkg, $name) = $sub =~ m/^(.*)::([^:]+)$/;
-  return await_future($self->send(class_call => $pkg, 0, can => $name));
+  return await_future($self->send_class_call(0, $pkg, can => $name));
+}
+
+sub send_class_call {
+  my ($self, $ctx, @call) = @_;
+  $self->send(call => class_call_handler => $ctx => call => @call);
+}
+
+sub register_class_call_handler {
+  my ($self) = @_;
+  $self->local_objects_by_id->{'class_call_handler'}
+    = Object::Remote::CodeContainer->new(
+        code => sub {
+          my ($class, $method) = splice @_, 0, 2;
+          use_module($class)->$method(@_);
+        }
+      );
 }
 
 sub register_remote {
@@ -141,7 +157,9 @@ sub send_free {
 sub send {
   my ($self, $type, @call) = @_;
 
-  unshift @call, $type => my $future = CPS::Future->new;
+  my $future = CPS::Future->new;
+
+  unshift @call, $type => $self->_local_object_to_id($future);
 
   my $outstanding = $self->outstanding_futures;
   $outstanding->{$future} = $future;
@@ -155,7 +173,7 @@ sub send {
 sub send_discard {
   my ($self, $type, @call) = @_;
 
-  unshift @call, $type => { __remote_object__ => 'NULL' };
+  unshift @call, $type => 'NULL';
 
   $self->_send(\@call);
 }
@@ -219,7 +237,7 @@ sub _receive_data_from {
   my $rb = $self->_receive_data_buffer;
   my $ready = $self->ready_future->is_ready;
   my $len = sysread($fh, $$rb, 1024, length($$rb));
-  my $err = defined($len) ? undef : ": $!";
+  my $err = defined($len) ? '' : ": $!";
   if (defined($len) and $len > 0) {
     while ($$rb =~ s/^(.*)\n//) {
       if ($ready) {
@@ -262,7 +280,8 @@ sub receive_free {
 }
 
 sub receive_call {
-  my ($self, $future, $id, @rest) = @_;
+  my ($self, $future_id, $id, @rest) = @_;
+  my $future = $self->_id_to_remote_object($future_id);
   $future->{method} = 'call_discard_free';
   my $local = $self->local_objects_by_id->{$id}
     or do { $future->fail("No such object $id"); return };
@@ -276,7 +295,8 @@ sub receive_call_free {
 }
 
 sub receive_class_call {
-  my ($self, $future, $class, @rest) = @_;
+  my ($self, $future_id, $class, @rest) = @_;
+  my $future = $self->_id_to_remote_object($future_id);
   $future->{method} = 'call_discard_free';
   eval { use_module($class) }
     or do { $future->fail("Error loading ${class}: $@"); return };
