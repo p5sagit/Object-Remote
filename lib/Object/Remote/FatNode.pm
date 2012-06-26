@@ -22,7 +22,10 @@ my $command = qq(
   -mObject::Remote
   -mObject::Remote::Connector::STDIO
   -mCPS::Future
+  -mMRO::Compat
   -mClass::C3
+  -mClass::C3::next
+  -mAlgorithm::C3
   -mObject::Remote::ModuleLoader
   -mObject::Remote::Node
   -mMethod::Generate::BuildAll
@@ -54,6 +57,8 @@ my $end = stripspace <<'END_END';
       open my $fh, '<', \$fat;
       return $fh;
     }
+    #Uncomment this to find brokenness
+    #warn "Missing $_[1]";
     return
   };
 
