@@ -1,6 +1,7 @@
 package Object::Remote::Role::Connector::PerlInterpreter;
 
 use IPC::Open2;
+use IO::Handle;
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
 use Scalar::Util qw(blessed);
@@ -43,6 +44,7 @@ sub _start_perl {
 sub _open2_for {
   my $self = shift;
   my ($foreign_stdin, $foreign_stdout, $pid) = $self->_start_perl(@_);
+  $foreign_stdin->autoflush(1);
   print $foreign_stdin 'BEGIN { $ENV{OBJECT_REMOTE_DEBUG} = 1 }'."\n"
     if $ENV{OBJECT_REMOTE_DEBUG};
   print $foreign_stdin $self->fatnode_text

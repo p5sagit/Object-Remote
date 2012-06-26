@@ -25,6 +25,8 @@ my $command = qq(
   -mClass::C3
   -mObject::Remote::ModuleLoader
   -mObject::Remote::Node
+  -mMethod::Generate::BuildAll
+  -mMethod::Generate::DemolishAll
   -mJSON::PP
   -e 'print join "\\n", reverse \%INC'
 );

@@ -1,6 +1,7 @@
 package Object::Remote::Connector::STDIO;
 
 use File::Spec;
+use IO::Handle;
 use Object::Remote::Connection;
 use Moo;
 
