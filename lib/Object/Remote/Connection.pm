@@ -165,12 +165,16 @@ sub send {
   my ($self, $type, @call) = @_;
 
   my $future = CPS::Future->new;
+  my $remote = $self->remote_objects_by_id->{$call[0]};
 
   unshift @call, $type => $self->_local_object_to_id($future);
 
   my $outstanding = $self->outstanding_futures;
   $outstanding->{$future} = $future;
-  $future->on_ready(sub { delete $outstanding->{$future} });
+  $future->on_ready(sub {
+    undef($remote);
+    delete $outstanding->{$future}
+  });
 
   $self->_send(\@call);
 
