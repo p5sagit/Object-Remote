@@ -337,3 +337,13 @@ sub DEMOLISH {
 }
 
 1;
+
+=head1 NAME
+
+Object::Remote::Connection - An underlying connection for L<Object::Remote>
+
+=head1 LAME
+
+Shipping prioritised over writing this part up. Blame mst.
+
+=cut

@@ -52,3 +52,13 @@ sub AUTOLOAD {
 }
 
 1;
+
+=head1 NAME
+
+Object::Remote::Future - Asynchronous calling for L<Object::Remote>
+
+=head1 LAME
+
+Shipping prioritised over writing this part up. Blame mst.
+
+=cut
