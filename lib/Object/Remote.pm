@@ -4,6 +4,8 @@ use Object::Remote::MiniLoop;
 use Object::Remote::Handle;
 use Module::Runtime qw(use_module);
 
+our $VERSION = '0.001001' # 0.1.1
+
 sub new::on {
   my ($class, $on, @args) = @_;
   my $conn = __PACKAGE__->connect($on);
