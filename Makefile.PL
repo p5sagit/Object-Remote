@@ -13,5 +13,9 @@ WriteMakefile(
     'JSON::PP' => 0,
     'CPS::Future' => 0,
   },
-  EXE_FILES => [ 'bin/object-remote-node' ],
+  EXE_FILES => [
+    'bin/object-remote-node',
+    'bin/object-remote-slave',
+    'bin/remoterepl',
+  ],
 );
