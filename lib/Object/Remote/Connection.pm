@@ -81,6 +81,11 @@ sub _build__json {
       my $code_container = $self->_id_to_remote_object(@_);
       sub { $code_container->call(@_) };
     }
+  )->filter_json_single_key_object(
+    __scalar_ref__ => sub {
+      my $value = shift;
+      return \$value;
+    }
   );
 }
 
@@ -236,6 +241,8 @@ sub _deobjectify {
                  Object::Remote::CodeContainer->new(code => $data)
                );
       return +{ __remote_code__ => $id };
+    } elsif ($ref eq 'SCALAR') {
+      return +{ __scalar_ref__ => $$data };
     } else {
       die "Can't collapse reftype $ref";
     }
