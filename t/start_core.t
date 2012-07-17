@@ -22,6 +22,10 @@ use File::Spec;
   our $C;
 
   sub get_s2 {
+    shift->maybe::start::_real_get_s2;
+  }
+
+  sub _real_get_s2 {
     future {
       my $f = shift;
       $C = sub { $f->done(S2F->new); undef($f); undef($C); };

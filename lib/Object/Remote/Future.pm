@@ -48,6 +48,15 @@ sub AUTOLOAD {
   return $res;
 }
 
+package maybe::start;
+
+sub AUTOLOAD {
+  my $invocant = shift;
+  my ($method) = our $AUTOLOAD =~ /^maybe::start::(.+)$/;
+  $method = "start::${method}" if ((caller(1)||'') eq 'start');
+  $invocant->$method(@_);
+}
+
 package then;
 
 sub AUTOLOAD {
