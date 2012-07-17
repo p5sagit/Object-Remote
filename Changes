@@ -1,3 +1,4 @@
+  - allow transfer of glob references
   - allow loading of classes and packages from __DATA__
   - allow transfer of scalar references
 

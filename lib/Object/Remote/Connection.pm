@@ -4,7 +4,10 @@ use Object::Remote::Future;
 use Object::Remote::Null;
 use Object::Remote::Handle;
 use Object::Remote::CodeContainer;
+use Object::Remote::GlobProxy;
+use Object::Remote::GlobContainer;
 use Object::Remote;
+use Symbol;
 use IO::Handle;
 use Module::Runtime qw(use_module);
 use Scalar::Util qw(weaken blessed refaddr);
@@ -85,6 +88,13 @@ sub _build__json {
     __scalar_ref__ => sub {
       my $value = shift;
       return \$value;
+    }
+  )->filter_json_single_key_object(
+    __glob_ref__ => sub {
+      my $glob_container = $self->_id_to_remote_object(@_);
+      my $handle = Symbol::gensym;
+      tie *$handle, 'Object::Remote::GlobProxy', $glob_container;
+      return $handle;
     }
   );
 }
@@ -243,6 +253,10 @@ sub _deobjectify {
       return +{ __remote_code__ => $id };
     } elsif ($ref eq 'SCALAR') {
       return +{ __scalar_ref__ => $$data };
+    } elsif ($ref eq 'GLOB') {
+      return +{ __glob_ref__ => $self->_local_object_to_id(
+        Object::Remote::GlobContainer->new(handle => $data)
+      ) };
     } else {
       die "Can't collapse reftype $ref";
     }
