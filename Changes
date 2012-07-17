@@ -1,3 +1,4 @@
+  - allow loading of classes and packages from __DATA__
   - allow transfer of scalar references
 
 0.001001 - 2012-07-12

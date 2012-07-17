@@ -14,6 +14,11 @@ sub _build_dir_list {
 
 sub source_for {
   my ($self, $module) = @_;
+  if (my $find = Object::Remote::FromData->can('find_module')) {
+    if (my $source = $find->($module)) {
+      return $source;
+    }
+  }
   my ($found) = first {  -f $_ }
                   map File::Spec->catfile($_, $module),
                     @{$self->dir_list};
