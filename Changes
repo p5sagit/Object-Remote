@@ -1,3 +1,5 @@
+  - start::, maybe::start:: and next::
+  - automatic prompting for sudo passwords
   - allow transfer of glob references
   - allow loading of classes and packages from __DATA__
   - allow transfer of scalar references
