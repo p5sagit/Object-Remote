@@ -1,20 +1,32 @@
 package Object::Remote::Connector::LocalSudo;
 
 use Symbol qw(gensym);
+use Module::Runtime qw(use_module);
 use IPC::Open3;
 use Moo;
 
 extends 'Object::Remote::Connector::Local';
 
-has password_callback => (is => 'ro');
+has target_user => (is => 'ro', required => 1);
+
+has password_callback => (is => 'lazy');
+
+sub _build_password_callback {
+  my ($self) = @_;
+  my $pw_prompt = use_module('Object::Remote::Prompt')->can('prompt_pw');
+  my $user = $self->target_user;
+  return sub {
+    $pw_prompt->("sudo password for ${user}", undef, { cache => 1 })
+  }
+}
 
 sub _sudo_perl_command {
-  my ($self, $target_user) = @_;
+  my ($self) = @_;
   return
-    'sudo', '-S', '-u', $target_user, '-p', "[sudo] password please\n",
+    'sudo', '-S', '-u', $self->target_user, '-p', "[sudo] password please\n",
     'perl', '-MPOSIX=dup2',
             '-e', 'print STDERR "GO\n"; exec(@ARGV);',
-    $self->_perl_command($target_user);
+    $self->_perl_command($self->target_user);
 }
 
 sub _start_perl {
@@ -70,7 +82,7 @@ push @Object::Remote::Connection::Guess, sub {
   for ($_[0]) {
     # username followed by @
     if (defined and !ref and /^ ([^\@]*?) \@ $/x) {
-      return __PACKAGE__->new->connect($1);
+      return __PACKAGE__->new(target_user => $1)->connect;
     }
   }
   return;

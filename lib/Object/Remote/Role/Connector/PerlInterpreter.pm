@@ -26,6 +26,8 @@ around connect => sub {
     class => 'Object::Remote::ModuleLoader',
     args => { module_sender => $self->module_sender }
   )->disarm_free;
+  require Object::Remote::Prompt;
+  Object::Remote::Prompt::maybe_set_prompt_command_on($conn);
   return $conn;
 };
 
