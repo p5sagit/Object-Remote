@@ -21,28 +21,28 @@ has send_to_fh => (
   trigger => sub { $_[1]->autoflush(1) },
 );
 
-has receive_from_fh => (
+has read_channel => (
   is => 'ro', required => 1,
   trigger => sub {
-    my ($self, $fh) = @_;
+    my ($self, $ch) = @_;
     weaken($self);
-    Object::Remote->current_loop
-                  ->watch_io(
-                      handle => $fh,
-                      on_read_ready => sub { $self->_receive_data_from($fh) }
-                    );
+    $ch->on_line_call(sub { $self->_receive(@_) });
+    $ch->on_close_call(sub { $self->on_close->done(@_) });
   },
 );
 
-has on_close => (is => 'rw', default => sub { CPS::Future->new });
+has on_close => (
+  is => 'ro', default => sub { CPS::Future->new },
+  trigger => sub { 
+    my ($self, $f) = @_;
+    weaken($self);
+    $f->on_done(sub {
+      $self->_fail_outstanding("Connection lost: ".($f->get)[0]);
+    });
+  }
+);
 
 has child_pid => (is => 'ro');
-
-has ready_future => (is => 'lazy');
-
-sub _build_ready_future { CPS::Future->new }
-
-has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 
 has local_objects_by_id => (
   is => 'ro', default => sub { {} },
@@ -55,6 +55,14 @@ has remote_objects_by_id => (
 );
 
 has outstanding_futures => (is => 'ro', default => sub { {} });
+
+sub _fail_outstanding {
+  my ($self, $error) = @_;
+  my $outstanding = $self->outstanding_futures;
+  $_->fail($error) for values %$outstanding;
+  %$outstanding = ();
+  return;
+}
 
 has _json => (
   is => 'lazy',
@@ -165,11 +173,6 @@ sub register_remote {
   return $remote;
 }
 
-sub await_ready {
-  my ($self) = @_;
-  await_future($self->ready_future);
-}
-
 sub send_free {
   my ($self, $id) = @_;
   delete $self->remote_objects_by_id->{$id};
@@ -206,8 +209,6 @@ sub send_discard {
 
 sub _send {
   my ($self, $to_send) = @_;
-
-  $self->await_ready;
 
   print { $self->send_to_fh } $self->_serialize($to_send)."\n";
 }
@@ -264,36 +265,6 @@ sub _deobjectify {
   return $data; # plain scalar
 }
 
-sub _receive_data_from {
-  my ($self, $fh) = @_;
-  my $rb = $self->_receive_data_buffer;
-  my $ready = $self->ready_future->is_ready;
-  my $len = sysread($fh, $$rb, 1024, length($$rb));
-  my $err = defined($len) ? '' : ": $!";
-  if (defined($len) and $len > 0) {
-    while ($$rb =~ s/^(.*)\n//) {
-      if ($ready) {
-        $self->_receive($1);
-      } else {
-        my $line = $1;
-        die "New remote container did not send Shere - got ${line}"
-          unless $line eq "Shere";
-        $self->ready_future->done;
-      }
-    }
-  } else {
-    Object::Remote->current_loop
-                  ->unwatch_io(
-                      handle => $self->receive_from_fh,
-                      on_read_ready => 1
-                    );
-    my $outstanding = $self->outstanding_futures;
-    $_->fail("Connection lost${err}") for values %$outstanding;
-    %$outstanding = ();
-    $self->on_close->done();
-  }
-}
-
 sub _receive {
   my ($self, $flat) = @_;
   warn "$$ <<< $flat\n" if $DEBUG;
@@ -345,16 +316,6 @@ sub _invoke {
     1;
   } or do { $future->fail($@); return; };
   return;
-}
-
-sub DEMOLISH {
-  my ($self, $gd) = @_;
-  return if $gd;
-  Object::Remote->current_loop
-                ->unwatch_io(
-                    handle => $self->receive_from_fh,
-                    on_read_ready => 1
-                  );
 }
 
 1;

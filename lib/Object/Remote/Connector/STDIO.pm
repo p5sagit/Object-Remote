@@ -3,6 +3,7 @@ package Object::Remote::Connector::STDIO;
 use File::Spec;
 use IO::Handle;
 use Object::Remote::Connection;
+use Object::Remote::ReadChannel;
 use Moo;
 
 sub connect {
@@ -18,7 +19,7 @@ sub connect {
   open STDOUT, '>', File::Spec->devnull or die "Re-opening stdout: $!";
   return Object::Remote::Connection->new(
     send_to_fh => $stdout,
-    receive_from_fh => $stdin
+    read_channel => Object::Remote::ReadChannel->new(fh => $stdin)
   );
 }
 
