@@ -83,13 +83,14 @@ is($res, 'S3', 'Asynchronous code ok');
 
 is(S1S->get_s2->get_s3, 'S3', 'Sync without start');
 
-open my $fh, '<', File::Spec->devnull;
-
-Object::Remote->current_loop->watch_io(
-  handle => $fh,
-  on_read_ready => sub {
-    $S1F::C->() if defined $S1F::C;
-    $S2F::C->() if defined $S2F::C;
+Object::Remote->current_loop->watch_time(
+  after => 0.1,
+  code => sub {
+    $S1F::C->();
+    Object::Remote->current_loop->watch_time(
+      after => 0.1,
+      code => sub { $S2F::C->() }
+    );
   }
 );
 

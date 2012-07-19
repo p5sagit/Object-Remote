@@ -1,3 +1,5 @@
+  - timer support in MiniLoop
+
 0.002001 - 2012-07-18
   - start::, maybe::start:: and next::
   - automatic prompting for sudo passwords
