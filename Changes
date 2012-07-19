@@ -1,3 +1,4 @@
+  - support Object::Remote->start::connect
   - timer support in MiniLoop
 
 0.002001 - 2012-07-18

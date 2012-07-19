@@ -8,19 +8,29 @@ use CPS::Future;
 
 our @EXPORT = qw(future await_future await_all);
 
-sub future (&) {
+sub future (&;$) {
   my $f = $_[0]->(CPS::Future->new);
-  return $f if ((caller(1)||'') eq 'start');
+  return $f if ((caller(1+($_[1]||0))||'') eq 'start');
   await_future($f);
 }
+
+our @await;
 
 sub await_future {
   my $f = shift;
   return $f if $f->is_ready;
   require Object::Remote;
   my $loop = Object::Remote->current_loop;
-  $f->on_ready(sub { $loop->stop });
-  $loop->run;
+  {
+    local @await = (@await, $f);
+    $f->on_ready(sub {
+      $loop->stop if $f == $await[-1]
+    });
+    $loop->run;
+  }
+  if (@await and $await[-1]->is_ready) {
+    $loop->stop;
+  }
   return wantarray ? $f->get : ($f->get)[0];
 }
 
@@ -30,6 +40,8 @@ sub await_all {
 }
 
 package start;
+
+our $start = sub { my ($obj, $call) = (shift, shift); $obj->$call(@_); };
 
 sub AUTOLOAD {
   my $invocant = shift;
@@ -46,6 +58,17 @@ sub AUTOLOAD {
     return $f;
   }
   return $res;
+}
+
+package maybe;
+
+sub start {
+  my ($obj, $call) = (shift, shift);
+  if ((caller(1)||'') eq 'start') {
+    $obj->$start::start($call => @_);
+  } else {
+    $obj->$call(@_);
+  }
 }
 
 package maybe::start;
