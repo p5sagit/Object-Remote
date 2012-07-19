@@ -25,7 +25,7 @@ sub await_future {
 }
 
 sub await_all {
-  await_future(CPS::Future->needs_all(@_));
+  await_future(CPS::Future->wait_all(@_));
   map $_->get, @_;
 }
 
