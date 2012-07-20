@@ -20,13 +20,15 @@ sub _build_password_callback {
   }
 }
 
-sub _sudo_perl_command {
+has sudo_perl_command => (is => 'lazy');
+
+sub _build_sudo_perl_command {
   my ($self) = @_;
   return
     'sudo', '-S', '-u', $self->target_user, '-p', "[sudo] password please\n",
     'perl', '-MPOSIX=dup2',
             '-e', 'print STDERR "GO\n"; exec(@ARGV);',
-    $self->_perl_command($self->target_user);
+    $self->perl_command;
 }
 
 sub _start_perl {
@@ -36,7 +38,7 @@ sub _start_perl {
     my $foreign_stdin,
     my $foreign_stdout,
     $sudo_stderr,
-    $self->_sudo_perl_command(@_)
+    @{$self->sudo_perl_command}
   ) or die "open3 failed: $!";
   chomp(my $line = <$sudo_stderr>);
   if ($line eq "GO") {

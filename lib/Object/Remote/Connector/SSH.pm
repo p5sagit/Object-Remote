@@ -8,10 +8,14 @@ with 'Object::Remote::Role::Connector::PerlInterpreter';
 
 has ssh_to => (is => 'ro', required => 1);
 
-around _perl_command => sub {
-  my ($orig, $self) = @_;
-  return 'ssh', '-A', $self->ssh_to, $self->$orig;
-};
+has ssh_perl_command => (is => 'lazy');
+
+sub _build_ssh_perl_command {
+  my ($self) = @_;
+  return [ 'ssh', '-A', $self->ssh_to, @{$self->perl_command} ];
+}
+
+sub final_perl_command { shift->ssh_perl_command }
 
 no warnings 'once';
 

@@ -6,6 +6,8 @@ use Moo::Role;
 
 requires '_open2_for';
 
+has timeout => (is => 'ro', default => sub { { after => 5 } });
+
 sub connect {
   my $self = shift;
   my ($send_to_fh, $receive_from_fh, $child_pid) = $self->_open2_for(@_);
@@ -34,7 +36,7 @@ sub connect {
     });
     Object::Remote->current_loop
                   ->watch_time(
-                      after => 5,
+                      %{$self->timeout},
                       code => sub {
                         $f->fail("Connection timed out") unless $f->is_ready;
                         undef($channel);

@@ -19,6 +19,10 @@ sub _build_module_sender {
   return $hook ? $hook->sender : Object::Remote::ModuleSender->new;
 }
 
+has perl_command => (is => 'lazy');
+
+sub _build_perl_command { [ 'perl', '-' ] }
+
 around connect => sub {
   my ($orig, $self) = (shift, shift);
   my $f = $self->$start::start($orig => @_);
@@ -37,14 +41,14 @@ around connect => sub {
   } 2;
 };
 
-sub _perl_command { 'perl', '-' }
+sub final_perl_command { shift->perl_command }
 
 sub _start_perl {
   my $self = shift;
   my $pid = open2(
     my $foreign_stdout,
     my $foreign_stdin,
-    $self->_perl_command(@_),
+    @{$self->final_perl_command},
   ) or die "Failed to run perl at '$_[0]': $!";
   return ($foreign_stdin, $foreign_stdout, $pid);
 }

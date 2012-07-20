@@ -43,6 +43,7 @@ sub watch_io {
     $self->_write_select->add($fh);
     $self->_write_watches->{$fh} = $cb;
   }
+  return;
 }
 
 sub unwatch_io {
