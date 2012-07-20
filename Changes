@@ -1,3 +1,4 @@
+  - timeouts for connection setup
   - support Object::Remote->start::connect
   - timer support in MiniLoop
 
