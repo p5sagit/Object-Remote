@@ -4,7 +4,7 @@ use Object::Remote::MiniLoop;
 use Object::Remote::Handle;
 use Module::Runtime qw(use_module);
 
-our $VERSION = '0.002001'; # 0.2.1
+our $VERSION = '0.002002'; # 0.2.2
 
 sub new::on {
   my ($class, $on, @args) = @_;

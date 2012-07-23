@@ -6,10 +6,9 @@ use Object::Remote;
 
 my $c = Object::Remote::Connector::UNIX->new->connect($ARGV[0]);
 
-my $cch = $c->new_class_call_handler;
+$c->register_class_class_handler;
 
-$c->new_remote(id => 'master')->register_slave(
-  class_call_handler => $cch,
+$c->remote_object(id => 'master')->register_slave(
   pid => $$,
   argv => \@ARGV
 )->run;
