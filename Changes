@@ -1,3 +1,4 @@
+0.002002 - 2012-07-23
   - timeouts for connection setup
   - support Object::Remote->start::connect
   - timer support in MiniLoop
