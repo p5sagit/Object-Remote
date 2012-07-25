@@ -1,3 +1,4 @@
+  - Add Class::C3 as a dependency since it's required for 5.8 remote nodes
   - SSH options as a separate argument for the SSH connector
 
 0.002002 - 2012-07-23
