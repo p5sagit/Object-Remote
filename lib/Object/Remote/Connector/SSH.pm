@@ -10,9 +10,17 @@ has ssh_to => (is => 'ro', required => 1);
 
 has ssh_perl_command => (is => 'lazy');
 
+has ssh_options => (is => 'ro', default => sub { [ '-A' ] });
+
+has ssh_command => (is => 'ro', default => sub { 'ssh' });
+
 sub _build_ssh_perl_command {
   my ($self) = @_;
-  return [ 'ssh', '-A', $self->ssh_to, @{$self->perl_command} ];
+  return [
+    do { my $c = $self->ssh_command; ref($c) ? @$c : $c },
+    @{$self->ssh_options}, $self->ssh_to,
+    @{$self->perl_command}
+  ];
 }
 
 sub final_perl_command { shift->ssh_perl_command }

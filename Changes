@@ -1,3 +1,5 @@
+  - SSH options as a separate argument for the SSH connector
+
 0.002002 - 2012-07-23
   - timeouts for connection setup
   - support Object::Remote->start::connect
