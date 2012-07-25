@@ -1,3 +1,4 @@
+  - Increase default timeout to 10 seconds
   - Add Class::C3 as a dependency since it's required for 5.8 remote nodes
   - SSH options as a separate argument for the SSH connector
 

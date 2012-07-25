@@ -6,7 +6,7 @@ use Moo::Role;
 
 requires '_open2_for';
 
-has timeout => (is => 'ro', default => sub { { after => 5 } });
+has timeout => (is => 'ro', default => sub { { after => 10 } });
 
 sub connect {
   my $self = shift;
