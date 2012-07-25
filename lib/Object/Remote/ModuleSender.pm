@@ -8,8 +8,10 @@ use Moo;
 has dir_list => (is => 'lazy');
 
 sub _build_dir_list {
-  my %core = map +($_ => 1), @Config{qw(privlibexp archlibexp)};
-  [ grep !/$Config{archname}$/, grep !$core{$_}, @INC ];
+  my %core = map +($_ => 1), grep $_, @Config{
+    qw(privlibexp archlibexp vendorarchexp sitearchexp)
+  };
+  [ grep !/\Q$Config{archname}/, grep !/\Q$Config{myarchname}/, grep !$core{$_}, @INC ];
 }
 
 sub source_for {
