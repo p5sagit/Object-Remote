@@ -93,6 +93,7 @@ END
   $text .= "ENDFAT\n";
   $text .= <<'END';
 eval $Object::Remote::FatNode::DATA;
+die $@ if $@;
 END
   $text .= "__END__\n";
   return $text;

@@ -1,3 +1,5 @@
+  - Propagate errors from FatNode code
+
 0.002003 - 2012-07-25
   - Exclude vendorarch and sitearch from FatNode and ModuleSender
   - Increase default timeout to 10 seconds
