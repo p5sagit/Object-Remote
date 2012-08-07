@@ -13,6 +13,7 @@ WriteMakefile(
     'JSON::PP' => 0,
     'CPS::Future' => 0,
     'Class::C3' => 0, # required to fatpack Moo
+    'IO::Prompter' => 0,
   },
   EXE_FILES => [
     'bin/object-remote-node',
