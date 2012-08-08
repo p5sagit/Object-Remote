@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 (do 'maint/Makefile.PL.include' or die $@) unless -f 'META.yml';
 
 WriteMakefile(
-  NAME => 'Object-Remote',
+  NAME => 'Object::Remote',
   VERSION_FROM => 'lib/Object/Remote.pm',
   PREREQ_PM => {
     Moo => 0,
