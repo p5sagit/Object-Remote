@@ -1,5 +1,6 @@
   - Propagate errors from FatNode code
   - Fall back to core non-arch modules in FatNode
+  - Fix module name in Makefile.PL
 
 0.002003 - 2012-07-25
   - Exclude vendorarch and sitearch from FatNode and ModuleSender
