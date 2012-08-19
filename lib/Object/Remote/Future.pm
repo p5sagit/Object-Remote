@@ -8,6 +8,8 @@ use CPS::Future;
 
 our @EXPORT = qw(future await_future await_all);
 
+sub _log { printf "[%s] %s\n", scalar(localtime), join '', @_ }
+
 sub future (&;$) {
   my $f = $_[0]->(CPS::Future->new);
   return $f if ((caller(1+($_[1]||0))||'') eq 'start');
@@ -18,6 +20,7 @@ our @await;
 
 sub await_future {
   my $f = shift;
+  _log(sprintf "got $f: [%s]", $f->is_ready);
   return $f if $f->is_ready;
   require Object::Remote;
   my $loop = Object::Remote->current_loop;
