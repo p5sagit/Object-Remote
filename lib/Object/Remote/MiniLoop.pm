@@ -16,8 +16,6 @@ has _write_select => (is => 'ro', default => sub { IO::Select->new });
 
 has _timers => (is => 'ro', default => sub { [] });
 
-sub _log { shift; printf "[%s] %s\n", scalar(localtime), join '', @_ }
-
 sub pass_watches_to {
   my ($self, $new_loop) = @_;
   foreach my $fh ($self->_read_select->handles) {
@@ -92,7 +90,6 @@ sub loop_once {
   # differentiate between an error and a timeout.
   #   -- no, love, mst.
   foreach my $fh (@$readable) {
-    $self->_log("got a readable: $fh");
     $read->{$fh}() if $read->{$fh};
   }
   foreach my $fh (@$writeable) {

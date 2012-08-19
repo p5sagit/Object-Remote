@@ -25,6 +25,8 @@ has on_line_call => (is => 'rw');
 
 has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 
+sub _log { shift; printf "[%s] %s\n", scalar(localtime), join '', @_ }
+
 sub _receive_data_from {
   my ($self, $fh) = @_;
   my $rb = $self->_receive_data_buffer;
@@ -41,6 +43,7 @@ sub _receive_data_from {
                       on_read_ready => 1
                     );
     $self->on_close_call->($err);
+    $self->_log(sprintf "!!!!!Closing %s due to $err!!!!!\n\n\n\n\n", $self->fh);
   }
 }
 
