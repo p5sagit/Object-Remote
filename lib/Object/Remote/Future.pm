@@ -26,6 +26,7 @@ sub await_future {
     $f->on_ready(sub {
       $loop->stop if $f == $await[-1]
     });
+    warn "running loop for ${f} [@{await}]";
     $loop->run;
   }
   if (@await and $await[-1]->is_ready) {
@@ -35,7 +36,11 @@ sub await_future {
 }
 
 sub await_all {
-  await_future(CPS::Future->wait_all(@_));
+  my @subs = @_;
+  for my $sub (@subs) {
+    warn "awaiting ${sub}";
+    await_future(CPS::Future->wait_all($sub));
+  }
   map $_->get, @_;
 }
 
