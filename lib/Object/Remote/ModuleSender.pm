@@ -11,7 +11,7 @@ sub _build_dir_list {
   my %core = map +($_ => 1), grep $_, @Config{
     qw(privlibexp archlibexp vendorarchexp sitearchexp)
   };
-  [ grep !/\Q$Config{archname}/, grep !/\Q$Config{myarchname}/, grep !$core{$_}, @INC ];
+  [ grep !$core{$_}, @INC ];
 }
 
 sub source_for {
