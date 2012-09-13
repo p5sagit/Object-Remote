@@ -5,6 +5,7 @@ use IO::Handle;
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
 use Object::Remote::Future;
+use Object::Remote::Logging qw( :log );
 use Scalar::Util qw(blessed);
 use Moo::Role;
 
@@ -29,6 +30,8 @@ around connect => sub {
   return future {
     $f->on_done(sub {
       my ($conn) = $f->get;
+      $conn->remote_sub('Object::Remote::Logging::init_node')
+         ->(Object::Remote::Logging->get_router);
       Object::Remote::Handle->new(
         connection => $conn,
         class => 'Object::Remote::ModuleLoader',

@@ -18,13 +18,18 @@ BEGIN {
 
 use Moo;
 
+use Object::Remote::Logging qw( :log );
+
 has module_sender => (is => 'ro', required => 1);
 
 has inc_hook => (is => 'lazy');
 
 sub _build_inc_hook {
   my ($self) = @_;
-  Object::Remote::ModuleLoader::Hook->new(sender => $self->module_sender);
+  log_debug { "Constructing module builder hook" };
+  #TODO why didn't log_trace return the argument? 
+  logS_trace { "Done constructing module builder hook" }
+    Object::Remote::ModuleLoader::Hook->new(sender => $self->module_sender);
 }
 
 sub BUILD { shift->enable }

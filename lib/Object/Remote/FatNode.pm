@@ -40,10 +40,11 @@ chomp(my @inc = qx($command));
 
 my %mods = reverse @inc;
 
+#TODO oi this isn't right yet
 my @non_core_non_arch = grep +(
   not (
     /^\Q$Config{privlibexp}/ or /^\Q$Config{archlibexp}/
-    or /^\Q$Config{vendorarchexp}/ or /^\Q$Config{sitearchexp}/
+    #or /^\Q$Config{vendorarchexp}/ or /^\Q$Config{sitearchexp}/
   )
 ), keys %mods;
 
