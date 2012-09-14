@@ -31,7 +31,7 @@ around connect => sub {
     $f->on_done(sub {
       my ($conn) = $f->get;
       $conn->remote_sub('Object::Remote::Logging::init_node')
-         ->(Object::Remote::Logging->get_router);
+         ->(Object::Remote::Logging->arg_router);
       Object::Remote::Handle->new(
         connection => $conn,
         class => 'Object::Remote::ModuleLoader',
