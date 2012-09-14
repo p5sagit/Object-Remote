@@ -2,14 +2,14 @@ package Object::Remote::Logging;
 
 use strictures 1;
 
-use Log::Contextual::Routed qw( :log );
-use base qw(Log::Contextual::Routed); 
+use Log::Contextual qw( :log );
+use Object::Remote::LogRouter;
 
-sub get_parent_router { $_[0]->SUPER::get_parent_router }
+use base qw(Log::Contextual); 
 
-use Data::Dumper; 
+sub arg_router { return $_[1] if defined $_[1]; our $Router_Instance ||= Object::Remote::LogRouter->new }
 
-sub init_node { my $n = `hostname`; chomp($n); $_[0]->add_child_router("[node $n]", __PACKAGE__->get_root_router) }
+sub init_node { my $n = `hostname`; chomp($n); $_[0]->add_child_router("[node $n]", __PACKAGE__->arg_router) }
 
 1;
 
