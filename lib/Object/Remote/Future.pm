@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use base qw(Exporter);
 
+use Object::Remote::Logging qw( :log );
+
 use CPS::Future;
 
 our @EXPORT = qw(future await_future await_all);

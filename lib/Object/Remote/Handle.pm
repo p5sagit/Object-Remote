@@ -3,6 +3,10 @@ package Object::Remote::Handle;
 use Object::Remote::Proxy;
 use Scalar::Util qw(weaken blessed);
 use Object::Remote::Future;
+#must find way to exclude certain log events
+#from being forwarded - log events generated in
+#response to log events cause exploding
+#use Object::Remote::Logging qw(:log);
 use Module::Runtime qw(use_module);
 use Moo;
 
@@ -27,6 +31,7 @@ sub proxy {
 
 sub BUILD {
   my ($self, $args) = @_;
+#  log_debug { "constructing instance of " . ref($self) };
   if ($self->id) {
     $self->disarm_free;
   } else {
@@ -41,6 +46,7 @@ sub BUILD {
       )->{remote}->disarm_free->id
     );
   }
+#  log_trace { "finished constructing " . ref($self) };
   $self->connection->register_remote($self);
 }
 
