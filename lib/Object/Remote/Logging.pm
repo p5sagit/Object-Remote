@@ -40,18 +40,22 @@ sub init_logging_stderr {
     our $Log_Output = Object::Remote::LogDestination->new(
         logger => Log::Contextual::SimpleLogger->new({ 
             levels_upto => $Log_Level,
-            coderef => sub { warn "[$hostname $$] ", @_ },
+            coderef => sub { 
+                my @t = localtime();
+                my $time = sprintf("%0.2i:%0.2i:%0.2i", $t[2], $t[1], $t[0]);
+                warn "[$hostname $$] $time ", @_ 
+            },
         })
     );
     $Log_Output->connect($class->arg_router);
 }
 
 sub init_logging_forwarding {
-    my ($class, $remote_parent) = @_; 
-    chomp(my $host = `hostname`);
-    $class->arg_router->description("$$ $host");
-    $class->arg_router->parent_router($remote_parent);
-    $remote_parent->add_child_router($class->arg_router);
+#    my ($class, $remote_parent) = @_; 
+#    chomp(my $host = `hostname`);
+#    $class->arg_router->description("$$ $host");
+#    $class->arg_router->parent_router($remote_parent);
+#    $remote_parent->add_child_router($class->arg_router);
 }
 
 1;
