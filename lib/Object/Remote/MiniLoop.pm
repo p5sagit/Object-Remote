@@ -90,7 +90,7 @@ sub unwatch_time {
 sub _next_timer_expires_delay {
   my ($self) = @_;
   my $timers = $self->_timers;
-  #undef means no timeout, only returns
+  #undef means no timeout, select only returns
   #when data is ready - when the system
   #deadlocks the chatter from the timeout in
   #select clogs up the logs
@@ -103,11 +103,11 @@ sub _next_timer_expires_delay {
   
   if ($duration < 0) {
     $duration = 0; 
-  } elsif (! defined($delay_max)) {
-    $duration = undef; 
-  } elsif ($duration > $delay_max) {
-    $duration = $delay_max; 
+  } elsif (defined $delay_max && $duration > $delay_max) {
+    $duration = $delay_max;
   }
+  
+  log_trace { "returning $duration as select() timeout period" }
     
   return $duration; 
 }
