@@ -11,51 +11,51 @@ use Carp qw(cluck);
 use base qw(Log::Contextual); 
 
 sub arg_router {
-    return $_[1] if defined $_[1]; 
-    our $Router_Instance;
+  return $_[1] if defined $_[1]; 
+  our $Router_Instance;
  
-    return $Router_Instance if defined $Router_Instance; 
+  return $Router_Instance if defined $Router_Instance; 
  
-    $Router_Instance = Object::Remote::LogRouter->new(
-        description => $_[0],
-    );
+  $Router_Instance = Object::Remote::LogRouter->new(
+    description => $_[0],
+  );
 }
 
 sub init_logging {
-    my ($class) = @_; 
-    our $Did_Init;
+  my ($class) = @_; 
+  our $Did_Init;
     
-    return if $Did_Init;
-    $Did_Init = 1; 
+  return if $Did_Init;
+  $Did_Init = 1; 
     
-    if ($ENV{OBJECT_REMOTE_LOG_LEVEL}) {
-        $class->init_logging_stderr($ENV{OBJECT_REMOTE_LOG_LEVEL});
-    }
+  if ($ENV{OBJECT_REMOTE_LOG_LEVEL}) {
+    $class->init_logging_stderr($ENV{OBJECT_REMOTE_LOG_LEVEL});
+  }
 }
 
 sub init_logging_stderr {
-    my ($class, $level) = @_;
-    our $Log_Level = $level;
-    chomp(my $hostname = `hostname`);
-    our $Log_Output = Object::Remote::LogDestination->new(
-        logger => Log::Contextual::SimpleLogger->new({ 
-            levels_upto => $Log_Level,
-            coderef => sub { 
-                my @t = localtime();
-                my $time = sprintf("%0.2i:%0.2i:%0.2i", $t[2], $t[1], $t[0]);
-                warn "[$hostname $$] $time ", @_ 
-            },
-        })
-    );
-    $Log_Output->connect($class->arg_router);
+  my ($class, $level) = @_;
+  our $Log_Level = $level;
+  chomp(my $hostname = `hostname`);
+  our $Log_Output = Object::Remote::LogDestination->new(
+    logger => Log::Contextual::SimpleLogger->new({ 
+      levels_upto => $Log_Level,
+      coderef => sub { 
+        my @t = localtime();
+        my $time = sprintf("%0.2i:%0.2i:%0.2i", $t[2], $t[1], $t[0]);
+        warn "[$hostname $$] $time ", @_ 
+      },
+    })
+  );
+  $Log_Output->connect($class->arg_router);
 }
 
 sub init_logging_forwarding {
-#    my ($class, $remote_parent) = @_; 
-#    chomp(my $host = `hostname`);
-#    $class->arg_router->description("$$ $host");
-#    $class->arg_router->parent_router($remote_parent);
-#    $remote_parent->add_child_router($class->arg_router);
+#  my ($class, $remote_parent) = @_; 
+#  chomp(my $host = `hostname`);
+#  $class->arg_router->description("$$ $host");
+#  $class->arg_router->parent_router($remote_parent);
+#  $remote_parent->add_child_router($class->arg_router);
 }
 
 1;
