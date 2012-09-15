@@ -2,13 +2,19 @@ package Object::Remote;
 
 use Object::Remote::MiniLoop;
 use Object::Remote::Handle;
+use Object::Remote::Logging qw( :log );
 use Module::Runtime qw(use_module);
 
 our $VERSION = '0.002003'; # 0.2.3
 
+BEGIN { 
+    Object::Remote::Logging->init_logging; 
+}
+
 sub new::on {
   my ($class, $on, @args) = @_;
   my $conn = __PACKAGE__->connect($on);
+  log_debug { sprintf("constructing instance of $class on connection for child pid of %i", $conn->child_pid) };
   return $conn->remote_object(class => $class, args => \@args);
 }
 

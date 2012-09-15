@@ -6,6 +6,7 @@ use Scalar::Util qw(blessed);
 with 'Object::Remote::Role::LogForwarder';
 
 has subscriptions => ( is => 'ro', required => 1, default => sub { [] } );
+has description => ( is => 'rw', required => 1 );
 
 sub before_import { }
 sub after_import {   
