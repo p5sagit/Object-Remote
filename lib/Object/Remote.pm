@@ -14,13 +14,14 @@ BEGIN {
 sub new::on {
   my ($class, $on, @args) = @_;
   my $conn = __PACKAGE__->connect($on);
-  log_debug { sprintf("constructing instance of $class on connection for child pid of %i", $conn->child_pid) };
+  log_trace { sprintf("constructing instance of $class on connection for child pid of %i", $conn->child_pid) };
   return $conn->remote_object(class => $class, args => \@args);
 }
 
 sub can::on {
   my ($class, $on, $name) = @_;
   my $conn = __PACKAGE__->connect($on);
+  log_trace { "Invoking remote \$class->can('$name')" };
   return $conn->remote_sub(join('::', $class, $name));
 }
 

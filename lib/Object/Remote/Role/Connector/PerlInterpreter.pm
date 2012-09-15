@@ -56,10 +56,13 @@ sub _start_perl {
   return ($foreign_stdin, $foreign_stdout, $pid);
 }
 
+#TODO open2() forks off a child and I have not been able to locate
+#a mechanism for reaping dead children so they don't become zombies
 sub _open2_for {
   my $self = shift;
   my ($foreign_stdin, $foreign_stdout, $pid) = $self->_start_perl(@_);
   my $to_send = $self->fatnode_text;
+  log_debug { my $len = length($to_send); "Sending contents of fat node to remote node; size is '$len' characters"  };
   Object::Remote->current_loop
                 ->watch_io(
                     handle => $foreign_stdin,
@@ -71,11 +74,14 @@ sub _open2_for {
                       # if the stdin went away, we'll never get Shere
                       # so it's not a big deal to simply give up on !defined
                       if (!defined($len) or 0 == length($to_send)) {
+                        log_trace { "Got EOF or error when writing fatnode data to filehandle, unwatching it" };
                         Object::Remote->current_loop
                                       ->unwatch_io(
                                           handle => $foreign_stdin,
                                           on_write_ready => 1
                                         );
+                      } else {
+                          log_trace { "Sent $len bytes of fatnode data to remote side" };
                       }
                     }
                   );

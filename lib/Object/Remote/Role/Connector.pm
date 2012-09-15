@@ -2,6 +2,7 @@ package Object::Remote::Role::Connector;
 
 use Module::Runtime qw(use_module);
 use Object::Remote::Future;
+use Object::Remote::Logging qw(:log :dlog );
 use Moo::Role;
 
 requires '_open2_for';
@@ -10,14 +11,17 @@ has timeout => (is => 'ro', default => sub { { after => 10 } });
 
 sub connect {
   my $self = shift;
+  Dlog_debug { "Perparing to create connection with args of: $_" } @_;
   my ($send_to_fh, $receive_from_fh, $child_pid) = $self->_open2_for(@_);
   my $channel = use_module('Object::Remote::ReadChannel')->new(
     fh => $receive_from_fh
   );
   return future {
+    log_trace { "Initializing connection for child pid '$child_pid'" };
     my $f = shift;
     $channel->on_line_call(sub {
       if ($_[0] eq "Shere") {
+        log_trace { "Received 'Shere' from child pid '$child_pid'; setting done handler to create connection" };
         $f->done(
           use_module('Object::Remote::Connection')->new(
             send_to_fh => $send_to_fh,
@@ -26,6 +30,7 @@ sub connect {
           )
         );
       } else {
+        log_warn { "'Shere' was not found in connection data for child pid '$child_pid'" };
         $f->fail("Expected Shere from remote but received: $_[0]");
       }
       undef($channel);
@@ -34,14 +39,25 @@ sub connect {
       $f->fail("Channel closed without seeing Shere: $_[0]");
       undef($channel);
     });
+    log_trace { "initialized events on channel for child pid '$child_pid'; creating timeout" };
     Object::Remote->current_loop
                   ->watch_time(
                       %{$self->timeout},
                       code => sub {
-                        $f->fail("Connection timed out") unless $f->is_ready;
+#                        log_warn { "Connection timed out for child pid '$child_pid'" };
+#                        $f->fail("Connection timed out") unless $f->is_ready;
+#                        undef($channel);
+                        Dlog_trace { "Connection timeout timer has fired for child pid '$child_pid'; is_ready: $_" } $f->is_ready;
+                        unless($f->is_ready) {
+                            log_warn { "Connection with child pid '$child_pid' has timed out" };
+                            $f->fail("Connection timed out") unless $f->is_ready;                    
+                        }
+                        #TODO hrm was this supposed to be conditional on the is_ready ? 
+                        #a connection is only good for timeout seconds?
                         undef($channel);
                       }
                     );
+    log_trace { "connection for child pid '$child_pid' has been initialized" }; 
     $f;
   }
 }
