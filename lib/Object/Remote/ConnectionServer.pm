@@ -57,6 +57,9 @@ sub _listen_ready {
   )->${\$self->connection_callback};
   $f->on_ready(sub { undef($c) });
   $c->ready_future->done;
+  #TODO see if this runs on the controller or the remote node 
+  #if this runs on the controller a poorly behaved remote node
+  #could cause the print() to block but it's a very low probability
   print $new "Shere\n" or die "Couldn't send to new socket: $!";
   return $c;
 }
