@@ -20,23 +20,32 @@ our @await;
 
 sub await_future {
   my $f = shift;
+  log_trace { my $ir = $f->is_ready; "await_future() invoked; is_ready: $ir" };
   return $f if $f->is_ready;
   require Object::Remote;
   my $loop = Object::Remote->current_loop;
   {
     local @await = (@await, $f);
     $f->on_ready(sub {
-      $loop->stop if $f == $await[-1]
+      log_trace { my $l = @await; "future has become ready, length of \@await: '$l'" };
+      if ($f == $await[-1]) {
+        log_debug { "This future is not waiting on anything so calling stop on the run loop" };
+        $loop->stop;         
+      }
     });
+    log_debug { "Starting run loop for newly created future" };
     $loop->run;
   }
   if (@await and $await[-1]->is_ready) {
+    log_debug { "Last future in await list was ready, stopping run loop" };
     $loop->stop;
   }
+  log_trace { "await_future() returning" };
   return wantarray ? $f->get : ($f->get)[0];
 }
 
 sub await_all {
+  log_trace { my $l = @_; "await_all() invoked with '$l' futures to wait on" };
   await_future(CPS::Future->wait_all(@_));
   map $_->get, @_;
 }

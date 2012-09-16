@@ -6,6 +6,7 @@ use Object::Remote::Handle;
 use Object::Remote::CodeContainer;
 use Object::Remote::GlobProxy;
 use Object::Remote::GlobContainer;
+use Object::Remote::Logging qw (:log :dlog);
 use Object::Remote;
 use Symbol;
 use IO::Handle;
@@ -139,6 +140,7 @@ sub remote_object {
 
 sub connect {
   my ($self, $to) = @_;
+  Dlog_debug { "Creating connection to remote node $_" } $to;
   return await_future(
     $self->send_class_call(0, 'Object::Remote', connect => $to)
   );
@@ -147,11 +149,13 @@ sub connect {
 sub remote_sub {
   my ($self, $sub) = @_;
   my ($pkg, $name) = $sub =~ m/^(.*)::([^:]+)$/;
+  log_debug { "Invoking remote sub '$sub'" };
   return await_future($self->send_class_call(0, $pkg, can => $name));
 }
 
 sub send_class_call {
   my ($self, $ctx, @call) = @_;
+  log_trace { "Sending a non-blocking class call" };
   $self->send(call => class_call_handler => $ctx => call => @call);
 }
 
@@ -175,12 +179,14 @@ sub new_class_call_handler {
 
 sub register_remote {
   my ($self, $remote) = @_;
+  log_trace { my $i = $remote->id; "Registered a remote object with id of '$i'" };
   weaken($self->remote_objects_by_id->{$remote->id} = $remote);
   return $remote;
 }
 
 sub send_free {
   my ($self, $id) = @_;
+  log_debug { "sending request to free object '$id'" };
   delete $self->remote_objects_by_id->{$id};
   $self->_send([ free => $id ]);
 }
@@ -215,8 +221,16 @@ sub send_discard {
 
 sub _send {
   my ($self, $to_send) = @_;
-
-  print { $self->send_to_fh } $self->_serialize($to_send)."\n";
+  my $fh = $self->send_to_fh;
+  my $serialized = $self->_serialize($to_send)."\n";
+  Dlog_debug { my $l = length($serialized); "Sending '$l' characters of serialized data to $_" } $fh;
+  #TODO this is very risky for deadlocks unless it's set to non-blocking and then with out extra
+  #logic it could easily do short-writes to the remote side
+  my $ret = print $fh $serialized;
+  Dlog_trace { my $r = defined $ret ? $ret : 'undef'; "print() returned $r with $_" } $fh;
+  #TODO hrm reason print's return value was ignored?
+  die "could not write to filehandle: $!" unless $ret;
+  return $ret; 
 }
 
 sub _serialize {

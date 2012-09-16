@@ -37,14 +37,14 @@ sub pass_watches_to {
 sub watch_io {
   my ($self, %watch) = @_;
   my $fh = $watch{handle};
-  log_debug { my $type = ref($fh); "Adding watch for ref of type '$type'" };
+  Dlog_debug { my $type = ref($fh); "Adding IO watch for $_" } $fh;
   if (my $cb = $watch{on_read_ready}) {
-    log_trace { "IO watcher on_read_ready has been invoked" };
+    log_trace { "IO watcher is registering with select() for reading" };
     $self->_read_select->add($fh);
     $self->_read_watches->{$fh} = $cb;
   }
   if (my $cb = $watch{on_write_ready}) {
-    log_trace { "IO watcher on_write_ready has been invoked" };
+    log_trace { "IO watcher is registering with select() for writing" };
     $self->_write_select->add($fh);
     $self->_write_watches->{$fh} = $cb;
   }
@@ -54,12 +54,14 @@ sub watch_io {
 sub unwatch_io {
   my ($self, %watch) = @_;
   my $fh = $watch{handle};
-  log_debug { my $type = ref($fh); "Removing watch for ref of type '$type'" };
+  Dlog_debug { "Removing IO watch for $_" } $fh;
   if ($watch{on_read_ready}) {
+    log_trace { "IO watcher is removing read from select()" };
     $self->_read_select->remove($fh);
     delete $self->_read_watches->{$fh};
   }
   if ($watch{on_write_ready}) {
+    log_trace { "IO watcher is removing write from select()" };
     $self->_write_select->remove($fh);
     delete $self->_write_watches->{$fh};
   }
@@ -94,6 +96,7 @@ sub _next_timer_expires_delay {
   #when data is ready - when the system
   #deadlocks the chatter from the timeout in
   #select clogs up the logs
+  #TODO should make this an attribute
   my $delay_max = undef;
     
   return $delay_max unless @$timers;
@@ -107,8 +110,8 @@ sub _next_timer_expires_delay {
     $duration = $delay_max;
   }
   
-  log_trace { "returning $duration as select() timeout period" }
-    
+  #uncomment for original behavior
+  #return .5;    
   return $duration; 
 }
 
@@ -122,7 +125,22 @@ sub loop_once {
   my $wait_time = $self->_next_timer_expires_delay;
   log_debug {  sprintf("Run loop: loop_once() has been invoked by $c[1]:$c[2] with read:%i write:%i select timeout:%s",
       scalar(keys(%$read)), scalar(keys(%$write)), defined $wait_time ? $wait_time : 'indefinite' ) };
+  #TODO The docs state that select() in some instances can return a socket as ready to
+  #read data even if reading from it would block and the recomendation is to set
+  #handles used with select() as non-blocking but Perl on Windows can not set a 
+  #handle to use non-blocking IO - If Windows is not one of the operating
+  #systems where select() returns a handle that could block it would work to
+  #enable non-blocking mode only under Posix - the non-blocking sysread()
+  #logic would work unmodified for both blocking and non-blocking handles
+  #under Posix and Windows.
   my ($readable, $writeable) = IO::Select->select(
+    #TODO how come select() isn't used to identify handles with errors on them?
+    #TODO is there a specific reason for a half second maximum wait duration?
+    #The two places I've found for the runloop to be invoked don't return control
+    #to the caller until a controlling variable interrupts the loop that invokes
+    #loop_once() - is this to allow that variable to be polled and exit the
+    #run loop? If so why isn't that behavior event driven and causes select() to
+    #return? 
     $self->_read_select, $self->_write_select, undef, $wait_time
   ); 
   log_debug { 
@@ -159,6 +177,9 @@ sub loop_once {
   return;
 }
 
+#::Node and ::ConnectionServer use the want_run() / want_stop()
+#counter to cause a run-loop to execute while something is active;
+#the futures do this via a different mechanism
 sub want_run {
   my ($self) = @_;
   Dlog_debug { "Run loop: Incrimenting want_running, is now $_" }
@@ -167,7 +188,7 @@ sub want_run {
 
 sub run_while_wanted {
   my ($self) = @_;
-  log_debug { "Run loop: run_while_wanted() invoked" };
+  log_debug { my $wr = $self->{want_running}; "Run loop: run_while_wanted() invoked; want_running: $wr" };
   $self->loop_once while $self->{want_running};
   log_debug { "Run loop: run_while_wanted() completed" };
   return;
@@ -183,6 +204,11 @@ sub want_stop {
     --$self->{want_running};
 }
 
+#TODO Hypothesis: Futures invoke run() which gives that future
+#it's own localized is_running attribute - any adjustment to the
+#is_running attribute outside of that future will not effect that
+#future so each future winds up able to call run() and stop() at 
+#will with out interfering with each other 
 sub run {
   my ($self) = @_;
   log_info { "Run loop: run() invoked" };
