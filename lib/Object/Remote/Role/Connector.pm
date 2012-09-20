@@ -7,6 +7,8 @@ use Moo::Role;
 
 requires '_open2_for';
 
+#TODO return to 10 seconds after debugging
+#has timeout => (is => 'ro', default => sub { { after => 10 } });
 has timeout => (is => 'ro', default => sub { { after => 10 } });
 
 sub connect {
@@ -50,11 +52,10 @@ sub connect {
                         Dlog_trace { "Connection timeout timer has fired for child pid '$child_pid'; is_ready: $_" } $f->is_ready;
                         unless($f->is_ready) {
                             log_warn { "Connection with child pid '$child_pid' has timed out" };
-                            $f->fail("Connection timed out") unless $f->is_ready;                    
+                            $f->fail("Connection timed out") unless $f->is_ready;                                                
                         }
-                        #TODO hrm was this supposed to be conditional on the is_ready ? 
-                        #a connection is only good for timeout seconds?
                         undef($channel);
+                        
                       }
                     );
     log_trace { "connection for child pid '$child_pid' has been initialized" }; 

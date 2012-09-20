@@ -6,6 +6,8 @@ with 'Object::Remote::Role::Connector::PerlInterpreter';
 
 no warnings 'once';
 
+BEGIN {  }
+
 push @Object::Remote::Connection::Guess, sub {
   if (($_[0]||'') eq '-') { __PACKAGE__->new }
 };

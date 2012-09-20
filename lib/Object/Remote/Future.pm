@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Exporter);
 
-use Object::Remote::Logging qw( :log );
+use Object::Remote::Logging qw( :log Dlog_trace );
 
 use CPS::Future;
 
