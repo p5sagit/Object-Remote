@@ -2,7 +2,7 @@ package Object::Remote::ReadChannel;
 
 use CPS::Future;
 use Scalar::Util qw(weaken);
-use Object::Remote::Logging qw(:log);
+use Object::Remote::Logging qw(:log :dlog);
 use Moo;
 
 has fh => (
@@ -38,14 +38,13 @@ has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 #there is no actual data to read from the socket
 sub _receive_data_from {
   my ($self, $fh) = @_;
-  log_trace { "Preparing to read data" };
+  Dlog_trace { "Preparing to read data from $_" } $fh;
   #use Carp qw(cluck); cluck();
   my $rb = $self->_receive_data_buffer;
   #TODO is there a specific reason sysread() and syswrite() aren't
   #a part of ::MiniLoop? It's one spot to handle errors and other
   #logic involving filehandles
-  #TODO why are the buffers so small? BUFSIZ is usually 32768
-  my $len = sysread($fh, $$rb, 1024, length($$rb));
+  my $len = sysread($fh, $$rb, 32768, length($$rb));
   my $err = defined($len) ? '' : ": $!";
   if (defined($len) and $len > 0) {
     log_trace { "Read $len bytes of data" };

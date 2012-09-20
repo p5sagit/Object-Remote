@@ -5,7 +5,7 @@ use IO::Handle;
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
 use Object::Remote::Future;
-use Object::Remote::Logging qw( :log );
+use Object::Remote::Logging qw( :log :dlog );
 use Scalar::Util qw(blessed);
 use Moo::Role;
 
@@ -22,7 +22,13 @@ sub _build_module_sender {
 
 has perl_command => (is => 'lazy');
 
-sub _build_perl_command { [ 'perl', '-' ] }
+#TODO convert nice value into optional feature enabled by
+#setting value of attribute
+#ulimit of ~500 megs of v-ram
+#TODO only works with ssh with quotes but only works locally
+#with out quotes
+sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 500000; nice -n 15 perl -"' ] }
+#sub _build_perl_command { [ 'perl', '-' ] }
 
 around connect => sub {
   my ($orig, $self) = (shift, shift);
@@ -48,11 +54,13 @@ sub final_perl_command { shift->perl_command }
 
 sub _start_perl {
   my $self = shift;
+  Dlog_debug { "invoking connection to perl interpreter using command line: $_" } @{$self->final_perl_command};
   my $pid = open2(
     my $foreign_stdout,
     my $foreign_stdin,
     @{$self->final_perl_command},
   ) or die "Failed to run perl at '$_[0]': $!";
+  Dlog_trace { "Connection to remote side successful; remote stdin and stdout: $_" } [ $foreign_stdin, $foreign_stdout ];
   return ($foreign_stdin, $foreign_stdout, $pid);
 }
 
@@ -67,7 +75,7 @@ sub _open2_for {
                 ->watch_io(
                     handle => $foreign_stdin,
                     on_write_ready => sub {
-                      my $len = syswrite($foreign_stdin, $to_send, 4096);
+                      my $len = syswrite($foreign_stdin, $to_send, 32768);
                       if (defined $len) {
                         substr($to_send, 0, $len) = '';
                       }

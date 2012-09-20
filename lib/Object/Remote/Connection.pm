@@ -16,6 +16,11 @@ use JSON::PP qw(encode_json);
 use Moo;
 
 our $DEBUG = !!$ENV{OBJECT_REMOTE_DEBUG};
+#numbering each connection allows it to be
+#tracked along with file handles in
+#the logs
+BEGIN { our $NEXT_CONNECTION_ID = 0 }
+has _id => ( is => 'ro', required => 1, default => sub { our $NEXT_CONNECTION_ID++ } );
 
 has send_to_fh => (
   is => 'ro', required => 1,
@@ -26,6 +31,7 @@ has read_channel => (
   is => 'ro', required => 1,
   trigger => sub {
     my ($self, $ch) = @_;
+    Dlog_trace { "trigger for read_channel has been invoked for connection $_" } $self->_id;
     weaken($self);
     $ch->on_line_call(sub { $self->_receive(@_) });
     $ch->on_close_call(sub { $self->on_close->done(@_) });
@@ -34,8 +40,9 @@ has read_channel => (
 
 has on_close => (
   is => 'ro', default => sub { CPS::Future->new },
-  trigger => sub { 
+  trigger => sub {
     my ($self, $f) = @_;
+    Dlog_trace { "trigger for on_close has been invoked for connection $_" } $self->_id;
     weaken($self);
     $f->on_done(sub {
       $self->_fail_outstanding("Connection lost: ".($f->get)[0]);
@@ -59,6 +66,7 @@ has outstanding_futures => (is => 'ro', default => sub { {} });
 
 sub _fail_outstanding {
   my ($self, $error) = @_;
+  Dlog_debug { "Failing outstanding futures with '$error' for connection $_" } $self->_id;
   my $outstanding = $self->outstanding_futures;
   $_->fail($error) for values %$outstanding;
   %$outstanding = ();
@@ -75,6 +83,7 @@ has _json => (
 
 sub _id_to_remote_object {
   my ($self, $id) = @_;
+  Dlog_trace { "fetching proxy for remote object with id '$id' for connection $_" } $self->_id;
   return bless({}, 'Object::Remote::Null') if $id eq 'NULL';
   (
     $self->remote_objects_by_id->{$id}
@@ -123,8 +132,10 @@ BEGIN {
 sub new_from_spec {
   my ($class, $spec) = @_;
   return $spec if blessed $spec;
+  Dlog_debug { "creating a new connection from spec" };
   foreach my $poss (do { our @Guess }) {
     if (my $conn = $poss->($spec)) {
+      #Dlog_debug { my $id = $conn->_id; "created connection $id for spec $_" } $spec;
       return $conn->maybe::start::connect;
     }
   }
@@ -140,7 +151,7 @@ sub remote_object {
 
 sub connect {
   my ($self, $to) = @_;
-  Dlog_debug { "Creating connection to remote node $_" } $to;
+  Dlog_debug { "Creating connection to remote node '$to' for connection $_" } $self->_id;
   return await_future(
     $self->send_class_call(0, 'Object::Remote', connect => $to)
   );
@@ -149,13 +160,13 @@ sub connect {
 sub remote_sub {
   my ($self, $sub) = @_;
   my ($pkg, $name) = $sub =~ m/^(.*)::([^:]+)$/;
-  log_debug { "Invoking remote sub '$sub'" };
+  Dlog_debug { "Invoking remote sub '$sub' for connection $_" } $self->_id;
   return await_future($self->send_class_call(0, $pkg, can => $name));
 }
 
 sub send_class_call {
   my ($self, $ctx, @call) = @_;
-  log_trace { "Sending a non-blocking class call" };
+  Dlog_trace { "Sending a class call for connection $_" } $self->_id;
   $self->send(call => class_call_handler => $ctx => call => @call);
 }
 
@@ -179,14 +190,14 @@ sub new_class_call_handler {
 
 sub register_remote {
   my ($self, $remote) = @_;
-  log_trace { my $i = $remote->id; "Registered a remote object with id of '$i'" };
+  Dlog_trace { my $i = $remote->id; "Registered a remote object with id of '$i' for connection $_" } $self->_id;
   weaken($self->remote_objects_by_id->{$remote->id} = $remote);
   return $remote;
 }
 
 sub send_free {
   my ($self, $id) = @_;
-  log_debug { "sending request to free object '$id'" };
+  Dlog_debug { "sending request to free object '$id' for connection $_" } $self->_id;
   delete $self->remote_objects_by_id->{$id};
   $self->_send([ free => $id ]);
 }
@@ -222,8 +233,9 @@ sub send_discard {
 sub _send {
   my ($self, $to_send) = @_;
   my $fh = $self->send_to_fh;
+  Dlog_trace { "Starting to serialize data in argument to _send for connection $_" } $self->_id;
   my $serialized = $self->_serialize($to_send)."\n";
-  Dlog_debug { my $l = length($serialized); "Sending '$l' characters of serialized data to $_" } $fh;
+  Dlog_debug { my $l = length($serialized); "serialization is completed; sending '$l' characters of serialized data to $_" } $fh;
   #TODO this is very risky for deadlocks unless it's set to non-blocking and then with out extra
   #logic it could easily do short-writes to the remote side
   my $ret = print $fh $serialized;
@@ -236,6 +248,7 @@ sub _send {
 sub _serialize {
   my ($self, $data) = @_;
   local our @New_Ids = (-1);
+  Dlog_debug { "starting to serialize data for connection $_" } $self->_id;
   return eval {
     my $flat = $self->_encode($self->_deobjectify($data));
     warn "$$ >>> ${flat}\n" if $DEBUG;
@@ -295,8 +308,10 @@ sub _deobjectify {
 sub _receive {
   my ($self, $flat) = @_;
   warn "$$ <<< $flat\n" if $DEBUG;
+  Dlog_trace { my $l = length($flat); "Starting to deserialize $l characters of data for connection $_" } $self->_id;
   my ($type, @rest) = eval { @{$self->_deserialize($flat)} }
     or do { warn "Deserialize failed for ${flat}: $@"; return };
+  Dlog_trace { "deserialization complete for connection $_" } $self->_id;
   eval { $self->${\"receive_${type}"}(@rest); 1 }
     or do { warn "Receive failed for ${flat}: $@"; return };
   return;
@@ -304,6 +319,7 @@ sub _receive {
 
 sub receive_free {
   my ($self, $id) = @_;
+  Dlog_trace { "got a receive_free for object '$id' for connection $_" } $self->_id;
   delete $self->local_objects_by_id->{$id}
     or warn "Free: no such object $id";
   return;
@@ -311,6 +327,7 @@ sub receive_free {
 
 sub receive_call {
   my ($self, $future_id, $id, @rest) = @_;
+  Dlog_trace { "got a receive_call for object '$id' for connection $_" } $self->_id;
   my $future = $self->_id_to_remote_object($future_id);
   $future->{method} = 'call_discard_free';
   my $local = $self->local_objects_by_id->{$id}
@@ -320,12 +337,14 @@ sub receive_call {
 
 sub receive_call_free {
   my ($self, $future, $id, @rest) = @_;
+  Dlog_trace { "got a receive_call_free for object '$id' for connection $_" } $self->_id;
   $self->receive_call($future, $id, undef, @rest);
   $self->receive_free($id);
 }
 
 sub _invoke {
   my ($self, $future, $local, $ctx, $method, @args) = @_;
+  Dlog_trace { "got _invoke for a method named '$method' for connection $_" } $self->_id;
   if ($method =~ /^start::/) {
     my $f = $local->$method(@args);
     $f->on_done(sub { undef($f); $future->done(@_) });

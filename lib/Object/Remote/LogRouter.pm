@@ -71,7 +71,7 @@ sub handle_log_message {
      #this info to the selector is a good feature
      local($_) = { level => $level, package => $caller };
      if ($selector->(@values)) {
-        #TODO resolve caller_level issues with routing
+        #SOLVED resolve caller_level issues with routing
         #idea: the caller level will differ in distance from the
         #start of the call stack but it's a constant distance from
         #the end of the call stack - can that be exploited to calculate
@@ -83,7 +83,14 @@ sub handle_log_message {
         #it can be invoked in that location and the caller level
         #problem doesn't exist anymore
         $logger = $logger->($caller, { caller_level => -1 });
-         
+        
+        #TODO there is a known issue with the interaction of this 
+        #routed logging scheme and objects proxied with Object::Remote.
+        #Specifically the loggers must be invoked with a calling
+        #depth of 0 which isn't possible using a logger that has
+        #been proxied which is what happens with routed logging
+        #if the logger is created in one Perl interpreter and the
+        #logging happens in another
         $logger->$level($log_meth->(@values))
           if $logger->${\"is_$level"};
      }

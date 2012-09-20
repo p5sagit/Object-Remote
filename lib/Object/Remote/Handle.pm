@@ -2,6 +2,7 @@ package Object::Remote::Handle;
 
 use Object::Remote::Proxy;
 use Scalar::Util qw(weaken blessed);
+use Object::Remote::Logging qw ( :log );
 use Object::Remote::Future;
 #must find way to exclude certain log events
 #from being forwarded - log events generated in
@@ -31,12 +32,14 @@ sub proxy {
 
 sub BUILD {
   my ($self, $args) = @_;
-#  log_debug { "constructing instance of " . ref($self) };
+  log_debug { "constructing remote handle" };
   if ($self->id) {
+    log_trace { "disaming free for this hanle" };
     $self->disarm_free;
   } else {
     die "No id supplied and no class either" unless $args->{class};
     ref($_) eq 'HASH' and $_ = [ %$_ ] for $args->{args};
+    log_trace { "fetching id for handle and disarming free on remote side" };
     $self->_set_id(
       await_future(
         $self->connection->send_class_call(
@@ -46,13 +49,14 @@ sub BUILD {
       )->{remote}->disarm_free->id
     );
   }
-#  log_trace { "finished constructing " . ref($self) };
+  log_trace { "finished constructing remote handle; registering it" . ref($self) };
   $self->connection->register_remote($self);
 }
 
 sub call {
   my ($self, $method, @args) = @_;
   my $w = wantarray;
+  log_debug { my $def = defined $w; "call() has been invoked on a remote handle; wantarray: '$def'" };
   $method = "start::${method}" if (caller(0)||'') eq 'start';
   future {
     $self->connection->send(call => $self->id, $w, $method, @args)
@@ -61,17 +65,20 @@ sub call {
 
 sub call_discard {
   my ($self, $method, @args) = @_;
+  log_trace { "invoking send_discard() with 'call' for method '$method' on connection for remote handle" };
   $self->connection->send_discard(call => $self->id, $method, @args);
 }
 
 sub call_discard_free {
   my ($self, $method, @args) = @_;
   $self->disarm_free;
+  log_trace { "invoking send_discard() with 'call_free' for method '$method' on connection for remote handle" };
   $self->connection->send_discard(call_free => $self->id, $method, @args);
 }
 
 sub DEMOLISH {
   my ($self, $gd) = @_;
+  log_trace { "Demolishing remote handle" };
   return if $gd or $self->disarmed_free;
   $self->connection->send_free($self->id);
 }

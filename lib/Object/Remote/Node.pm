@@ -2,12 +2,12 @@ package Object::Remote::Node;
 
 use strictures 1;
 use Object::Remote::Connector::STDIO;
-use Object::Remote::Logging qw(:log);
+use Object::Remote::Logging qw(:log :dlog);
 use Object::Remote;
 use CPS::Future;
 
 sub run {
-  log_trace { "run() has been invoked on remote node; creating STDIO connector" };
+  log_trace { "run() has been invoked on remote node" };
   my $c = Object::Remote::Connector::STDIO->new->connect;
 
   $c->register_class_call_handler;
@@ -19,6 +19,7 @@ sub run {
     $loop->want_stop 
   });
 
+  Dlog_trace { "Node is sending 'Shere' to $_" } $c->send_to_fh;
   print { $c->send_to_fh } "Shere\n";
 
   log_debug { "Node is going to start the run loop" };
