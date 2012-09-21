@@ -8,9 +8,19 @@ use Object::Remote::Handle;
 use Object::Remote::Future;
 use Object::Remote::Logging qw( :log :dlog );
 use Scalar::Util qw(blessed);
+use POSIX ":sys_wait_h";
 use Moo::Role;
 
 with 'Object::Remote::Role::Connector';
+
+BEGIN { 
+  $SIG{CHLD} = sub { 
+    my $kid; 
+    do {
+      $kid = waitpid(-1, WNOHANG);
+    } while $kid > 0;
+  } 
+}
 
 has module_sender => (is => 'lazy');
 #if no child_stderr file handle is specified then stderr
@@ -32,7 +42,7 @@ has perl_command => (is => 'lazy');
 #TODO only works with ssh with quotes but only works locally
 #with out quotes
 #sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 80000; nice -n 15 perl -"' ] }
-sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 500000; nice -n 15 perl -"' ] }
+sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 200000; nice -n 15 perl -"' ] }
 #sub _build_perl_command { [ 'perl', '-' ] }
 
 around connect => sub {
