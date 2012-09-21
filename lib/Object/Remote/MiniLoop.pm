@@ -43,13 +43,15 @@ sub watch_io {
   #will need to be integrated in a way that
   #is compatible with Windows which has no
   #non-blocking support
-  Dlog_warn { "setting file handle to be non-blocking: " } $fh;
-  use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
-  my $flags = fcntl($fh, F_GETFL, 0)
-    or die "Can't get flags for the socket: $!\n";
-  $flags = fcntl($fh, F_SETFL, $flags | O_NONBLOCK)
-    or die "Can't set flags for the socket: $!\n";
-
+  if (0) {
+    Dlog_warn { "setting file handle to be non-blocking: $_" } $fh;
+    use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
+    my $flags = fcntl($fh, F_GETFL, 0)
+      or die "Can't get flags for the socket: $!\n";
+    $flags = fcntl($fh, F_SETFL, $flags | O_NONBLOCK)
+      or die "Can't set flags for the socket: $!\n"; 
+  }
+  
   if (my $cb = $watch{on_read_ready}) {
     log_trace { "IO watcher is registering with select for reading" };
     $self->_read_select->add($fh);
@@ -122,8 +124,6 @@ sub _next_timer_expires_delay {
     $duration = $delay_max;
   }
   
-  #uncomment for original behavior
-  #return .5;    
   return $duration; 
 }
 
@@ -131,11 +131,12 @@ sub loop_once {
   my ($self) = @_;
   my $read = $self->_read_watches;
   my $write = $self->_write_watches;
+  our $Loop_Entered = 1; 
   my $read_count = 0;
   my $write_count = 0; 
   my @c = caller;
   my $wait_time = $self->_next_timer_expires_delay;
-  log_debug {  sprintf("Run loop: loop_once() has been invoked by $c[1]:$c[2] with read:%i write:%i select timeout:%s",
+  log_trace {  sprintf("Run loop: loop_once() has been invoked by $c[1]:$c[2] with read:%i write:%i select timeout:%s",
       scalar(keys(%$read)), scalar(keys(%$write)), defined $wait_time ? $wait_time : 'indefinite' ) };
   #TODO The docs state that select() in some instances can return a socket as ready to
   #read data even if reading from it would block and the recomendation is to set
@@ -155,7 +156,7 @@ sub loop_once {
     #return? 
     $self->_read_select, $self->_write_select, undef, $wait_time
   ); 
-  log_debug { 
+  log_trace { 
     my $readable_count = defined $readable ? scalar(@$readable) : 0;
     my $writable_count = defined $writeable ? scalar(@$writeable) : 0;
     "Run loop: select returned readable:$readable_count writeable:$writable_count";
@@ -163,11 +164,15 @@ sub loop_once {
   # I would love to trap errors in the select call but IO::Select doesn't
   # differentiate between an error and a timeout.
   #   -- no, love, mst.
+
+  local $Loop_Entered;
+
   log_trace { "Reading from all ready filehandles" };
   foreach my $fh (@$readable) {
     next unless $read->{$fh};
     $read_count++;
     $read->{$fh}();
+    last if $Loop_Entered;
 #    $read->{$fh}() if $read->{$fh};
   }
   log_trace { "Writing to all ready filehandles" };
@@ -175,6 +180,7 @@ sub loop_once {
     next unless $write->{$fh};
     $write_count++;
     $write->{$fh}();
+    last if $Loop_Entered;
 #    $write->{$fh}() if $write->{$fh};
   }
   log_trace { "Read from $read_count filehandles; wrote to $write_count filehandles" };
@@ -184,8 +190,9 @@ sub loop_once {
   while (@$timers and $timers->[0][0] <= $now) {
     Dlog_debug { "Found timer that needs to be executed: $_" } $timers->[0];
     (shift @$timers)->[1]->();
+    last if $Loop_Entered;
   }
-  log_debug { "Run loop: single loop is completed" };
+  log_trace { "Run loop: single loop is completed" };
   return;
 }
 
@@ -223,12 +230,12 @@ sub want_stop {
 #will with out interfering with each other 
 sub run {
   my ($self) = @_;
-  log_info { "Run loop: run() invoked" };
+  log_trace { "Run loop: run() invoked" };
   local $self->{is_running} = 1;
   while ($self->is_running) {
     $self->loop_once;
   }
-  log_info { "Run loop: run() completed" };
+  log_trace { "Run loop: run() completed" };
   return;
 }
 

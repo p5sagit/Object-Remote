@@ -29,15 +29,15 @@ sub await_future {
     $f->on_ready(sub {
       log_trace { my $l = @await; "future has become ready, length of \@await: '$l'" };
       if ($f == $await[-1]) {
-        log_debug { "This future is not waiting on anything so calling stop on the run loop" };
+        log_trace { "This future is not waiting on anything so calling stop on the run loop" };
         $loop->stop;         
       }
     });
-    log_debug { "Starting run loop for newly created future" };
+    log_trace { "Starting run loop for newly created future" };
     $loop->run;
   }
   if (@await and $await[-1]->is_ready) {
-    log_debug { "Last future in await list was ready, stopping run loop" };
+    log_trace { "Last future in await list was ready, stopping run loop" };
     $loop->stop;
   }
   log_trace { "await_future() returning" };

@@ -1,6 +1,6 @@
 package Object::Remote::Role::Connector::PerlInterpreter;
 
-#use IPC::Open2;
+use IPC::Open2;
 use IPC::Open3; 
 use IO::Handle;
 use Object::Remote::ModuleSender;
@@ -13,6 +13,9 @@ use Moo::Role;
 with 'Object::Remote::Role::Connector';
 
 has module_sender => (is => 'lazy');
+#if no child_stderr file handle is specified then stderr
+#of the child will be connected to stderr of the parent
+has stderr => ( is => 'rw', default => sub { \*STDERR } );
 
 sub _build_module_sender {
   my ($hook) =
@@ -28,6 +31,7 @@ has perl_command => (is => 'lazy');
 #ulimit of ~500 megs of v-ram
 #TODO only works with ssh with quotes but only works locally
 #with out quotes
+#sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 80000; nice -n 15 perl -"' ] }
 sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 500000; nice -n 15 perl -"' ] }
 #sub _build_perl_command { [ 'perl', '-' ] }
 
@@ -55,8 +59,52 @@ sub final_perl_command { shift->perl_command }
 
 sub _start_perl {
   my $self = shift;
+  my $given_stderr = $self->stderr;
+  my $foreign_stderr;
+ 
   Dlog_debug { "invoking connection to perl interpreter using command line: $_" } @{$self->final_perl_command};
   
+  use Symbol; 
+  
+  if (defined($given_stderr)) {
+      $foreign_stderr = gensym();
+  } else {
+      $foreign_stderr = ">&STDERR";
+  }
+  
+  my $pid = open3(
+    my $foreign_stdin,
+    my $foreign_stdout,
+    $foreign_stderr,
+    @{$self->final_perl_command},
+  ) or die "Failed to run perl at '$_[0]': $!";
+  
+  if (defined($given_stderr)) {   
+      log_warn { "using experimental cat for child stderr" };
+        
+      #TODO refactor if this solves the problem
+      Object::Remote->current_loop
+                    ->watch_io(
+                        handle => $foreign_stderr,
+                        on_read_ready => sub {
+                          my $buf = ''; 
+                          my $len = sysread($foreign_stderr, $buf, 32768);
+                          if (!defined($len) or $len == 0) {
+                            log_trace { "Got EOF or error on child stderr, removing from watcher" };
+                            $self->stderr(undef);
+                            Object::Remote->current_loop
+                                          ->unwatch_io(
+                                              handle => $foreign_stderr,
+                                              on_read_ready => 1
+                                            );
+                          } else {
+                              Dlog_trace { "got $len characters of stderr data for connection" };
+                              print $given_stderr $buf or die "could not send stderr data: $!";
+                          }
+                         }
+                      );     
+  }
+      
   #TODO open2() dupes the child stderr into the calling
   #process stderr which means if this process exits the
   #child is still attached to the shell - using open3()
@@ -69,11 +117,11 @@ sub _start_perl {
   #where the user of a connection species a destination for output
   #either a file name or their own file handle and the node output
   #is dumped to it 
-  my $pid = open2(
-    my $foreign_stdout,
-    my $foreign_stdin,
-    @{$self->final_perl_command},
-  ) or die "Failed to run perl at '$_[0]': $!";
+#  my $pid = open2(
+#    my $foreign_stdout,
+#    my $foreign_stdin,
+#    @{$self->final_perl_command},
+#  ) or die "Failed to run perl at '$_[0]': $!";
 
   Dlog_trace { "Connection to remote side successful; remote stdin and stdout: $_" } [ $foreign_stdin, $foreign_stdout ];
   return ($foreign_stdin, $foreign_stdout, $pid);

@@ -239,7 +239,7 @@ sub _send {
   my $fh = $self->send_to_fh;
   Dlog_trace { "Starting to serialize data in argument to _send for connection $_" } $self->_id;
   my $serialized = $self->_serialize($to_send)."\n";
-  Dlog_debug { my $l = length($serialized); "serialization is completed; sending '$l' characters of serialized data to $_" } $fh;
+  Dlog_trace { my $l = length($serialized); "serialization is completed; sending '$l' characters of serialized data to $_" } $fh;
   #TODO this is very risky for deadlocks unless it's set to non-blocking and then with out extra
   #logic it could easily do short-writes to the remote side
   my $ret = print $fh $serialized;
@@ -252,7 +252,6 @@ sub _send {
 sub _serialize {
   my ($self, $data) = @_;
   local our @New_Ids = (-1);
-  Dlog_debug { "starting to serialize data for connection $_" } $self->_id;
   return eval {
     my $flat = $self->_encode($self->_deobjectify($data));
     warn "$$ >>> ${flat}\n" if $DEBUG;
