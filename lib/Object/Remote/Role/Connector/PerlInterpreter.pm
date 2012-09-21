@@ -1,6 +1,7 @@
 package Object::Remote::Role::Connector::PerlInterpreter;
 
-use IPC::Open2;
+#use IPC::Open2;
+use IPC::Open3; 
 use IO::Handle;
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
@@ -55,17 +56,33 @@ sub final_perl_command { shift->perl_command }
 sub _start_perl {
   my $self = shift;
   Dlog_debug { "invoking connection to perl interpreter using command line: $_" } @{$self->final_perl_command};
+  
+  #TODO open2() dupes the child stderr into the calling
+  #process stderr which means if this process exits the
+  #child is still attached to the shell - using open3()
+  #and having the run loop manage the stderr means this
+  #won't happen BUT if the run loop just sends the remote
+  #stderr data to the local stderr the logs will interleave
+  #for sure - a simple test would be to use open3() and just
+  #close the remote stderr and see what happens - a longer
+  #term solution would be for Object::Remote to offer a feature
+  #where the user of a connection species a destination for output
+  #either a file name or their own file handle and the node output
+  #is dumped to it 
   my $pid = open2(
     my $foreign_stdout,
     my $foreign_stdin,
     @{$self->final_perl_command},
   ) or die "Failed to run perl at '$_[0]': $!";
+
   Dlog_trace { "Connection to remote side successful; remote stdin and stdout: $_" } [ $foreign_stdin, $foreign_stdout ];
   return ($foreign_stdin, $foreign_stdout, $pid);
 }
 
 #TODO open2() forks off a child and I have not been able to locate
 #a mechanism for reaping dead children so they don't become zombies
+#CONFIRMED there is no reaping of children being done, find a safe
+#way to do it
 sub _open2_for {
   my $self = shift;
   my ($foreign_stdin, $foreign_stdout, $pid) = $self->_start_perl(@_);

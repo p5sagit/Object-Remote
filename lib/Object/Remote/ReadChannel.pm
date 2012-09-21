@@ -3,6 +3,7 @@ package Object::Remote::ReadChannel;
 use CPS::Future;
 use Scalar::Util qw(weaken);
 use Object::Remote::Logging qw(:log :dlog);
+use POSIX;
 use Moo;
 
 has fh => (
@@ -51,7 +52,10 @@ sub _receive_data_from {
     while (my $cb = $self->on_line_call and $$rb =~ s/^(.*)\n//) {
       $cb->(my $line = $1);
     }
-  } else {
+  #TODO this isn't compatible with Windows but would be if
+  #EAGAIN was set to something that could never match
+  #if on Windows   
+  } elsif ($! != EAGAIN) {
     log_trace { "Got EOF or error, this read channel is done" };
     Object::Remote->current_loop
                   ->unwatch_io(
