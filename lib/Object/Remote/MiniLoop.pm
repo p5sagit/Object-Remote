@@ -37,14 +37,26 @@ sub pass_watches_to {
 sub watch_io {
   my ($self, %watch) = @_;
   my $fh = $watch{handle};
-  Dlog_debug { my $type = ref($fh); "Adding IO watch for $_" } $fh;
+  Dlog_debug { "Adding IO watch for $_" } $fh;
+
+  #TODO if this works out non-blocking support
+  #will need to be integrated in a way that
+  #is compatible with Windows which has no
+  #non-blocking support
+  Dlog_warn { "setting file handle to be non-blocking: " } $fh;
+  use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
+  my $flags = fcntl($fh, F_GETFL, 0)
+    or die "Can't get flags for the socket: $!\n";
+  $flags = fcntl($fh, F_SETFL, $flags | O_NONBLOCK)
+    or die "Can't set flags for the socket: $!\n";
+
   if (my $cb = $watch{on_read_ready}) {
-    log_trace { "IO watcher is registering with select() for reading" };
+    log_trace { "IO watcher is registering with select for reading" };
     $self->_read_select->add($fh);
     $self->_read_watches->{$fh} = $cb;
   }
   if (my $cb = $watch{on_write_ready}) {
-    log_trace { "IO watcher is registering with select() for writing" };
+    log_trace { "IO watcher is registering with select for writing" };
     $self->_write_select->add($fh);
     $self->_write_watches->{$fh} = $cb;
   }

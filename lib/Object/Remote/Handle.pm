@@ -34,7 +34,7 @@ sub BUILD {
   my ($self, $args) = @_;
   log_debug { "constructing remote handle" };
   if ($self->id) {
-    log_trace { "disaming free for this hanle" };
+    log_trace { "disarming free for this handle" };
     $self->disarm_free;
   } else {
     die "No id supplied and no class either" unless $args->{class};
@@ -49,14 +49,14 @@ sub BUILD {
       )->{remote}->disarm_free->id
     );
   }
-  log_trace { "finished constructing remote handle; registering it" . ref($self) };
+  log_trace { "finished constructing remote handle; registering it " . ref($self) };
   $self->connection->register_remote($self);
 }
 
 sub call {
   my ($self, $method, @args) = @_;
   my $w = wantarray;
-  log_debug { my $def = defined $w; "call() has been invoked on a remote handle; wantarray: '$def'" };
+  log_debug { my $def = defined $w ? 1 : 0; "call() has been invoked on a remote handle; wantarray: '$def'" };
   $method = "start::${method}" if (caller(0)||'') eq 'start';
   future {
     $self->connection->send(call => $self->id, $w, $method, @args)

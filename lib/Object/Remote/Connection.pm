@@ -24,14 +24,18 @@ has _id => ( is => 'ro', required => 1, default => sub { our $NEXT_CONNECTION_ID
 
 has send_to_fh => (
   is => 'ro', required => 1,
-  trigger => sub { $_[1]->autoflush(1) },
+  trigger => sub {
+      my $self = $_[0];
+      $_[1]->autoflush(1);
+      Dlog_trace { my $id = $self->_id; "connection had send_to_fh set to $_"  } $_[1];
+  },
 );
 
 has read_channel => (
   is => 'ro', required => 1,
   trigger => sub {
     my ($self, $ch) = @_;
-    Dlog_trace { "trigger for read_channel has been invoked for connection $_" } $self->_id;
+    Dlog_trace { my $id = $self->_id; "trigger for read_channel has been invoked for connection $id; file handle is " } $ch->fh; 
     weaken($self);
     $ch->on_line_call(sub { $self->_receive(@_) });
     $ch->on_close_call(sub { $self->on_close->done(@_) });
