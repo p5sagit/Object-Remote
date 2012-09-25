@@ -7,6 +7,7 @@ use Object::Remote::CodeContainer;
 use Object::Remote::GlobProxy;
 use Object::Remote::GlobContainer;
 use Object::Remote::Logging qw (:log :dlog);
+use Object::Remote::Tied;
 use Object::Remote;
 use Symbol;
 use IO::Handle;
@@ -122,7 +123,19 @@ sub _build__json {
     __local_object__ => sub {
       $self->local_objects_by_id->{$_[0]}
     }
-  );
+  )->filter_json_single_key_object(
+    __remote_tied_hash__ => sub {
+        my %tied_hash;
+        tie %tied_hash, 'Object::Remote::Tied', $self->_id_to_remote_object(@_);
+        return \%tied_hash;
+    }
+  )->filter_json_single_key_object(
+    __remote_tied_array__ => sub {
+        my @tied_array;
+        tie @tied_array, 'Object::Remote::Tied', $self->_id_to_remote_object(@_);
+        return \@tied_array;
+    }
+  ); 
 }
 
 BEGIN {
@@ -139,7 +152,6 @@ sub new_from_spec {
   Dlog_debug { "creating a new connection from spec" };
   foreach my $poss (do { our @Guess }) {
     if (my $conn = $poss->($spec)) {
-      #Dlog_debug { my $id = $conn->_id; "created connection $id for spec $_" } $spec;
       return $conn->maybe::start::connect;
     }
   }
@@ -201,7 +213,7 @@ sub register_remote {
 
 sub send_free {
   my ($self, $id) = @_;
-  Dlog_debug { "sending request to free object '$id' for connection $_" } $self->_id;
+  Dlog_trace { "sending request to free object '$id' for connection $_" } $self->_id;
   delete $self->remote_objects_by_id->{$id};
   $self->_send([ free => $id ]);
 }
@@ -241,7 +253,9 @@ sub _send {
   my $serialized = $self->_serialize($to_send)."\n";
   Dlog_trace { my $l = length($serialized); "serialization is completed; sending '$l' characters of serialized data to $_" } $fh;
   #TODO this is very risky for deadlocks unless it's set to non-blocking and then with out extra
-  #logic it could easily do short-writes to the remote side
+  #logic it could easily do short-writes to the remote side - how about taking this entire buffer
+  #and having the run loop send it to the file handle so this doesn't block while the sending
+  #is happening? 
   my $ret = print $fh $serialized;
   Dlog_trace { my $r = defined $ret ? $ret : 'undef'; "print() returned $r with $_" } $fh;
   #TODO hrm reason print's return value was ignored?
@@ -287,9 +301,19 @@ sub _deobjectify {
     }
   } elsif (my $ref = ref($data)) {
     if ($ref eq 'HASH') {
-      return +{ map +($_ => $self->_deobjectify($data->{$_})), keys %$data };
+      my $tied_to = tied(%$data);
+      if(defined($tied_to)) {
+        return +{__remote_tied_hash__ => $self->_local_object_to_id($tied_to)}; 
+      } else {
+        return +{ map +($_ => $self->_deobjectify($data->{$_})), keys %$data };
+      }
     } elsif ($ref eq 'ARRAY') {
-      return [ map $self->_deobjectify($_), @$data ];
+      my $tied_to = tied(@$data);
+      if (defined($tied_to)) {
+        return +{__remote_tied_array__ => $self->_local_object_to_id($tied_to)}; 
+      } else {
+        return [ map $self->_deobjectify($_), @$data ];
+      }
     } elsif ($ref eq 'CODE') {
       my $id = $self->_local_object_to_id(
                  Object::Remote::CodeContainer->new(code => $data)

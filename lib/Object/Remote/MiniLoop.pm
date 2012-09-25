@@ -42,7 +42,7 @@ sub watch_io {
   #TODO if this works out non-blocking support
   #will need to be integrated in a way that
   #is compatible with Windows which has no
-  #non-blocking support
+  #non-blocking support - see also ::ReadChannel
   if (0) {
     Dlog_warn { "setting file handle to be non-blocking: $_" } $fh;
     use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
@@ -173,7 +173,6 @@ sub loop_once {
     $read_count++;
     $read->{$fh}();
     last if $Loop_Entered;
-#    $read->{$fh}() if $read->{$fh};
   }
   log_trace { "Writing to all ready filehandles" };
   foreach my $fh (@$writeable) {
@@ -181,8 +180,8 @@ sub loop_once {
     $write_count++;
     $write->{$fh}();
     last if $Loop_Entered;
-#    $write->{$fh}() if $write->{$fh};
   }
+  
   log_trace { "Read from $read_count filehandles; wrote to $write_count filehandles" };
   my $timers = $self->_timers;
   my $now = time();
@@ -227,7 +226,8 @@ sub want_stop {
 #it's own localized is_running attribute - any adjustment to the
 #is_running attribute outside of that future will not effect that
 #future so each future winds up able to call run() and stop() at 
-#will with out interfering with each other 
+#will with out interfering with each other - how about having
+#run loop until the future becomes ready? 
 sub run {
   my ($self) = @_;
   log_trace { "Run loop: run() invoked" };

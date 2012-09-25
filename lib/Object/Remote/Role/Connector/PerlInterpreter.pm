@@ -13,6 +13,8 @@ use Moo::Role;
 
 with 'Object::Remote::Role::Connector';
 
+#TODO ugh breaks some of the stuff in System::Introspector::Util by
+#screwing with status value of child
 BEGIN { 
   $SIG{CHLD} = sub { 
     my $kid; 
@@ -26,6 +28,7 @@ has module_sender => (is => 'lazy');
 #if no child_stderr file handle is specified then stderr
 #of the child will be connected to stderr of the parent
 has stderr => ( is => 'rw', default => sub { \*STDERR } );
+#has stderr => ( is => 'rw' );
 
 sub _build_module_sender {
   my ($hook) =
@@ -111,7 +114,7 @@ sub _start_perl {
                               Dlog_trace { "got $len characters of stderr data for connection" };
                               print $given_stderr $buf or die "could not send stderr data: $!";
                           }
-                         }
+                         } 
                       );     
   }
       
@@ -132,9 +135,11 @@ sub _start_perl {
 #    my $foreign_stdin,
 #    @{$self->final_perl_command},
 #  ) or die "Failed to run perl at '$_[0]': $!";
+#
+#  Dlog_trace { "Connection to remote side successful; remote stdin and stdout: $_" } [ $foreign_stdin, $foreign_stdout ];
 
-  Dlog_trace { "Connection to remote side successful; remote stdin and stdout: $_" } [ $foreign_stdin, $foreign_stdout ];
-  return ($foreign_stdin, $foreign_stdout, $pid);
+
+   return ($foreign_stdin, $foreign_stdout, $pid);
 }
 
 #TODO open2() forks off a child and I have not been able to locate
