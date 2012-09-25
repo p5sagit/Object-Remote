@@ -32,7 +32,7 @@ sub proxy {
 
 sub BUILD {
   my ($self, $args) = @_;
-  log_debug { "constructing remote handle" };
+  log_trace { "constructing remote handle" };
   if ($self->id) {
     log_trace { "disarming free for this handle" };
     $self->disarm_free;
@@ -56,7 +56,7 @@ sub BUILD {
 sub call {
   my ($self, $method, @args) = @_;
   my $w = wantarray;
-  log_debug { my $def = defined $w ? 1 : 0; "call() has been invoked on a remote handle; wantarray: '$def'" };
+  log_trace { my $def = defined $w ? 1 : 0; "call() has been invoked on a remote handle; wantarray: '$def'" };
   $method = "start::${method}" if (caller(0)||'') eq 'start';
   future {
     $self->connection->send(call => $self->id, $w, $method, @args)
