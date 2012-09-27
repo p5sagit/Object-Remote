@@ -49,6 +49,7 @@ sub _receive_data_from {
                       handle => $self->fh,
                       on_read_ready => 1
                     );
+    log_trace { "Invoking on_close_call() for dead read channel" };
     $self->on_close_call->($err);
   }
 }

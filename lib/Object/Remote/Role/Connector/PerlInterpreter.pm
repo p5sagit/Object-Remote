@@ -10,6 +10,7 @@ use Object::Remote::Logging qw( :log :dlog );
 use Scalar::Util qw(blessed);
 use POSIX ":sys_wait_h";
 use Moo::Role;
+use Symbol; 
 
 with 'Object::Remote::Role::Connector';
 
@@ -44,7 +45,6 @@ has perl_command => (is => 'lazy');
 #ulimit of ~500 megs of v-ram
 #TODO only works with ssh with quotes but only works locally
 #with out quotes
-#sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 80000; nice -n 15 perl -"' ] }
 sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 200000; nice -n 15 perl -"' ] }
 #sub _build_perl_command { [ 'perl', '-' ] }
 
@@ -76,9 +76,7 @@ sub _start_perl {
   my $foreign_stderr;
  
   Dlog_debug { "invoking connection to perl interpreter using command line: $_" } @{$self->final_perl_command};
-  
-  use Symbol; 
-  
+    
   if (defined($given_stderr)) {
       $foreign_stderr = gensym();
   } else {
