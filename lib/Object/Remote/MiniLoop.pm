@@ -82,16 +82,36 @@ sub unwatch_io {
   return;
 }
 
+sub _sort_timers {
+  my ($self, @new) = @_;
+  my $timers = $self->_timers; 
+  
+  log_trace { "Sorting timers" };
+  
+  @{$timers} = sort { $a->[0] <=> $b->[0] } @{$timers}, @new;
+  return;   
+}
+
 sub watch_time {
   my ($self, %watch) = @_;
-  my $at = $watch{at} || do {
-    die "watch_time requires at or after" unless my $after = $watch{after};
-    time() + $after;
-  };
+  my $at; 
+  
+  Dlog_trace { "watch_time() invoked with $_" } \%watch;
+ 
+  if (exists($watch{every})) {
+    $at = time() + $watch{every};
+  } elsif (exists($watch{after})) {
+    $at = time() + $watch{after}; 
+  } elsif (exists($watch{at})) {
+      $at = $watch{at}; 
+  } else {
+      die "watch_time requires every, after or at";
+  }
+  
   die "watch_time requires code" unless my $code = $watch{code};
   my $timers = $self->_timers;
-  my $new = [ $at => $code ];
-  @{$timers} = sort { $a->[0] <=> $b->[0] } @{$timers}, $new;
+  my $new = [ $at => $code, $watch{every} ];
+  $self->_sort_timers($new); 
   log_debug { "Created new timer that expires at '$at'" };
   return "$new";
 }
@@ -187,10 +207,26 @@ sub loop_once {
   my $now = time();
   log_trace { "Checking timers" };
   while (@$timers and $timers->[0][0] <= $now) {
-    Dlog_debug { "Found timer that needs to be executed: $_" } $timers->[0];
-    (shift @$timers)->[1]->();
+    my $active = $timers->[0]; 
+    Dlog_debug { "Found timer that needs to be executed: $_" } $active;
+#   my (shift @$timers)->[1]->();
+     
+    if (defined($active->[2])) {
+      #handle the case of an 'every' timer
+      $active->[0] = time() + $active->[2]; 
+      Dlog_trace { "scheduling timer for repeat execution at $_"} $active->[0];
+      $self->_sort_timers;
+    } else {
+      #it doesn't repeat again so get rid of it  
+      shift(@$timers);    
+    }
+
+    #execute the timer
+    $active->[1]->();
+     
     last if $Loop_Entered;
   }
+  
   log_trace { "Run loop: single loop is completed" };
   return;
 }

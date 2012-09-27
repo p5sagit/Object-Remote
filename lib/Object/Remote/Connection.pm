@@ -12,7 +12,7 @@ use Object::Remote;
 use Symbol;
 use IO::Handle;
 use Module::Runtime qw(use_module);
-use Scalar::Util qw(weaken blessed refaddr);
+use Scalar::Util qw(weaken blessed refaddr openhandle);
 use JSON::PP qw(encode_json);
 use Moo;
 
@@ -36,21 +36,36 @@ has read_channel => (
   is => 'ro', required => 1,
   trigger => sub {
     my ($self, $ch) = @_;
-    Dlog_trace { my $id = $self->_id; "trigger for read_channel has been invoked for connection $id; file handle is " } $ch->fh; 
+    my $id = $self->_id; 
+    Dlog_trace { "trigger for read_channel has been invoked for connection $id; file handle is $_" } $ch->fh; 
     weaken($self);
     $ch->on_line_call(sub { $self->_receive(@_) });
-    $ch->on_close_call(sub { $self->on_close->done(@_) });
+    $ch->on_close_call(sub { 
+        log_trace { "invoking 'done' on on_close handler for connection id '$id'" }; 
+        $self->on_close->done(@_);
+    });
   },
 );
 
+#TODO properly fix this bug -
+#trigger can't ever be invoked with a default
+#value and the on_close attribute is read only....
+#the future never gets the on_done handler
+#installed 
+sub BUILD {
+  my ($self) = @_; 
+  $self->on_close(CPS::Future->new);  
+}
+
 has on_close => (
-  is => 'ro', default => sub { CPS::Future->new },
+  is => 'rw', default => sub { CPS::Future->new },
   trigger => sub {
     my ($self, $f) = @_;
     Dlog_trace { "trigger for on_close has been invoked for connection $_" } $self->_id;
     weaken($self);
     $f->on_done(sub {
-      $self->_fail_outstanding("Connection lost: ".($f->get)[0]);
+      Dlog_trace { "failing all of the outstanding futures for connection $_" } $self->_id;
+      $self->_fail_outstanding("Connection lost: " . ($f->get)[0]);
     });
   }
 );
@@ -256,10 +271,22 @@ sub _send {
   #logic it could easily do short-writes to the remote side - how about taking this entire buffer
   #and having the run loop send it to the file handle so this doesn't block while the sending
   #is happening? 
-  my $ret = print $fh $serialized;
-  Dlog_trace { my $r = defined $ret ? $ret : 'undef'; "print() returned $r with $_" } $fh;
-  #TODO hrm reason print's return value was ignored?
-  die "could not write to filehandle: $!" unless $ret;
+  my $ret; 
+  eval { 
+      local($SIG{PIPE}) = 'IGNORE';
+      die "filehandle is not open" unless openhandle($fh);
+      log_trace { "file handle has passed openhandle() test; printing to it" };
+      $ret = print $fh $serialized;
+      die "print was not successful: $!" unless defined $ret
+  };
+  
+  if ($@) {
+      Dlog_debug { "exception encountered when trying to write to file handle $_: $@" } $fh;
+      my $error = $@; chomp($error);
+      $self->on_close->done("could not write to file handle: $error") unless $self->on_close->is_ready;
+      return; 
+  }
+      
   return $ret; 
 }
 

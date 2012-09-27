@@ -38,6 +38,7 @@ sub connect {
       undef($channel);
     });
     $channel->on_close_call(sub {
+      log_trace { "Connection has been closed" };
       $f->fail("Channel closed without seeing Shere: $_[0]");
       undef($channel);
     });
