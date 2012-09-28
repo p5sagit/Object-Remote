@@ -1,26 +1,64 @@
 package Object::Remote::Connection;
 
+use Object::Remote::Logging qw (:log :dlog);
 use Object::Remote::Future;
 use Object::Remote::Null;
 use Object::Remote::Handle;
 use Object::Remote::CodeContainer;
 use Object::Remote::GlobProxy;
 use Object::Remote::GlobContainer;
-use Object::Remote::Logging qw (:log :dlog);
 use Object::Remote::Tied;
 use Object::Remote;
 use Symbol;
 use IO::Handle;
+use POSIX ":sys_wait_h";
 use Module::Runtime qw(use_module);
 use Scalar::Util qw(weaken blessed refaddr openhandle);
 use JSON::PP qw(encode_json);
 use Moo;
 
+BEGIN { 
+  #this will reap child processes as soon
+  #as they are done executing so the process
+  #table cleans up as fast as possible but
+  #anything that needs to call waitpid()
+  #in the future to get the exit value of
+  #a child will get trash results if
+  #the signal handler was running. 
+  #If creating a child and getting the
+  #exit value is required then set
+  #a localized version of the signal
+  #handler for CHLD to be 'IGNORE'
+  #in the smallest block possible
+  #and outside the block send
+  #the process a CHLD signal
+  #to reap anything that may
+  #have exited while blocked
+  #in waitpid() 
+  $SIG{CHLD} = sub { 
+    my $kid; 
+    log_debug { "CHLD signal handler is executing" };
+    do {
+      $kid = waitpid(-1, WNOHANG);
+      log_trace { "waitpid() returned '$kid'" };
+    } while $kid > 0;
+    log_trace { "CHLD signal handler is done" };
+  };      
+}
+
+END {
+  log_debug { "Killing all child processes in the process group" };
+    
+  #send SIGINT to the process group for our children
+  kill(1, -2);
+}
+
+
 our $DEBUG = !!$ENV{OBJECT_REMOTE_DEBUG};
 #numbering each connection allows it to be
 #tracked along with file handles in
 #the logs
-BEGIN { our $NEXT_CONNECTION_ID = 0 }
+
 has _id => ( is => 'ro', required => 1, default => sub { our $NEXT_CONNECTION_ID++ } );
 
 has send_to_fh => (
@@ -32,6 +70,9 @@ has send_to_fh => (
   },
 );
 
+#TODO see if this is another case of the same bug below 
+#where trigger never fires because the attribute isn't
+#actually set at any time
 has read_channel => (
   is => 'ro', required => 1,
   trigger => sub {
@@ -52,10 +93,22 @@ has read_channel => (
 #value and the on_close attribute is read only....
 #the future never gets the on_done handler
 #installed 
-sub BUILD {
+sub BUILD { 
   my ($self) = @_; 
-  $self->on_close(CPS::Future->new);  
+  $self->on_close(CPS::Future->new);
 }
+
+after BUILD => sub {
+  my ($self) = @_; 
+  
+  return unless defined $self->child_pid; 
+  
+  log_debug { "Setting process group of child process" };
+  
+  setpgrp($self->child_pid, 1);
+};
+
+
 
 has on_close => (
   is => 'rw', default => sub { CPS::Future->new },
@@ -65,7 +118,7 @@ has on_close => (
     weaken($self);
     $f->on_done(sub {
       Dlog_trace { "failing all of the outstanding futures for connection $_" } $self->_id;
-      $self->_fail_outstanding("Connection lost: " . ($f->get)[0]);
+      $self->_fail_outstanding("Object::Remote connection lost: " . ($f->get)[0]);
     });
   }
 );
@@ -149,24 +202,47 @@ sub _build__json {
   ); 
 }
 
+sub _load_if_possible {
+  my ($class) = @_; 
+
+  eval "require $class"; 
+
+  if ($@) {
+    log_debug { "Attempt at loading '$class' failed with '$@'" };
+  }
+
+}
+
 BEGIN {
   unshift our @Guess, sub { blessed($_[0]) ? $_[0] : undef };
-  eval { require Object::Remote::Connector::Local };
-  eval { require Object::Remote::Connector::LocalSudo };
-  eval { require Object::Remote::Connector::SSH };
-  eval { require Object::Remote::Connector::UNIX };
+  map _load_if_possible($_), qw(
+    Object::Remote::Connector::Local
+    Object::Remote::Connector::LocalSudo
+    Object::Remote::Connector::SSH
+    Object::Remote::Connector::UNIX
+  ); 
+}
+
+sub conn_from_spec {
+  my ($class, $spec, @args) = @_;
+  foreach my $poss (do { our @Guess }) {
+    if (my $conn = $poss->($spec, @args)) {
+      return $conn;
+    }
+  }
+  
+  return undef;
 }
 
 sub new_from_spec {
   my ($class, $spec) = @_;
   return $spec if blessed $spec;
-  Dlog_debug { "creating a new connection from spec" };
-  foreach my $poss (do { our @Guess }) {
-    if (my $conn = $poss->($spec)) {
-      return $conn->maybe::start::connect;
-    }
-  }
-  die "Couldn't figure out what to do with ${spec}";
+  my $conn = $class->conn_from_spec($spec); 
+  
+  die "Couldn't figure out what to do with ${spec}"
+    unless defined $conn;
+    
+  return $conn->maybe::start::connect;  
 }
 
 sub remote_object {
@@ -275,7 +351,7 @@ sub _send {
       $ret = print $fh $serialized;
       die "print was not successful: $!" unless defined $ret
   };
-  
+    
   if ($@) {
       Dlog_debug { "exception encountered when trying to write to file handle $_: $@" } $fh;
       my $error = $@; chomp($error);

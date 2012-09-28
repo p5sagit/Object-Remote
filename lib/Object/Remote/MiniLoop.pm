@@ -112,7 +112,7 @@ sub watch_time {
   my $timers = $self->_timers;
   my $new = [ $at => $code, $watch{every} ];
   $self->_sort_timers($new); 
-  log_debug { "Created new timer that expires at '$at'" };
+  log_debug { "Created new timer with id '$new' that expires at '$at'" };
   return "$new";
 }
 
@@ -158,22 +158,7 @@ sub loop_once {
   my $wait_time = $self->_next_timer_expires_delay;
   log_trace {  sprintf("Run loop: loop_once() has been invoked by $c[1]:$c[2] with read:%i write:%i select timeout:%s",
       scalar(keys(%$read)), scalar(keys(%$write)), defined $wait_time ? $wait_time : 'indefinite' ) };
-  #TODO The docs state that select() in some instances can return a socket as ready to
-  #read data even if reading from it would block and the recomendation is to set
-  #handles used with select() as non-blocking but Perl on Windows can not set a 
-  #handle to use non-blocking IO - If Windows is not one of the operating
-  #systems where select() returns a handle that could block it would work to
-  #enable non-blocking mode only under Posix - the non-blocking sysread()
-  #logic would work unmodified for both blocking and non-blocking handles
-  #under Posix and Windows.
   my ($readable, $writeable) = IO::Select->select(
-    #TODO how come select() isn't used to identify handles with errors on them?
-    #TODO is there a specific reason for a half second maximum wait duration?
-    #The two places I've found for the runloop to be invoked don't return control
-    #to the caller until a controlling variable interrupts the loop that invokes
-    #loop_once() - is this to allow that variable to be polled and exit the
-    #run loop? If so why isn't that behavior event driven and causes select() to
-    #return? 
     $self->_read_select, $self->_write_select, undef, $wait_time
   ); 
   log_trace { 
@@ -208,8 +193,7 @@ sub loop_once {
   log_trace { "Checking timers" };
   while (@$timers and $timers->[0][0] <= $now) {
     my $active = $timers->[0]; 
-    Dlog_debug { "Found timer that needs to be executed: $_" } $active;
-#   my (shift @$timers)->[1]->();
+    Dlog_debug { "Found timer that needs to be executed: '$active'" };
      
     if (defined($active->[2])) {
       #handle the case of an 'every' timer
@@ -231,9 +215,6 @@ sub loop_once {
   return;
 }
 
-#::Node and ::ConnectionServer use the want_run() / want_stop()
-#counter to cause a run-loop to execute while something is active;
-#the futures do this via a different mechanism
 sub want_run {
   my ($self) = @_;
   Dlog_debug { "Run loop: Incrimenting want_running, is now $_" }
@@ -258,12 +239,6 @@ sub want_stop {
     --$self->{want_running};
 }
 
-#TODO Hypothesis: Futures invoke run() which gives that future
-#it's own localized is_running attribute - any adjustment to the
-#is_running attribute outside of that future will not effect that
-#future so each future winds up able to call run() and stop() at 
-#will with out interfering with each other - how about having
-#run loop until the future becomes ready? 
 sub run {
   my ($self) = @_;
   log_trace { "Run loop: run() invoked" };

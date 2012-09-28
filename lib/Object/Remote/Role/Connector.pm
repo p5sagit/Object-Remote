@@ -7,8 +7,6 @@ use Moo::Role;
 
 requires '_open2_for';
 
-#TODO return to 10 seconds after debugging
-#has timeout => (is => 'ro', default => sub { { after => 10 } });
 has timeout => (is => 'ro', default => sub { { after => 10 } });
 
 sub connect {
@@ -47,9 +45,6 @@ sub connect {
                   ->watch_time(
                       %{$self->timeout},
                       code => sub {
-#                        log_warn { "Connection timed out for child pid '$child_pid'" };
-#                        $f->fail("Connection timed out") unless $f->is_ready;
-#                        undef($channel);
                         Dlog_trace { "Connection timeout timer has fired for child pid '$child_pid'; is_ready: $_" } $f->is_ready;
                         unless($f->is_ready) {
                             log_warn { "Connection with child pid '$child_pid' has timed out" };

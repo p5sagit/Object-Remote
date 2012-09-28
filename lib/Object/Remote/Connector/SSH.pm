@@ -14,6 +14,9 @@ has ssh_options => (is => 'ro', default => sub { [ '-A' ] });
 
 has ssh_command => (is => 'ro', default => sub { 'ssh' });
 
+#TODO properly integrate if this works
+BEGIN { $ENV{TERM} = 'dumb'; } 
+
 sub _build_ssh_perl_command {
   my ($self) = @_;
   return [
@@ -31,7 +34,8 @@ push @Object::Remote::Connection::Guess, sub {
   for ($_[0]) {
     # 0-9 a-z _ - first char, those or . subsequent - hostnamish
     if (defined and !ref and /^(?:.*?\@)?[\w\-][\w\-\.]/) {
-      return __PACKAGE__->new(ssh_to => $_[0]);
+      my $host = shift(@_);
+      return __PACKAGE__->new(@_, ssh_to => $host);
     }
   }
   return;

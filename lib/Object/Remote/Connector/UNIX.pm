@@ -20,7 +20,8 @@ no warnings 'once';
 push @Object::Remote::Connection::Guess, sub { 
   for ($_[0]) {
     if (defined and !ref and /^(?:\.\/|\/)/) {
-      return __PACKAGE__->new(socket_path => $_[0]);
+      my $socket = shift(@_);
+      return __PACKAGE__->new(@_, socket_path => $socket);
     }
   }
   return;

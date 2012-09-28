@@ -33,7 +33,7 @@ sub _receive_data_from {
   Dlog_trace { "Preparing to read data from $_" } $fh;
   my $rb = $self->_receive_data_buffer;
   my $len = sysread($fh, $$rb, 32768, length($$rb));
-  my $err = defined($len) ? '' : ": $!";
+  my $err = defined($len) ? 'eof' : ": $!";
   if (defined($len) and $len > 0) {
     log_trace { "Read $len bytes of data" };
     while (my $cb = $self->on_line_call and $$rb =~ s/^(.*)\n//) {
