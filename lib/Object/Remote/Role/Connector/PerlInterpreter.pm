@@ -34,8 +34,8 @@ has watchdog_timeout => ( is => 'ro', required => 1, default => sub { 0 } );
 #ulimit of ~500 megs of v-ram
 #TODO only works with ssh with quotes but only works locally
 #with out quotes
-#sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 200000; nice -n 15 perl -"' ] }
-sub _build_perl_command { [ 'perl', '-' ] }
+sub _build_perl_command {[ 'sh -c "ulimit -v 200000; nice -n 15 perl -"' ] }
+#sub _build_perl_command { [ 'perl', '-' ] }
 #sub _build_perl_command { [ 'cat' ] }
 
 around connect => sub {
@@ -156,7 +156,7 @@ sub _setup_watchdog_reset {
     Dlog_trace { "Creating Watchdog management timer for connection id $_" } $conn->_id;
 
     $timer_id = Object::Remote->current_loop->watch_time(
-        every => $self->watchdog_timeout / 5,
+        every => $self->watchdog_timeout / 3,
         code => sub {
             unless(defined($conn)) {
                 log_trace { "Weak reference to connection in Watchdog was lost, terminating update timer $timer_id" };

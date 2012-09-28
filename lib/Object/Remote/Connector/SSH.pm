@@ -17,12 +17,24 @@ has ssh_command => (is => 'ro', default => sub { 'ssh' });
 #TODO properly integrate if this works
 BEGIN { $ENV{TERM} = 'dumb'; } 
 
+sub _escape_shell_arg { 
+    my ($self, $str) = (@_);
+    $str =~ s/((?:^|[^\\])(?:\\\\)*)'/$1\\'/g;
+    return "$str";
+}
+
+
 sub _build_ssh_perl_command {
   my ($self) = @_;
+  my $perl_command = join('', @{$self->perl_command});
+  
+  #TODO non-trivial to escape properly for ssh and shell
+  #this "works" but is not right, needs to be replaced
+  #after testing
   return [
     do { my $c = $self->ssh_command; ref($c) ? @$c : $c },
     @{$self->ssh_options}, $self->ssh_to,
-    @{$self->perl_command}
+    $self->_escape_shell_arg($perl_command),
   ];
 }
 
