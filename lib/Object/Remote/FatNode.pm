@@ -106,7 +106,7 @@ my $end = stripspace <<'END_END';
 
   use strictures 1;
   use Object::Remote::Node;
-  Object::Remote::Node->run;
+  Object::Remote::Node->run(watchdog_timeout => $WATCHDOG_TIMEOUT);
 END_END
 
 my %files = map +($mods{$_} => scalar do { local (@ARGV, $/) = ($_); <> }),

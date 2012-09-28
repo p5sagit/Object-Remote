@@ -91,7 +91,8 @@ push @Object::Remote::Connection::Guess, sub {
   for ($_[0]) {
     # username followed by @
     if (defined and !ref and /^ ([^\@]*?) \@ $/x) {
-      return __PACKAGE__->new(target_user => $1);
+      shift(@_);
+      return __PACKAGE__->new(@_, target_user => $1);
     }
   }
   return;

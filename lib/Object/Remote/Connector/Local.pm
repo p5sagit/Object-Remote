@@ -9,7 +9,10 @@ no warnings 'once';
 BEGIN {  }
 
 push @Object::Remote::Connection::Guess, sub {
-  if (($_[0]||'') eq '-') { __PACKAGE__->new }
+  if (($_[0]||'') eq '-') {
+      shift(@_); 
+      __PACKAGE__->new(@_); 
+  }
 };
 
 1;

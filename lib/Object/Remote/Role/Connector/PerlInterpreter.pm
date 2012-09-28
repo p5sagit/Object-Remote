@@ -3,33 +3,21 @@ package Object::Remote::Role::Connector::PerlInterpreter;
 use IPC::Open2;
 use IPC::Open3; 
 use IO::Handle;
+use Object::Remote::Logging qw( :log :dlog );
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
 use Object::Remote::Future;
-use Object::Remote::Logging qw( :log :dlog );
-use Scalar::Util qw(blessed);
-use POSIX ":sys_wait_h";
+use Scalar::Util qw(blessed weaken);
 use Moo::Role;
 use Symbol; 
 
 with 'Object::Remote::Role::Connector';
 
-#TODO ugh breaks some of the stuff in System::Introspector::Util by
-#screwing with status value of child
-BEGIN { 
-  $SIG{CHLD} = sub { 
-    my $kid; 
-    do {
-      $kid = waitpid(-1, WNOHANG);
-    } while $kid > 0;
-  } 
-}
-
 has module_sender => (is => 'lazy');
+
 #if no child_stderr file handle is specified then stderr
 #of the child will be connected to stderr of the parent
-has stderr => ( is => 'rw', default => sub { \*STDERR } );
-#has stderr => ( is => 'rw' );
+has stderr => ( is => 'rw', default => sub { undef } );
 
 sub _build_module_sender {
   my ($hook) =
@@ -39,14 +27,16 @@ sub _build_module_sender {
 }
 
 has perl_command => (is => 'lazy');
+has watchdog_timeout => ( is => 'ro', required => 1, default => sub { 0 } );
 
 #TODO convert nice value into optional feature enabled by
 #setting value of attribute
 #ulimit of ~500 megs of v-ram
 #TODO only works with ssh with quotes but only works locally
 #with out quotes
-sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 200000; nice -n 15 perl -"' ] }
-#sub _build_perl_command { [ 'perl', '-' ] }
+#sub _build_perl_command { [ 'sh', '-c', '"ulimit -v 200000; nice -n 15 perl -"' ] }
+sub _build_perl_command { [ 'perl', '-' ] }
+#sub _build_perl_command { [ 'cat' ] }
 
 around connect => sub {
   my ($orig, $self) = (shift, shift);
@@ -54,6 +44,7 @@ around connect => sub {
   return future {
     $f->on_done(sub {
       my ($conn) = $f->get;
+      $self->_setup_watchdog_reset($conn); 
       my $sub = $conn->remote_sub('Object::Remote::Logging::init_logging_forwarding');
       $sub->('Object::Remote::Logging', Object::Remote::Logging->arg_router);
       Object::Remote::Handle->new(
@@ -78,8 +69,15 @@ sub _start_perl {
   Dlog_debug { "invoking connection to perl interpreter using command line: $_" } @{$self->final_perl_command};
     
   if (defined($given_stderr)) {
+      #if the stderr data goes to an existing file handle
+      #an need an anonymous file handle is required
+      #as the other half of a pipe style file handle pair
+      #so the file handles can go into the run loop
       $foreign_stderr = gensym();
   } else {
+      #if no file handle has been specified
+      #for the child's stderr then connect
+      #the child stderr to the parent stderr
       $foreign_stderr = ">&STDERR";
   }
   
@@ -116,34 +114,9 @@ sub _start_perl {
                       );     
   }
       
-  #TODO open2() dupes the child stderr into the calling
-  #process stderr which means if this process exits the
-  #child is still attached to the shell - using open3()
-  #and having the run loop manage the stderr means this
-  #won't happen BUT if the run loop just sends the remote
-  #stderr data to the local stderr the logs will interleave
-  #for sure - a simple test would be to use open3() and just
-  #close the remote stderr and see what happens - a longer
-  #term solution would be for Object::Remote to offer a feature
-  #where the user of a connection species a destination for output
-  #either a file name or their own file handle and the node output
-  #is dumped to it 
-#  my $pid = open2(
-#    my $foreign_stdout,
-#    my $foreign_stdin,
-#    @{$self->final_perl_command},
-#  ) or die "Failed to run perl at '$_[0]': $!";
-#
-#  Dlog_trace { "Connection to remote side successful; remote stdin and stdout: $_" } [ $foreign_stdin, $foreign_stdout ];
-
-
-   return ($foreign_stdin, $foreign_stdout, $pid);
+  return ($foreign_stdin, $foreign_stdout, $pid);
 }
 
-#TODO open2() forks off a child and I have not been able to locate
-#a mechanism for reaping dead children so they don't become zombies
-#CONFIRMED there is no reaping of children being done, find a safe
-#way to do it
 sub _open2_for {
   my $self = shift;
   my ($foreign_stdin, $foreign_stdout, $pid) = $self->_start_perl(@_);
@@ -174,10 +147,46 @@ sub _open2_for {
   return ($foreign_stdin, $foreign_stdout, $pid);
 }
 
+sub _setup_watchdog_reset {
+    my ($self, $conn) = @_;
+    my $timer_id; 
+    
+    return unless $self->watchdog_timeout; 
+        
+    Dlog_trace { "Creating Watchdog management timer for connection id $_" } $conn->_id;
+
+    $timer_id = Object::Remote->current_loop->watch_time(
+        every => $self->watchdog_timeout / 5,
+        code => sub {
+            unless(defined($conn)) {
+                log_trace { "Weak reference to connection in Watchdog was lost, terminating update timer $timer_id" };
+                Object::Remote->current_loop->unwatch_time($timer_id);
+                return;  
+            }
+            
+            Dlog_debug { "Reseting Watchdog for connection id $_" } $conn->_id;
+            #we do not want to block in the run loop so send the
+            #update off and ignore any result, we don't need it
+            #anyway
+            $conn->send_class_call(0, 'Object::Remote::WatchDog', 'reset');
+        }
+    );
+    
+    $conn->on_close->on_done(sub { Object::Remote->current_loop->unwatch_time($timer_id) });
+}
+
 sub fatnode_text {
   my ($self) = @_;
-  require Object::Remote::FatNode;
   my $text = '';
+
+  require Object::Remote::FatNode;
+  
+  $text = "my \$WATCHDOG_TIMEOUT = '" . $self->watchdog_timeout . "';\n";
+  
+  if (my $duration = $self->watchdog_timeout) {
+    $text .= "alarm(\$WATCHDOG_TIMEOUT);\n";    
+  }
+
   $text .= 'BEGIN { $ENV{OBJECT_REMOTE_DEBUG} = 1 }'."\n"
     if $ENV{OBJECT_REMOTE_DEBUG};
   $text .= <<'END';
@@ -190,6 +199,7 @@ END
 eval $Object::Remote::FatNode::DATA;
 die $@ if $@;
 END
+  
   $text .= "__END__\n";
   return $text;
 }
