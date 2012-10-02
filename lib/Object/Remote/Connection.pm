@@ -37,13 +37,15 @@ BEGIN {
   #in waitpid() 
   $SIG{CHLD} = sub { 
     my $kid; 
-    log_debug { "CHLD signal handler is executing" };
+    log_trace { "CHLD signal handler is executing" };
     do {
       $kid = waitpid(-1, WNOHANG);
-      log_trace { "waitpid() returned '$kid'" };
+      log_debug { "waitpid() returned '$kid'" };
     } while $kid > 0;
     log_trace { "CHLD signal handler is done" };
-  };      
+  };
+  
+  $SIG{PIPE} = sub { log_debug { "Got a PIPE signal" } };      
 }
 
 END {
@@ -109,7 +111,6 @@ after BUILD => sub {
 };
 
 
-
 has on_close => (
   is => 'rw', default => sub { CPS::Future->new },
   trigger => sub {
@@ -141,7 +142,7 @@ sub _fail_outstanding {
   my ($self, $error) = @_;
   Dlog_debug { "Failing outstanding futures with '$error' for connection $_" } $self->_id;
   my $outstanding = $self->outstanding_futures;
-  $_->fail($error) for values %$outstanding;
+  $_->fail("$error\n") for values %$outstanding;
   %$outstanding = ();
   return;
 }
