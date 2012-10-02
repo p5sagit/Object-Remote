@@ -193,7 +193,7 @@ sub loop_once {
   log_trace { "Checking timers" };
   while (@$timers and $timers->[0][0] <= $now) {
     my $active = $timers->[0]; 
-    Dlog_debug { "Found timer that needs to be executed: '$active'" };
+    Dlog_trace { "Found timer that needs to be executed: '$active'" };
      
     if (defined($active->[2])) {
       #handle the case of an 'every' timer

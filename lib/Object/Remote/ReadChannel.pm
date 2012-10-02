@@ -1,7 +1,7 @@
 package Object::Remote::ReadChannel;
 
 use CPS::Future;
-use Scalar::Util qw(weaken);
+use Scalar::Util qw(weaken openhandle);
 use Object::Remote::Logging qw(:log :dlog);
 use POSIX;
 use Moo;
@@ -58,11 +58,14 @@ sub DEMOLISH {
   my ($self, $gd) = @_;
   return if $gd;
   log_trace { "read channel is being demolished" };
+   
   Object::Remote->current_loop
                 ->unwatch_io(
                     handle => $self->fh,
                     on_read_ready => 1
                   );
+                  
+  
 }
 
 1;

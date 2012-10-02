@@ -8,6 +8,7 @@ use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
 use Object::Remote::Future;
 use Scalar::Util qw(blessed weaken);
+use POSIX;
 use Moo::Role;
 use Symbol; 
 
@@ -98,7 +99,7 @@ sub _start_perl {
                         on_read_ready => sub {
                           my $buf = ''; 
                           my $len = sysread($foreign_stderr, $buf, 32768);
-                          if (!defined($len) or $len == 0) {
+                          if ((!defined($len) && $! != EAGAIN) or $len == 0) {
                             log_trace { "Got EOF or error on child stderr, removing from watcher" };
                             $self->stderr(undef);
                             Object::Remote->current_loop
@@ -132,7 +133,7 @@ sub _open2_for {
                       }
                       # if the stdin went away, we'll never get Shere
                       # so it's not a big deal to simply give up on !defined
-                      if (!defined($len) or 0 == length($to_send)) {
+                      if ((!defined($len) && $! != EAGAIN) or 0 == length($to_send)) {
                         log_trace { "Got EOF or error when writing fatnode data to filehandle, unwatching it" };
                         Object::Remote->current_loop
                                       ->unwatch_io(
@@ -154,7 +155,9 @@ sub _setup_watchdog_reset {
     return unless $self->watchdog_timeout; 
         
     Dlog_trace { "Creating Watchdog management timer for connection id $_" } $conn->_id;
-
+    
+    weaken($conn);
+        
     $timer_id = Object::Remote->current_loop->watch_time(
         every => $self->watchdog_timeout / 3,
         code => sub {
@@ -164,15 +167,13 @@ sub _setup_watchdog_reset {
                 return;  
             }
             
-            Dlog_debug { "Reseting Watchdog for connection id $_" } $conn->_id;
+            Dlog_trace { "Reseting Watchdog for connection id $_" } $conn->_id;
             #we do not want to block in the run loop so send the
             #update off and ignore any result, we don't need it
             #anyway
             $conn->send_class_call(0, 'Object::Remote::WatchDog', 'reset');
         }
-    );
-    
-    $conn->on_close->on_done(sub { Object::Remote->current_loop->unwatch_time($timer_id) });
+    );     
 }
 
 sub fatnode_text {
@@ -181,12 +182,13 @@ sub fatnode_text {
 
   require Object::Remote::FatNode;
   
-  $text = "my \$WATCHDOG_TIMEOUT = '" . $self->watchdog_timeout . "';\n";
-  
-  if (my $duration = $self->watchdog_timeout) {
+  if (defined($self->watchdog_timeout)) {
+    $text = "my \$WATCHDOG_TIMEOUT = '" . $self->watchdog_timeout . "';\n";   
     $text .= "alarm(\$WATCHDOG_TIMEOUT);\n";    
+  } else {
+      $text = "my \$WATCHDOG_TIMEOUT = undef;\n";
   }
-
+  
   $text .= 'BEGIN { $ENV{OBJECT_REMOTE_DEBUG} = 1 }'."\n"
     if $ENV{OBJECT_REMOTE_DEBUG};
   $text .= <<'END';

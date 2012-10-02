@@ -11,7 +11,7 @@ has timeout => (is => 'ro', default => sub { { after => 10 } });
 
 sub connect {
   my $self = shift;
-  Dlog_debug { "Perparing to create connection with args of: $_" } @_;
+  Dlog_debug { "Preparing to create connection with args of: $_" } @_;
   my ($send_to_fh, $receive_from_fh, $child_pid) = $self->_open2_for(@_);
   my $channel = use_module('Object::Remote::ReadChannel')->new(
     fh => $receive_from_fh
