@@ -64,9 +64,6 @@ sub _start_perl {
                 ->watch_io(
                     handle => $sudo_stderr,
                     on_read_ready => sub {
-  #TODO is there a specific reason sysread() and syswrite() aren't
-  #a part of ::MiniLoop? It's one spot to handle errors and other
-  #logic involving filehandles
                       Dlog_debug { "LocalSudo: Preparing to read data from $_" } $sudo_stderr;
                       if (sysread($sudo_stderr, my $buf, 32768) > 0) {
                         log_trace { "LocalSudo: successfully read data, printing it to STDERR" };

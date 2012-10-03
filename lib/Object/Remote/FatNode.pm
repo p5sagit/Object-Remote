@@ -1,8 +1,5 @@
 package Object::Remote::FatNode;
 
-#TODO If a file does not end in a new line by itself
-#then fat node fails
-
 use strictures 1;
 use Config;
 use B qw(perlstring);

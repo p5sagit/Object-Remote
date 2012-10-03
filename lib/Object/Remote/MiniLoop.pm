@@ -8,6 +8,9 @@ use Moo;
 # this is ro because we only actually set it using local in sub run
 
 has is_running => (is => 'ro', clearer => 'stop');
+#maximum duration that select() will block - undef means indefinite,
+#0 means no blocking, otherwise maximum time in seconds
+has block_duration => ( is => 'rw' );
 
 has _read_watches => (is => 'ro', default => sub { {} });
 has _read_select => (is => 'ro', default => sub { IO::Select->new });
@@ -38,19 +41,6 @@ sub watch_io {
   my ($self, %watch) = @_;
   my $fh = $watch{handle};
   Dlog_debug { "Adding IO watch for $_" } $fh;
-
-  #TODO if this works out non-blocking support
-  #will need to be integrated in a way that
-  #is compatible with Windows which has no
-  #non-blocking support - see also ::ReadChannel
-  if (0) {
-    Dlog_warn { "setting file handle to be non-blocking: $_" } $fh;
-    use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
-    my $flags = fcntl($fh, F_GETFL, 0)
-      or die "Can't get flags for the socket: $!\n";
-    $flags = fcntl($fh, F_SETFL, $flags | O_NONBLOCK)
-      or die "Can't set flags for the socket: $!\n"; 
-  }
   
   if (my $cb = $watch{on_read_ready}) {
     log_trace { "IO watcher is registering with select for reading" };
@@ -126,12 +116,7 @@ sub unwatch_time {
 sub _next_timer_expires_delay {
   my ($self) = @_;
   my $timers = $self->_timers;
-  #undef means no timeout, select only returns
-  #when data is ready - when the system
-  #deadlocks the chatter from the timeout in
-  #select clogs up the logs
-  #TODO should make this an attribute
-  my $delay_max = undef;
+  my $delay_max = $self->block_duration;
     
   return $delay_max unless @$timers;
   my $duration = $timers->[0]->[0] - time;

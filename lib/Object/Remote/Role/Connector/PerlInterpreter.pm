@@ -3,14 +3,13 @@ package Object::Remote::Role::Connector::PerlInterpreter;
 use IPC::Open2;
 use IPC::Open3; 
 use IO::Handle;
+use Symbol; 
 use Object::Remote::Logging qw( :log :dlog );
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
 use Object::Remote::Future;
 use Scalar::Util qw(blessed weaken);
-use POSIX;
 use Moo::Role;
-use Symbol; 
 
 with 'Object::Remote::Role::Connector';
 
@@ -30,14 +29,8 @@ sub _build_module_sender {
 has perl_command => (is => 'lazy');
 has watchdog_timeout => ( is => 'ro', required => 1, default => sub { 0 } );
 
-#TODO convert nice value into optional feature enabled by
-#setting value of attribute
-#ulimit of ~500 megs of v-ram
-#TODO only works with ssh with quotes but only works locally
-#with out quotes
+#TODO convert the ulimit and nice values into configurable attributes
 sub _build_perl_command {[ 'sh -c "ulimit -v 200000; nice -n 15 perl -"' ] }
-#sub _build_perl_command { [ 'perl', '-' ] }
-#sub _build_perl_command { [ 'cat' ] }
 
 around connect => sub {
   my ($orig, $self) = (shift, shift);
@@ -90,16 +83,15 @@ sub _start_perl {
   ) or die "Failed to run perl at '$_[0]': $!";
   
   if (defined($given_stderr)) {   
-      log_warn { "using experimental cat for child stderr" };
+      Dlog_debug { "Child process STDERR is being handled via run loop" };
         
-      #TODO refactor if this solves the problem
       Object::Remote->current_loop
                     ->watch_io(
                         handle => $foreign_stderr,
                         on_read_ready => sub {
                           my $buf = ''; 
                           my $len = sysread($foreign_stderr, $buf, 32768);
-                          if ((!defined($len) && $! != EAGAIN) or $len == 0) {
+                          if (!defined($len) or $len == 0) {
                             log_trace { "Got EOF or error on child stderr, removing from watcher" };
                             $self->stderr(undef);
                             Object::Remote->current_loop
@@ -133,7 +125,7 @@ sub _open2_for {
                       }
                       # if the stdin went away, we'll never get Shere
                       # so it's not a big deal to simply give up on !defined
-                      if ((!defined($len) && $! != EAGAIN) or 0 == length($to_send)) {
+                      if (!defined($len) or 0 == length($to_send)) {
                         log_trace { "Got EOF or error when writing fatnode data to filehandle, unwatching it" };
                         Object::Remote->current_loop
                                       ->unwatch_io(
