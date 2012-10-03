@@ -55,11 +55,7 @@ END {
   kill(1, -2);
 }
 
-
 our $DEBUG = !!$ENV{OBJECT_REMOTE_DEBUG};
-#numbering each connection allows it to be
-#tracked along with file handles in
-#the logs
 
 has _id => ( is => 'ro', required => 1, default => sub { our $NEXT_CONNECTION_ID++ } );
 
@@ -72,9 +68,6 @@ has send_to_fh => (
   },
 );
 
-#TODO see if this is another case of the same bug below 
-#where trigger never fires because the attribute isn't
-#actually set at any time
 has read_channel => (
   is => 'ro', required => 1,
   trigger => sub {
@@ -90,38 +83,9 @@ has read_channel => (
   },
 );
 
-#TODO properly fix this bug -
-#trigger can't ever be invoked with a default
-#value and the on_close attribute is read only....
-#the future never gets the on_done handler
-#installed 
-sub BUILD { 
-  my ($self) = @_; 
-  $self->on_close(CPS::Future->new);
-}
-
-after BUILD => sub {
-  my ($self) = @_; 
-  
-  return unless defined $self->child_pid; 
-  
-  log_debug { "Setting process group of child process" };
-  
-  setpgrp($self->child_pid, 1);
-};
-
-
 has on_close => (
-  is => 'rw', default => sub { CPS::Future->new },
-  trigger => sub {
-    my ($self, $f) = @_;
-    Dlog_trace { "trigger for on_close has been invoked for connection $_" } $self->_id;
-    weaken($self);
-    $f->on_done(sub {
-      Dlog_trace { "failing all of the outstanding futures for connection $_" } $self->_id;
-      $self->_fail_outstanding("Object::Remote connection lost: " . ($f->get)[0]);
-    });
-  }
+  is => 'rw', default => sub { $_[0]->_install_future_handlers(CPS::Future->new) },
+  trigger => \&_install_future_handlers,
 );
 
 has child_pid => (is => 'ro');
@@ -138,6 +102,26 @@ has remote_objects_by_id => (
 
 has outstanding_futures => (is => 'ro', default => sub { {} });
 
+has _json => (
+  is => 'lazy',
+  handles => {
+    _deserialize => 'decode',
+    _encode => 'encode',
+  },
+);
+
+after BUILD => sub {
+  my ($self) = @_; 
+  
+  return unless defined $self->child_pid; 
+  
+  log_debug { "Setting process group of child process" };
+  
+  setpgrp($self->child_pid, 1);
+};
+
+sub BUILD { }
+
 sub _fail_outstanding {
   my ($self, $error) = @_;
   Dlog_debug { "Failing outstanding futures with '$error' for connection $_" } $self->_id;
@@ -147,13 +131,16 @@ sub _fail_outstanding {
   return;
 }
 
-has _json => (
-  is => 'lazy',
-  handles => {
-    _deserialize => 'decode',
-    _encode => 'encode',
-  },
-);
+sub _install_future_handlers {
+    my ($self, $f) = @_;
+    Dlog_trace { "trigger for on_close has been invoked for connection $_" } $self->_id;
+    weaken($self);
+    $f->on_done(sub {
+      Dlog_trace { "failing all of the outstanding futures for connection $_" } $self->_id;
+      $self->_fail_outstanding("Object::Remote connection lost: " . ($f->get)[0]);
+    });
+    return $f; 
+};
 
 sub _id_to_remote_object {
   my ($self, $id) = @_;
@@ -340,24 +327,20 @@ sub _send {
   Dlog_trace { "Starting to serialize data in argument to _send for connection $_" } $self->_id;
   my $serialized = $self->_serialize($to_send)."\n";
   Dlog_trace { my $l = length($serialized); "serialization is completed; sending '$l' characters of serialized data to $_" } $fh;
-  #TODO this is very risky for deadlocks unless it's set to non-blocking and then with out extra
-  #logic it could easily do short-writes to the remote side - how about taking this entire buffer
-  #and having the run loop send it to the file handle so this doesn't block while the sending
-  #is happening? 
   my $ret; 
   eval { 
-      local($SIG{PIPE}) = 'IGNORE';
-      die "filehandle is not open" unless openhandle($fh);
-      log_trace { "file handle has passed openhandle() test; printing to it" };
-      $ret = print $fh $serialized;
-      die "print was not successful: $!" unless defined $ret
+    #TODO this should be converted over to a non-blocking ::WriteChannel class
+    die "filehandle is not open" unless openhandle($fh);
+    log_trace { "file handle has passed openhandle() test; printing to it" };
+    $ret = print $fh $serialized;
+    die "print was not successful: $!" unless defined $ret
   };
     
   if ($@) {
-      Dlog_debug { "exception encountered when trying to write to file handle $_: $@" } $fh;
-      my $error = $@; chomp($error);
-      $self->on_close->done("could not write to file handle: $error") unless $self->on_close->is_ready;
-      return; 
+    Dlog_debug { "exception encountered when trying to write to file handle $_: $@" } $fh;
+    my $error = $@; chomp($error);
+    $self->on_close->done("could not write to file handle: $error") unless $self->on_close->is_ready;
+    return; 
   }
       
   return $ret; 

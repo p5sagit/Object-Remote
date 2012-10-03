@@ -14,9 +14,6 @@ has ssh_options => (is => 'ro', default => sub { [ '-A' ] });
 
 has ssh_command => (is => 'ro', default => sub { 'ssh' });
 
-#TODO properly integrate if this works
-BEGIN { $ENV{TERM} = 'dumb'; } 
-
 sub _escape_shell_arg { 
     my ($self, $str) = (@_);
     $str =~ s/((?:^|[^\\])(?:\\\\)*)'/$1\\'/g;

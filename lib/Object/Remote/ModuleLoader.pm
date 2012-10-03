@@ -9,7 +9,6 @@ BEGIN {
   # unqualified INC forced into package main
   sub Object::Remote::ModuleLoader::Hook::INC {
     my ($self, $module) = @_;
-    #TODO not logging - timing issue?
     log_debug { "Loading $module via " . ref($self) };
     if (my $code = $self->sender->source_for($module)) {
       open my $fh, '<', \$code;

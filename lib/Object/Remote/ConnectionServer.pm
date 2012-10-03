@@ -5,7 +5,6 @@ use Module::Runtime qw(use_module);
 use Object::Remote;
 use Object::Remote::Logging qw( :log :dlog );
 use IO::Socket::UNIX;
-use POSIX ();
 use Moo;
 
 has listen_on => (
@@ -65,9 +64,6 @@ sub _listen_ready {
   $f->on_ready(sub { undef($c) });
   log_trace { "marking the future as done" };
   $c->ready_future->done;
-  #TODO see if this runs on the controller or the remote node 
-  #if this runs on the controller a poorly behaved remote node
-  #could cause the print() to block but it's a very low probability
   Dlog_trace { "Sending 'Shere' to socket $_" } $new; 
   print $new "Shere\n" or die "Couldn't send to new socket: $!";
   log_debug { "Connection has been fully handled" };
