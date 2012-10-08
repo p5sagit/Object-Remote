@@ -6,7 +6,6 @@ use Object::Remote::Logging qw( :log :dlog );
 use Moo;
 
 # this is ro because we only actually set it using local in sub run
-
 has is_running => (is => 'ro', clearer => 'stop');
 #maximum duration that select() will block - undef means indefinite,
 #0 means no blocking, otherwise maximum time in seconds
@@ -93,9 +92,9 @@ sub watch_time {
   } elsif (exists($watch{after})) {
     $at = time() + $watch{after}; 
   } elsif (exists($watch{at})) {
-      $at = $watch{at}; 
+    $at = $watch{at}; 
   } else {
-      die "watch_time requires every, after or at";
+    die "watch_time requires every, after or at";
   }
   
   die "watch_time requires code" unless my $code = $watch{code};

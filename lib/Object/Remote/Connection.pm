@@ -77,8 +77,8 @@ has read_channel => (
     weaken($self);
     $ch->on_line_call(sub { $self->_receive(@_) });
     $ch->on_close_call(sub { 
-        log_trace { "invoking 'done' on on_close handler for connection id '$id'" }; 
-        $self->on_close->done(@_);
+      log_trace { "invoking 'done' on on_close handler for connection id '$id'" }; 
+      $self->on_close->done(@_);
     });
   },
 );
@@ -181,15 +181,15 @@ sub _build__json {
     }
   )->filter_json_single_key_object(
     __remote_tied_hash__ => sub {
-        my %tied_hash;
-        tie %tied_hash, 'Object::Remote::Tied', $self->_id_to_remote_object(@_);
-        return \%tied_hash;
+      my %tied_hash;
+      tie %tied_hash, 'Object::Remote::Tied', $self->_id_to_remote_object(@_);
+      return \%tied_hash;
     }
   )->filter_json_single_key_object(
     __remote_tied_array__ => sub {
-        my @tied_array;
-        tie @tied_array, 'Object::Remote::Tied', $self->_id_to_remote_object(@_);
-        return \@tied_array;
+      my @tied_array;
+      tie @tied_array, 'Object::Remote::Tied', $self->_id_to_remote_object(@_);
+      return \@tied_array;
     }
   ); 
 }

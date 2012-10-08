@@ -9,11 +9,11 @@ use strictures 1;
 #is passed to the constructor 
 
 sub TIEHASH {
-    return $_[1];
+  return $_[1];
 }
 
 sub TIEARRAY {
-    return $_[1];
+  return $_[1];
 }
 
 
