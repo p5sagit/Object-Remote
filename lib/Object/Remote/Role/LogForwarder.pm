@@ -1,3 +1,7 @@
+#This is an experimental method for working with
+#Log::Contextual crossing Object::Remote connections
+#transparently 
+
 package Object::Remote::Role::LogForwarder;
 
 use Moo::Role; 
@@ -38,6 +42,8 @@ sub describe {
 sub add_child_router {
   my ($self, $router) = @_;
   push(@{ $self->child_routers }, $router);
+  #TODO re-weaken when object::remote proxied
+  #weak references is figured out
 #   weaken(${ $self->child_routers }[-1]);
   return; 
 }

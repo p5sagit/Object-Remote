@@ -55,9 +55,9 @@ my @core_non_arch = grep +(
 
 my $env_pass = '';
 if (defined($ENV{OBJECT_REMOTE_LOG_LEVEL})) {
-    my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};
-    return unless $level =~ /^\w+$/;
-    $env_pass = '$ENV{OBJECT_REMOTE_LOG_LEVEL} = "' . $level . "\";\n";
+  my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};
+  return unless $level =~ /^\w+$/;
+  $env_pass = '$ENV{OBJECT_REMOTE_LOG_LEVEL} = "' . $level . "\";\n";
 }
 
 my $start = stripspace <<'END_START';

@@ -8,7 +8,7 @@ use Module::Runtime qw(use_module);
 our $VERSION = '0.002003'; # 0.2.3
 
 BEGIN { 
-    Object::Remote::Logging->init_logging; 
+  Object::Remote::Logging->init_logging; 
 }
 
 sub new::on {

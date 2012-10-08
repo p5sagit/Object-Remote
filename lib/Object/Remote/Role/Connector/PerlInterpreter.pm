@@ -14,6 +14,8 @@ use Moo::Role;
 with 'Object::Remote::Role::Connector';
 
 has module_sender => (is => 'lazy');
+has ulimit => ( is => 'ro' );
+has nice => ( is => 'ro' );
 
 #if no child_stderr file handle is specified then stderr
 #of the child will be connected to stderr of the parent
@@ -29,8 +31,28 @@ sub _build_module_sender {
 has perl_command => (is => 'lazy');
 has watchdog_timeout => ( is => 'ro', required => 1, default => sub { 0 } );
 
-#TODO convert the ulimit and nice values into configurable attributes
-sub _build_perl_command {[ 'sh -c "ulimit -v 200000; nice -n 15 perl -"' ] }
+#SSH requires the entire remote command to be
+#given as one single argument to the ssh 
+#command line program so this jumps through
+#some hoops
+sub _build_perl_command {
+    my ($self) = @_; 
+    my $nice = $self->nice;
+    my $ulimit = $self->ulimit; 
+    my $shell_code = 'sh -c "';
+    
+    if (defined($ulimit)) {
+        $shell_code .= "ulimit -v $ulimit; ";
+    }
+    
+    if (defined($nice)) {
+        $shell_code .= "nice -n $nice ";
+    }
+    
+    $shell_code .= 'perl -"';
+    
+    return [ $shell_code ];        
+}
 
 around connect => sub {
   my ($orig, $self) = (shift, shift);
