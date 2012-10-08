@@ -40,17 +40,14 @@ chomp(my @inc = qx($command));
 
 my %mods = reverse @inc;
 
-#TODO oi this isn't right yet
-my @non_core_non_arch = grep +(
+my @non_core = grep +(
   not (
     /^\Q$Config{privlibexp}/ or /^\Q$Config{archlibexp}/
-    #or /^\Q$Config{vendorarchexp}/ or /^\Q$Config{sitearchexp}/
   )
 ), keys %mods;
 
-my @core_non_arch = grep +(
+my @core = grep +(
   /^\Q$Config{privlibexp}/
-  and not(/^\Q$Config{archlibexp}/ or /\Q$Config{archname}/ or /\Q$Config{myarchname}/)
 ), keys %mods;
 
 my $env_pass = '';
@@ -91,7 +88,7 @@ my $end = stripspace <<'END_END';
 END_END
 
 my %files = map +($mods{$_} => scalar do { local (@ARGV, $/) = ($_); <> }),
-              @non_core_non_arch, @core_non_arch;
+              @non_core, @core;
 
 sub generate_fatpack_hash {
   my ($hash_name, $orig) = @_;
@@ -103,8 +100,8 @@ sub generate_fatpack_hash {
 }
 
 my @segments = (
-    map(generate_fatpack_hash('fatpacked', $_), sort map $mods{$_}, @non_core_non_arch),
-    map(generate_fatpack_hash('fatpacked_extra', $_), sort map $mods{$_}, @core_non_arch),
+    map(generate_fatpack_hash('fatpacked', $_), sort map $mods{$_}, @non_core),
+    map(generate_fatpack_hash('fatpacked_extra', $_), sort map $mods{$_}, @core),
 );
 
 our $DATA = join "\n", $start, $env_pass, @segments, $end;
