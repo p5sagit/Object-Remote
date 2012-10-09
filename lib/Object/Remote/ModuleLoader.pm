@@ -3,7 +3,7 @@ package Object::Remote::ModuleLoader;
 BEGIN {
   package Object::Remote::ModuleLoader::Hook;
   use Moo;
-  use Object::Remote::Logging qw(:log);
+  use Object::Remote::Logging qw( :log :dlog );
   has sender => (is => 'ro', required => 1);
 
   # unqualified INC forced into package main
@@ -12,8 +12,10 @@ BEGIN {
     log_debug { "Loading $module via " . ref($self) };
     if (my $code = $self->sender->source_for($module)) {
       open my $fh, '<', \$code;
+      Dlog_trace { "Module sender successfully sent code for '$module': $code" } $code;
       return $fh;
     }
+    log_trace { "Module sender did not return code for '$module'" };
     return;
   }
 }

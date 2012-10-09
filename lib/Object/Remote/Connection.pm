@@ -193,7 +193,7 @@ sub _build__json {
 sub _load_if_possible {
   my ($class) = @_; 
 
-  eval "require $class"; 
+  use_module($class); 
 
   if ($@) {
     log_debug { "Attempt at loading '$class' failed with '$@'" };

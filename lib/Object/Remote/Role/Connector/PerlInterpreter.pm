@@ -86,7 +86,7 @@ sub _start_perl {
     
   if (defined($given_stderr)) {
       #if the stderr data goes to an existing file handle
-      #an need an anonymous file handle is required
+      #an anonymous file handle is required
       #as the other half of a pipe style file handle pair
       #so the file handles can go into the run loop
       $foreign_stderr = gensym();

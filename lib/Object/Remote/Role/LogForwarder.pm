@@ -5,7 +5,6 @@
 package Object::Remote::Role::LogForwarder;
 
 use Moo::Role; 
-use Object::Remote::Logging; 
 use Scalar::Util qw(weaken);
 use Carp qw(cluck);
 
