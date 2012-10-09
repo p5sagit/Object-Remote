@@ -2,9 +2,8 @@ package Object::Remote::Logging;
 
 use strictures 1;
 
-use Log::Contextual qw( :log );
 use Object::Remote::LogRouter;
-use Object::Remote::LogDestination; 
+use Object::Remote::LogDestination;
 use Log::Contextual::SimpleLogger;
 use Carp qw(cluck);
 
