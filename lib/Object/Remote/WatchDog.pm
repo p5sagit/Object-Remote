@@ -38,7 +38,7 @@ sub reset {
   die "Attempt to reset the watchdog before it was constructed"
     unless defined $WATCHDOG; 
   
-  log_trace { "Watchdog has been reset" };
+  log_debug { "Watchdog has been reset" };
   alarm($WATCHDOG->timeout); 
 }
 
@@ -48,6 +48,7 @@ sub reset {
 #it makes sense to still terminate the process
 sub shutdown {
   my ($self) = @_;
+  log_debug { "Watchdog is shutting down" };
   alarm(0); 
 }
 
