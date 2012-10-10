@@ -30,18 +30,11 @@ sub _build_module_sender {
   return $hook ? $hook->sender : Object::Remote::ModuleSender->new;
 }
 
-#SSH requires the entire remote command to be
-#given as one single argument to the ssh 
-#command line program so this jumps through
-#some hoops
-
-#TODO this is SSH's problem not perl's so move
-#this to the SSH connector
 sub _build_perl_command {
     my ($self) = @_; 
     my $nice = $self->nice;
-    my $ulimit = $self->ulimit; 
-    my $shell_code = 'sh -c "';
+    my $ulimit = $self->ulimit;
+    my $shell_code = '';  
     
     if (defined($ulimit)) {
         $shell_code .= "ulimit -v $ulimit; ";
@@ -51,9 +44,9 @@ sub _build_perl_command {
         $shell_code .= "nice -n $nice ";
     }
     
-    $shell_code .= 'perl -"';
-    
-    return [ $shell_code ];        
+    $shell_code .= 'perl -';
+        
+    return [ 'sh', '-c', $shell_code ];        
 }
 
 around connect => sub {

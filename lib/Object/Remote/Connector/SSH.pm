@@ -2,6 +2,7 @@ package Object::Remote::Connector::SSH;
 
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
+use String::ShellQuote;
 use Moo;
 
 with 'Object::Remote::Role::Connector::PerlInterpreter';
@@ -14,24 +15,14 @@ has ssh_options => (is => 'ro', default => sub { [ '-A' ] });
 
 has ssh_command => (is => 'ro', default => sub { 'ssh' });
 
-sub _escape_shell_arg { 
-    my ($self, $str) = (@_);
-    $str =~ s/((?:^|[^\\])(?:\\\\)*)'/$1\\'/g;
-    return "$str";
-}
-
-
 sub _build_ssh_perl_command {
   my ($self) = @_;
-  my $perl_command = join('', @{$self->perl_command});
-  
-  #TODO non-trivial to escape properly for ssh and shell
-  #this "works" but is not right, needs to be replaced
-  #after testing
+  my $perl_command = $self->perl_command; 
+
   return [
     do { my $c = $self->ssh_command; ref($c) ? @$c : $c },
     @{$self->ssh_options}, $self->ssh_to,
-    $self->_escape_shell_arg($perl_command),
+    shell_quote(@$perl_command),
   ];
 }
 
