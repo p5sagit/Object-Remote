@@ -5,6 +5,8 @@ use FindBin;
 
 use lib "$FindBin::Bin/lib";
 
+require 't/logsetup.pl';
+
 use Object::Remote;
 
 is exception {

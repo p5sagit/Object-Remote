@@ -12,7 +12,7 @@ sub run {
   log_trace { "run() has been invoked on remote node" };
   
   if ($args{watchdog_timeout}) {
-    Object::Remote::WatchDog->new(timeout => $args{watchdog_timeout}); 
+    Object::Remote::WatchDog->new(timeout => $args{watchdog_timeout});
   }
   
   my $c = Object::Remote::Connector::STDIO->new->connect;

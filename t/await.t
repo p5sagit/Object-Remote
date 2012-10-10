@@ -3,6 +3,7 @@ use Test::More;
 use Test::Fatal;
 use FindBin;
 use lib "$FindBin::Bin/lib";
+require 't/logsetup.pl';
 
 use Object::Remote;
 use Object::Remote::Future qw( await_all await_future );
