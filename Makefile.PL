@@ -13,6 +13,7 @@ WriteMakefile(
     'JSON::PP' => 0,
     'CPS::Future' => 0,
     'Class::C3' => 0, # required to fatpack Moo
+    'String::ShellEscape' => 0, # required for ssh argument manipulation
   },
   EXE_FILES => [
     'bin/object-remote-node',

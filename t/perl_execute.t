@@ -22,11 +22,11 @@ is($defaults->nice, undef, 'Nice is not enabled by default');
 is($defaults->ulimit, undef, 'Ulimit is not enabled by default');
 is($defaults->stderr, undef, 'Child process STDERR is clone of parent process STDERR by default');
 
-is_deeply($normal, ['sh -c "perl -"'], 'Default Perl interpreter arguments correct');
-is_deeply($ulimit, ['sh -c "ulimit -v 536; perl -"'], 'Arguments for ulimit are correct');
-is_deeply($nice, ['sh -c "nice -n 834 perl -"'], 'Arguments for nice are correct');
-is_deeply($both, ['sh -c "ulimit -v 913; nice -n 612 perl -"'], 'Arguments for nice and ulimit are correct');
-is_deeply($ssh, [qw(ssh -A testhost), 'sh -c "ulimit -v 782; nice -n 494 perl -"'], "Arguments using ssh are correct");
+is_deeply($normal, ['sh', '-c', 'perl -'], 'Default Perl interpreter arguments correct');
+is_deeply($ulimit, ['sh', '-c', 'ulimit -v 536; perl -'], 'Arguments for ulimit are correct');
+is_deeply($nice, ['sh', '-c', 'nice -n 834 perl -'], 'Arguments for nice are correct');
+is_deeply($both, ['sh', '-c', 'ulimit -v 913; nice -n 612 perl -'], 'Arguments for nice and ulimit are correct');
+is_deeply($ssh, [qw(ssh -A testhost), "sh -c 'ulimit -v 782; nice -n 494 perl -'"], "Arguments using ssh are correct");
 
 done_testing; 
 
