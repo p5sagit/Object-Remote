@@ -3,6 +3,8 @@ use Test::More;
 use Object::Remote;
 use File::Spec;
 
+require 't/logsetup.pl';
+
 {
   package S1S;
 

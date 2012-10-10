@@ -16,6 +16,8 @@ with 'Object::Remote::Role::Connector';
 has module_sender => (is => 'lazy');
 has ulimit => ( is => 'ro' );
 has nice => ( is => 'ro' );
+has watchdog_timeout => ( is => 'ro', required => 1, default => sub { undef } );
+has perl_command => (is => 'lazy');
 
 #if no child_stderr file handle is specified then stderr
 #of the child will be connected to stderr of the parent
@@ -28,13 +30,13 @@ sub _build_module_sender {
   return $hook ? $hook->sender : Object::Remote::ModuleSender->new;
 }
 
-has perl_command => (is => 'lazy');
-has watchdog_timeout => ( is => 'ro', required => 1, default => sub { 0 } );
-
 #SSH requires the entire remote command to be
 #given as one single argument to the ssh 
 #command line program so this jumps through
 #some hoops
+
+#TODO this is SSH's problem not perl's so move
+#this to the SSH connector
 sub _build_perl_command {
     my ($self) = @_; 
     my $nice = $self->nice;

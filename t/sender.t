@@ -1,6 +1,8 @@
 use strictures 1;
 use Test::More;
 
+require 't/logsetup.pl';
+
 use Object::Remote::Connector::Local;
 use Object::Remote;
 use Object::Remote::ModuleSender;

@@ -4,16 +4,6 @@ use Object::Remote::MiniLoop;
 use Object::Remote::Logging qw ( :log :dlog );
 use Moo; 
 
-BEGIN { 
-  $SIG{ALRM} = sub {
-    #if the Watchdog is killing the process we don't want any chance of the
-    #process not actually exiting and die could be caught by an eval which
-    #doesn't do us any good 
-    log_error { sprintf("Watchdog has expired, terminating the process at file %s line %s", __FILE__, __LINE__ + 1); };
-    exit(1);     
-  };   
-};
-
 has timeout => ( is => 'ro', required => 1 );
 
 around new => sub {
@@ -28,6 +18,15 @@ around new => sub {
 #start the watchdog
 sub BUILD {
   my ($self) = @_;
+  
+  $SIG{ALRM} = sub {
+    #if the Watchdog is killing the process we don't want any chance of the
+    #process not actually exiting and die could be caught by an eval which
+    #doesn't do us any good 
+    log_error { sprintf("Watchdog has expired, terminating the process at file %s line %s", __FILE__, __LINE__ + 1); };
+    exit(1);     
+  };   
+  
   Dlog_debug { "Initializing watchdog with timeout of $_ seconds" } $self->timeout;
   alarm($self->timeout);
 }

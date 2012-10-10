@@ -5,6 +5,8 @@ use Config;
 use B qw(perlstring);
 
 my @exclude_mods = qw(XSLoader.pm DynaLoader.pm);
+#used by t/watchdog_fatnode 
+our $INHIBIT_RUN_NODE = 0; 
 
 sub stripspace {
   my ($text) = @_;
@@ -103,7 +105,11 @@ my $end = stripspace <<'END_END';
 
   use strictures 1;
   use Object::Remote::Node;
-  Object::Remote::Node->run(watchdog_timeout => $WATCHDOG_TIMEOUT);
+  
+  unless ($Object::Remote::FatNode::INHIBIT_RUN_NODE) {
+    Object::Remote::Node->run(watchdog_timeout => $WATCHDOG_TIMEOUT);    
+  }
+  
 END_END
 
 my %files = map +($mods{$_} => scalar do { local (@ARGV, $/) = ($_); <> }),

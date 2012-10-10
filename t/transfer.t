@@ -3,6 +3,8 @@ use Test::More;
 use Test::Fatal;
 use FindBin;
 
+require 't/logsetup.pl';
+
 $ENV{PERL5LIB} = join(
   ':', ($ENV{PERL5LIB} ? $ENV{PERL5LIB} : ()), qw(lib t/lib)
 );
