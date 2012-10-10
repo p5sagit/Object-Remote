@@ -107,7 +107,7 @@ sub watch_time {
 
 sub unwatch_time {
   my ($self, $id) = @_;
-  log_debug { "Removing timer with id of '$id'" };
+  log_trace { "Removing timer with id of '$id'" };
   @$_ = grep !($_ eq $id), @$_ for $self->_timers;
   return;
 }
