@@ -19,7 +19,6 @@ sub give_back {
 sub takes_object {
     my ($self, $object) = @_;
 
-    print STDERR ref($object);
     if($object->isa('ORTestObjects')) {
         return 1;
     }

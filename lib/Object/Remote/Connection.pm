@@ -104,6 +104,10 @@ sub _build__json {
       tie *$handle, 'Object::Remote::GlobProxy', $glob_container;
       return $handle;
     }
+  )->filter_json_single_key_object(
+    __local_object__ => sub {
+      $self->local_objects_by_id->{$_[0]}
+    }
   );
 }
 
@@ -243,7 +247,14 @@ sub _local_object_to_id {
 sub _deobjectify {
   my ($self, $data) = @_;
   if (blessed($data)) {
-    return +{ __remote_object__ => $self->_local_object_to_id($data) };
+    if (
+      $data->isa('Object::Remote::Proxy')
+      and $data->{remote}->connection == $self
+    ) {
+      return +{ __local_object__ => $data->{remote}->id };
+    } else {
+      return +{ __remote_object__ => $self->_local_object_to_id($data) };
+    }
   } elsif (my $ref = ref($data)) {
     if ($ref eq 'HASH') {
       return +{ map +($_ => $self->_deobjectify($data->{$_})), keys %$data };
