@@ -198,8 +198,6 @@ sub fatnode_text {
       $text = "my \$WATCHDOG_TIMEOUT = undef;\n";
   }
   
-  $text .= 'BEGIN { $ENV{OBJECT_REMOTE_DEBUG} = 1 }'."\n"
-    if $ENV{OBJECT_REMOTE_DEBUG};
   $text .= <<'END';
 $INC{'Object/Remote/FatNode.pm'} = __FILE__;
 $Object::Remote::FatNode::DATA = <<'ENDFAT';

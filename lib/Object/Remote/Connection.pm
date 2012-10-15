@@ -55,8 +55,6 @@ END {
   kill(1, -2);
 }
 
-our $DEBUG = !!$ENV{OBJECT_REMOTE_DEBUG};
-
 has _id => ( is => 'ro', required => 1, default => sub { our $NEXT_CONNECTION_ID++ } );
 
 has send_to_fh => (
@@ -355,7 +353,6 @@ sub _serialize {
   local our @New_Ids = (-1);
   return eval {
     my $flat = $self->_encode($self->_deobjectify($data));
-    warn "$$ >>> ${flat}\n" if $DEBUG;
     $flat;
   } || do {
     my $err = $@; # won't get here if the eval doesn't die
@@ -421,7 +418,6 @@ sub _deobjectify {
 
 sub _receive {
   my ($self, $flat) = @_;
-  warn "$$ <<< $flat\n" if $DEBUG;
   Dlog_trace { my $l = length($flat); "Starting to deserialize $l characters of data for connection $_" } $self->_id;
   my ($type, @rest) = eval { @{$self->_deserialize($flat)} }
     or do { warn "Deserialize failed for ${flat}: $@"; return };
