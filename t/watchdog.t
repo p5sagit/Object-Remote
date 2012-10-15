@@ -30,13 +30,13 @@ package HangClass;
 use Moo;
 
 sub alive {
-    return 1; 
+  return 1; 
 }
 
 sub hang {
-    while(1) {
-        sleep(1); 
-    }
+  while(1) {
+    sleep(1); 
+  }
 }
 
 

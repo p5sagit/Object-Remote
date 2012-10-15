@@ -15,10 +15,10 @@ use Object::Remote::Logging qw( :log );
 use Object::Remote::LogDestination; 
 #make sure to enable execution of every logging code block
 #by setting the log level as high as it can go
-    my $____LOG_DESTINATION = Object::Remote::LogDestination->new(
-        logger => Object::Remote::Logger::TestOutput->new({ levels_upto => 'trace' }),
-    );  
+  my $____LOG_DESTINATION = Object::Remote::LogDestination->new(
+    logger => Object::Remote::Logger::TestOutput->new({ levels_upto => 'trace' }),
+  );  
     
-    $____LOG_DESTINATION->connect(Object::Remote::Logging->arg_router);
+  $____LOG_DESTINATION->connect(Object::Remote::Logging->arg_router);
 1;
 

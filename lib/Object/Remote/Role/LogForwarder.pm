@@ -31,8 +31,8 @@ sub describe {
   $depth++;
   my $buf = "\t" x $depth . $self->description . "\n";
   foreach my $child (@{$self->child_routers}) {
-      next unless defined $child; 
-      $buf .= $child->describe($depth);
+    next unless defined $child; 
+    $buf .= $child->describe($depth);
   }
     
   return $buf; 
@@ -48,8 +48,8 @@ sub add_child_router {
 }
 
 #sub remove_child_router {
-#   my ($self, $description) = @_;
-#   return delete $self->child_routers->{$description};
+#  my ($self, $description) = @_;
+#  return delete $self->child_routers->{$description};
 #}
 
 after handle_log_message => sub {

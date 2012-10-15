@@ -80,16 +80,16 @@ sub _start_perl {
   Dlog_debug { "invoking connection to perl interpreter using command line: $_" } @{$self->final_perl_command};
     
   if (defined($given_stderr)) {
-      #if the stderr data goes to an existing file handle
-      #an anonymous file handle is required
-      #as the other half of a pipe style file handle pair
-      #so the file handles can go into the run loop
-      $foreign_stderr = gensym();
+    #if the stderr data goes to an existing file handle
+    #an anonymous file handle is required
+    #as the other half of a pipe style file handle pair
+    #so the file handles can go into the run loop
+    $foreign_stderr = gensym();
   } else {
-      #if no file handle has been specified
-      #for the child's stderr then connect
-      #the child stderr to the parent stderr
-      $foreign_stderr = ">&STDERR";
+    #if no file handle has been specified
+    #for the child's stderr then connect
+    #the child stderr to the parent stderr
+    $foreign_stderr = ">&STDERR";
   }
   
   my $pid = open3(
@@ -100,25 +100,24 @@ sub _start_perl {
   ) or die "Failed to run perl at '$_[0]': $!";
   
   if (defined($given_stderr)) {   
-      Dlog_debug { "Child process STDERR is being handled via run loop" };
+    Dlog_debug { "Child process STDERR is being handled via run loop" };
         
-      Object::Remote->current_loop
-                    ->watch_io(
-                        handle => $foreign_stderr,
-                        on_read_ready => sub {
-                          my $buf = ''; 
-                          my $len = sysread($foreign_stderr, $buf, 32768);
-                          if (!defined($len) or $len == 0) {
-                            log_trace { "Got EOF or error on child stderr, removing from watcher" };
-                            $self->stderr(undef);
-                            Object::Remote->current_loop
-                                          ->unwatch_io(
-                                              handle => $foreign_stderr,
-                                              on_read_ready => 1
-                                            );
+    Object::Remote->current_loop
+                  ->watch_io(
+                      handle => $foreign_stderr,
+                      on_read_ready => sub {
+                        my $buf = ''; 
+                        my $len = sysread($foreign_stderr, $buf, 32768);
+                        if (!defined($len) or $len == 0) {
+                          log_trace { "Got EOF or error on child stderr, removing from watcher" };
+                          $self->stderr(undef);
+                          Object::Remote->current_loop->unwatch_io(
+                                         handle => $foreign_stderr,
+                                         on_read_ready => 1
+                                       );
                           } else {
-                              Dlog_trace { "got $len characters of stderr data for connection" };
-                              print $given_stderr $buf or die "could not send stderr data: $!";
+                            Dlog_trace { "got $len characters of stderr data for connection" };
+                            print $given_stderr $buf or die "could not send stderr data: $!";
                           }
                          } 
                       );     
@@ -148,7 +147,7 @@ sub _open2_for {
                                       ->unwatch_io(
                                           handle => $foreign_stdin,
                                           on_write_ready => 1
-                                        );
+                                      );
                       } else {
                           log_trace { "Sent $len bytes of fatnode data to remote side" };
                       }
@@ -158,31 +157,31 @@ sub _open2_for {
 }
 
 sub _setup_watchdog_reset {
-    my ($self, $conn) = @_;
-    my $timer_id; 
+  my ($self, $conn) = @_;
+  my $timer_id; 
     
-    return unless $self->watchdog_timeout; 
+  return unless $self->watchdog_timeout; 
         
-    Dlog_trace { "Creating Watchdog management timer for connection id $_" } $conn->_id;
+  Dlog_trace { "Creating Watchdog management timer for connection id $_" } $conn->_id;
     
-    weaken($conn);
+  weaken($conn);
         
-    $timer_id = Object::Remote->current_loop->watch_time(
-        every => $self->watchdog_timeout / 3,
-        code => sub {
-            unless(defined($conn)) {
-                log_trace { "Weak reference to connection in Watchdog was lost, terminating update timer $timer_id" };
-                Object::Remote->current_loop->unwatch_time($timer_id);
-                return;  
-            }
+  $timer_id = Object::Remote->current_loop->watch_time(
+    every => $self->watchdog_timeout / 3,
+    code => sub {
+      unless(defined($conn)) {
+        log_trace { "Weak reference to connection in Watchdog was lost, terminating update timer $timer_id" };
+        Object::Remote->current_loop->unwatch_time($timer_id);
+        return;  
+      }
             
-            Dlog_trace { "Reseting Watchdog for connection id $_" } $conn->_id;
-            #we do not want to block in the run loop so send the
-            #update off and ignore any result, we don't need it
-            #anyway
-            $conn->send_class_call(0, 'Object::Remote::WatchDog', 'reset');
-        }
-    );     
+      Dlog_trace { "Reseting Watchdog for connection id $_" } $conn->_id;
+      #we do not want to block in the run loop so send the
+      #update off and ignore any result, we don't need it
+      #anyway
+      $conn->send_class_call(0, 'Object::Remote::WatchDog', 'reset');
+    }
+  );     
 }
 
 sub fatnode_text {
@@ -195,7 +194,7 @@ sub fatnode_text {
     $text = "my \$WATCHDOG_TIMEOUT = '" . $self->watchdog_timeout . "';\n";   
     $text .= "alarm(\$WATCHDOG_TIMEOUT);\n";    
   } else {
-      $text = "my \$WATCHDOG_TIMEOUT = undef;\n";
+    $text = "my \$WATCHDOG_TIMEOUT = undef;\n";
   }
   
   $text .= <<'END';
