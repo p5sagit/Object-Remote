@@ -7,9 +7,6 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
   NAME => 'Object::Remote',
   VERSION_FROM => 'lib/Object/Remote.pm',
-  BUILD_REQUIRES => {
-     'IO::Prompter' => 0, 	
-  },
   PREREQ_PM => {
     Moo => 0,
     'Module::Runtime' => 0,
