@@ -93,8 +93,8 @@ sub generate_fatpack_hash {
 }
 
 my @segments = (
-    map(generate_fatpack_hash('fatpacked', $_), sort map $mods{$_}, @non_core),
-    map(generate_fatpack_hash('fatpacked_extra', $_), sort map $mods{$_}, @core_non_arch),
+  map(generate_fatpack_hash('fatpacked', $_), sort map $mods{$_}, @non_core),
+  map(generate_fatpack_hash('fatpacked_extra', $_), sort map $mods{$_}, @core_non_arch),
 );
 
 our $DATA = join "\n", $start, @segments, $end;
