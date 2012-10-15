@@ -45,7 +45,7 @@ my @non_core_non_arch = grep +(
     /^\Q$Config{privlibexp}/ or /^\Q$Config{archlibexp}/
     or /^\Q$Config{vendorarchexp}/ or /^\Q$Config{sitearchexp}/
   )
-), keys %mods;
+), grep !/\Q$Config{archname}/, grep !/\Q$Config{myarchname}/, keys %mods;
 
 my @core_non_arch = grep +(
   /^\Q$Config{privlibexp}/
