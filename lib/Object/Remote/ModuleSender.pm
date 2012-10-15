@@ -20,7 +20,7 @@ sub source_for {
   log_debug { "locating source for module '$module'" };
   if (my $find = Object::Remote::FromData->can('find_module')) {
     if (my $source = $find->($module)) {
-      Dlog_trace { "Object::Remote::FromData->find_module('$module') returned '$_'" } $source;
+      Dlog_trace { "source of '$module' was found by Object::Remote::FromData" };
       return $source;
     }
   }
