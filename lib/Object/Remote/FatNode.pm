@@ -49,9 +49,9 @@ my @non_core = grep +(
   )
 ), keys %mods;
 
-my @core = grep +(
+my @core_non_arch = grep +(
   /^\Q$Config{privlibexp}/
-), keys %mods;
+), grep !/\Q$Config{archname}/, grep !/\Q$Config{myarchname}/, keys %mods;
 
 my $env_pass = '';
 if (defined($ENV{OBJECT_REMOTE_LOG_LEVEL})) {
@@ -95,7 +95,7 @@ my $end = stripspace <<'END_END';
 END_END
 
 my %files = map +($mods{$_} => scalar do { local (@ARGV, $/) = ($_); <> }),
-              @non_core, @core;
+              @non_core, @core_non_arch;
 
 sub generate_fatpack_hash {
   my ($hash_name, $orig) = @_;
@@ -107,8 +107,8 @@ sub generate_fatpack_hash {
 }
 
 my @segments = (
-    map(generate_fatpack_hash('fatpacked', $_), sort map $mods{$_}, @non_core),
-    map(generate_fatpack_hash('fatpacked_extra', $_), sort map $mods{$_}, @core),
+  map(generate_fatpack_hash('fatpacked', $_), sort map $mods{$_}, @non_core),
+  map(generate_fatpack_hash('fatpacked_extra', $_), sort map $mods{$_}, @core_non_arch),
 );
 
 our $DATA = join "\n", $start, $env_pass, @segments, $end;
