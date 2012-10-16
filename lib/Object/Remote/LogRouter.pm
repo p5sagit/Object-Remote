@@ -12,53 +12,32 @@ sub before_import { }
 sub after_import { }
 
 sub subscribe {
-  my ($self, $logger, $selector, $is_temp) = @_; 
+  my ($self, $logger, $selector) = @_;
   my $subscription_list = $self->subscriptions;
+     
+  my $subscription = [ $logger, $selector ];
+  
+  push(@$subscription_list, $subscription);
    
-  if(ref $logger ne 'CODE') {
-    die 'logger was not a CodeRef or a logger object.  Please try again.'
-      unless blessed($logger);
-    $logger = do { my $l = $logger; sub { $l } }
-  }
-  
-   my $subscription = [ $logger, $selector ];
-  
-   $is_temp = 0 unless defined $is_temp; 
-   push(@$subscription_list, $subscription);
-   if ($is_temp) {
-     #weaken($subscription->[-1]);
-   }
-   return $subscription; 
+  return $self; 
 }
 
 #TODO turn this logic into a role
-sub handle_log_message {
-  my ($self, $caller, $level, $log_meth, @values) = @_; 
+sub get_loggers {
+  my ($self, $caller, $level) = @_; 
   my $should_clean = 0; 
+  my @logger_list; 
       
   foreach(@{ $self->subscriptions }) {
-    unless(defined($_)) {
+    unless(defined) {
       $should_clean = 1;
         next; 
      }
+     
      my ($logger, $selector) = @$_;
-     #TODO this is not a firm part of the api but providing
-     #this info to the selector is a good feature
-     local($_) = { level => $level, package => $caller };
-     if ($selector->(@values)) {
-        #TODO issues with caller_level have not been resolved yet
-        #when a logger crosses an object::remote::connection so
-        $logger = $logger->($caller, { caller_level => -1 });
-        
-        #TODO there is a known issue with the interaction of this 
-        #routed logging scheme and objects proxied with Object::Remote.
-        #Specifically the loggers must be invoked with a calling
-        #depth of 0 which isn't possible using a logger that has
-        #been proxied which is what happens with routed logging
-        #if the logger is created in one Perl interpreter and the
-        #logging happens in another
-        $logger->$level($log_meth->(@values))
-          if $logger->${\"is_$level"};
+     
+     if ($selector->({ log_level => $level, package => $caller, caller_level => 2 })) {
+       push(@logger_list, $logger);     
      }
    }
    
@@ -66,7 +45,7 @@ sub handle_log_message {
      $self->_remove_dead_subscriptions; 
    }
    
-   return; 
+   return @logger_list; 
 }
 
 sub _remove_dead_subscriptions {

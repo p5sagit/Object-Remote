@@ -52,7 +52,7 @@ sub add_child_router {
 #  return delete $self->child_routers->{$description};
 #}
 
-after handle_log_message => sub {
+after get_loggers => sub {
   my ($self, @args) = @_;
   my $parent = $self->parent_router;
       
