@@ -10,7 +10,7 @@ sub select {
   my ($self, $router, $selector) = @_; 
   my $subscription = $router->subscribe($self->logger, $selector); 
   push(@{ $self->subscriptions }, $subscription);
-  return $subscription; 
+  return $self;
 }
 
 sub connect {
