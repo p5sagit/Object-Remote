@@ -40,13 +40,11 @@ chomp(my @inc = qx($command));
 
 my %mods = reverse @inc;
 
-#my @non_core = grep +(
-#  not (
-#    /^\Q$Config{privlibexp}/ or /^\Q$Config{archlibexp}/
-#  )
-#), keys %mods;
-
-my @non_core = keys %mods; 
+my @non_core = grep +(
+  not (
+    /^\Q$Config{privlibexp}/ or /^\Q$Config{archlibexp}/
+  )
+), keys %mods;
 
 #my @core_non_arch = grep +(
 #  /^\Q$Config{privlibexp}/
@@ -64,8 +62,8 @@ my $end = stripspace <<'END_END';
   s/^  //mg for values %fatpacked, values %fatpacked_extra;
 
   sub load_from_hash {
-    if ($_[1] eq 'XSLoader.pm') {
-      warn "XSLoader made it into the fat node";
+    if ($_[1] eq 'XSLoader.pm' || $_[1] eq 'DynaLoader.pm') {
+      warn "Will not pre-load '$_[1]'";
       return undef; 
     }
 
