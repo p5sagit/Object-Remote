@@ -55,7 +55,8 @@ sub filter_not_core {
   )        
 }
 
-my @before_inc = grep { filter_not_core() } keys %mods;
+my @file_names = keys %mods;
+my @before_inc = grep { filter_not_core() } @file_names;
 my @after_inc;
 
 my $start = stripspace <<'END_START';
@@ -66,7 +67,7 @@ my $start = stripspace <<'END_START';
   my (%fatpacked,%fatpacked_extra);
 END_START
 
-$start .= 'my %exclude = map { $_ => 1 } qw(' . join(' ', @exclude_mods) . ");\n";
+$start .= 'my %exclude = map { $_ => 1 } (\'' . join("','", @exclude_mods) . "');\n";
 
 my $end = stripspace <<'END_END';
   s/^  //mg for values %fatpacked, values %fatpacked_extra;
@@ -78,7 +79,7 @@ my $end = stripspace <<'END_END';
         return undef; 
       }
  
-      warn "handling $_[1]";
+      #warn "Handling $_[1]";
       open my $fh, '<', \$fat;
       return $fh;
     }
