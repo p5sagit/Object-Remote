@@ -1,3 +1,4 @@
+  - Fixup dependency versions
   - Propagate errors from FatNode code
   - Fall back to core non-arch modules in FatNode
   - Fix module name in Makefile.PL

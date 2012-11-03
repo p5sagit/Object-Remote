@@ -8,11 +8,11 @@ WriteMakefile(
   NAME => 'Object::Remote',
   VERSION_FROM => 'lib/Object/Remote.pm',
   PREREQ_PM => {
-    Moo => 0,
-    'Module::Runtime' => 0,
-    'JSON::PP' => 0,
-    'CPS::Future' => 0,
-    'Class::C3' => 0, # required to fatpack Moo
+    Moo => 1.000005,
+    'Module::Runtime' => 0.013,
+    'JSON::PP' => 2.27200,
+    'CPS::Future' => 0.17,
+    'Class::C3' => 0.24, # required to fatpack Moo
   },
   EXE_FILES => [
     'bin/object-remote-node',
