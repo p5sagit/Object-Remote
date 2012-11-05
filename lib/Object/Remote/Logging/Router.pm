@@ -33,7 +33,9 @@ sub _get_loggers {
         
         foreach my $logger ($selector->($package, { %metadata })) {
             next unless defined $logger;
-            next unless $logger->$is_level;
+            my $method = $logger->can($is_level);
+            next unless defined $method;
+            next unless $logger->$method;
             push(@loggers, $logger);
         }
     }
