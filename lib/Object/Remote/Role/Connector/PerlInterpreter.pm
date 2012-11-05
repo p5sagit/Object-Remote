@@ -4,7 +4,7 @@ use IPC::Open2;
 use IPC::Open3; 
 use IO::Handle;
 use Symbol; 
-use Object::Remote::Logging qw( :log :dlog );
+use Object::Remote::Logging qw( :log :dlog get_router );
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
 use Object::Remote::Future;
@@ -57,7 +57,7 @@ around connect => sub {
       my ($conn) = $f->get;
       $self->_setup_watchdog_reset($conn); 
       my $sub = $conn->remote_sub('Object::Remote::Logging::init_logging_forwarding');
-      $sub->('Object::Remote::Logging', Object::Remote::Logging->arg_router);
+      $sub->('Object::Remote::Logging', router => get_router, connection_id => $conn->_id);
       Object::Remote::Handle->new(
         connection => $conn,
         class => 'Object::Remote::ModuleLoader',

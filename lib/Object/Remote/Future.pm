@@ -4,7 +4,9 @@ use strict;
 use warnings;
 use base qw(Exporter);
 
-use Object::Remote::Logging qw( :log Dlog_trace );
+use Object::Remote::Logging qw( :log get_router );
+
+BEGIN { get_router()->exclude_forwarding }
 
 use CPS::Future;
 

@@ -1,24 +1,22 @@
 #require this file in the test to initialize the logging framework
-#so the tests can run
+#so the tests can run and all log items can be executed during testing
 
-package Object::Remote::Logger::TestOutput; 
+package Object::Remote::Logging::TestOutput;
 
-use base qw ( Log::Contextual::SimpleLogger );
+use base qw ( Object::Remote::Logging::Logger );
 
-#we want the code blocks in the log lines to execute but not
-#output anything so turn this into a null logger
-sub _log { }
+#don't need to output anything
+sub _output { }
 
 package main; 
 
-use Object::Remote::Logging qw( :log ); 
-use Object::Remote::LogDestination; 
+use Object::Remote::Logging qw( get_router ); 
 #make sure to enable execution of every logging code block
 #by setting the log level as high as it can go
-  my $____LOG_DESTINATION = Object::Remote::LogDestination->new(
-    logger => Object::Remote::Logger::TestOutput->new({ levels_upto => 'trace' }),
-  );  
-    
-  $____LOG_DESTINATION->connect(Object::Remote::Logging->arg_router);
+get_router->connect(Object::Remote::Logging::TestOutput->new(
+  min_level => 'trace', max_level => 'error',
+  level_names => Object::Remote::Logging->arg_levels(),
+));
+
 1;
 
