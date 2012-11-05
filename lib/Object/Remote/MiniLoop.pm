@@ -2,8 +2,10 @@ package Object::Remote::MiniLoop;
 
 use IO::Select;
 use Time::HiRes qw(time);
-use Object::Remote::Logging qw( :log :dlog );
+use Object::Remote::Logging qw( :log :dlog get_router );
 use Moo;
+
+BEGIN { get_router()->exclude_forwarding }
 
 # this is ro because we only actually set it using local in sub run
 has is_running => (is => 'ro', clearer => 'stop');
