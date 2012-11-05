@@ -13,8 +13,19 @@ sub router {
   }
 }
 
+#log level descriptions
+#info - standard log level - normal program output for the end user
+#warn - output for program that is executing quietly
+#error - output for program that is running more quietly
+#fatal - it is not possible to continue execution; this level is as quiet as is possible
+#verbose - output for program executing verbosely (-v)
+#debug - output for program running more verbosely (-v -v)
+#trace - output for program running extremely verbosely (-v -v -v)
 sub arg_levels {
-  return [qw( trace debug verbose info warn error )];
+  #the order of the log levels is significant with the
+  #most verbose level being first in the list and the
+  #most quiet as the last item
+  return [qw( trace debug verbose info warn error fatal )];
 }
 
 #this is invoked on all nodes
