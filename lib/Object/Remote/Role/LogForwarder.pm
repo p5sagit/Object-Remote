@@ -33,9 +33,9 @@ around _get_loggers => sub {
 };
 
 sub exclude_forwarding {
-    my ($self, $package) = @_;
-    $package = caller unless defined $package;
-    $self->_forward_stop->{$package} = 1;
+  my ($self, $package) = @_;
+  $package = caller unless defined $package;
+  $self->_forward_stop->{$package} = 1;
 }
 
 1;
