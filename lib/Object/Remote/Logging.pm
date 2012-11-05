@@ -7,33 +7,33 @@ use Object::Remote::Logging::Logger;
 extends 'Log::Contextual';
 
 sub router {
-   our $Router_Instance ||= do {
-      require Object::Remote::Logging::Router;
-      Object::Remote::Logging::Router->new;
-   }
+  our $Router_Instance ||= do {
+    require Object::Remote::Logging::Router;
+    Object::Remote::Logging::Router->new;
+  }
 }
 
 sub arg_levels {
-    return [qw( trace debug verbose info warn error )];
+  return [qw( trace debug verbose info warn error )];
 }
 
 #this is invoked on all nodes
 sub init_logging {
-    my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};
-    return unless defined $level;
-    my $logger = Object::Remote::Logging::Logger->new(
-      min_level => lc($level),
-      level_names => Object::Remote::Logging::arg_levels(),
-    );
-    
-    #TODO check on speed of string compare against a hash with a single key
-    router()->connect(sub { 
-        return unless $_[1]->{controller} eq __PACKAGE__;
-        #skip things from remote hosts because they log to STDERR
-        #when OBJECT_REMOTE_LOG_LEVEL is in effect
-        return if $_[1]->{remote}->{connection_id};
-        $logger
-    });
+  my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};
+  return unless defined $level;
+  my $logger = Object::Remote::Logging::Logger->new(
+    min_level => lc($level),
+    level_names => Object::Remote::Logging::arg_levels(),
+  );
+
+  #TODO check on speed of string compare against a hash with a single key
+  router()->connect(sub { 
+    return unless $_[1]->{controller} eq __PACKAGE__;
+    #skip things from remote hosts because they log to STDERR
+    #when OBJECT_REMOTE_LOG_LEVEL is in effect
+    return if $_[1]->{remote}->{connection_id};
+    $logger
+  });
 }
 
 #this is invoked by the controlling node
