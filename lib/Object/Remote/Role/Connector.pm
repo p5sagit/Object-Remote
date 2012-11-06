@@ -7,7 +7,7 @@ use Moo::Role;
 
 requires '_open2_for';
 
-has timeout => (is => 'ro', default => sub { { after => 10 } });
+has timeout => (is => 'ro', default => sub { 10 });
 
 sub connect {
   my $self = shift;
@@ -43,7 +43,7 @@ sub connect {
     log_trace { "initialized events on channel for child pid '$child_pid'; creating timeout" };
     Object::Remote->current_loop
                   ->watch_time(
-                      %{$self->timeout},
+                      after => $self->timeout,
                       code => sub {
                         Dlog_trace { "Connection timeout timer has fired for child pid '$child_pid'; is_ready: $_" } $f->is_ready;
                         unless($f->is_ready) {

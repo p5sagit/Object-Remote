@@ -186,15 +186,20 @@ sub _setup_watchdog_reset {
 
 sub fatnode_text {
   my ($self) = @_;
+  my $connection_timeout = $self->timeout;
+  my $watchdog_timeout = $self->watchdog_timeout;
   my $text = '';
 
   require Object::Remote::FatNode;
   
-  if (defined($self->watchdog_timeout)) {
-    $text = "my \$WATCHDOG_TIMEOUT = '" . $self->watchdog_timeout . "';\n";   
-    $text .= "alarm(\$WATCHDOG_TIMEOUT);\n";    
+  if (defined($connection_timeout)) {
+    $text .= "alarm($connection_timeout);\n";
+  }
+  
+  if (defined($watchdog_timeout)) {
+    $text .= "my \$WATCHDOG_TIMEOUT = $watchdog_timeout;\n";   
   } else {
-    $text = "my \$WATCHDOG_TIMEOUT = undef;\n";
+    $text .= "my \$WATCHDOG_TIMEOUT = undef;\n";
   }
   
   $text .= <<'END';

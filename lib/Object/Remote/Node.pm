@@ -10,11 +10,7 @@ use CPS::Future;
 sub run {
   my ($class, %args) = @_; 
   log_trace { "run() has been invoked on remote node" };
-  
-  if ($args{watchdog_timeout}) {
-    Object::Remote::WatchDog->new(timeout => $args{watchdog_timeout});
-  }
-  
+    
   my $c = Object::Remote::Connector::STDIO->new->connect;
   
   $c->register_class_call_handler;
@@ -30,6 +26,12 @@ sub run {
   print { $c->send_to_fh } "Shere\n";
 
   log_debug { "Node is going to start the run loop" };
+  if ($args{watchdog_timeout}) {
+    Object::Remote::WatchDog->new(timeout => $args{watchdog_timeout});
+  } else {
+    #reset connection watchdog from the fatnode
+    alarm(0);
+  }
   $loop->want_run;
   $loop->run_while_wanted;
   log_debug { "Run loop invocation in node has completed" };
