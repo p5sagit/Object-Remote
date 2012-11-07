@@ -64,8 +64,11 @@ my @after_inc;
 my $env_pass = '';
 if (defined($ENV{OBJECT_REMOTE_LOG_LEVEL})) {
   my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};
-  return unless $level =~ /^\w+$/;
-  $env_pass = '$ENV{OBJECT_REMOTE_LOG_LEVEL} = "' . $level . "\";\n";
+  $env_pass .= '$ENV{OBJECT_REMOTE_LOG_LEVEL} = "' . $level . "\";\n";
+}
+if (defined($ENV{OBJECT_REMOTE_LOG_FORMAT})) {
+  my $format = $ENV{OBJECT_REMOTE_LOG_FORMAT};
+  $env_pass .= '$ENV{OBJECT_REMOTE_LOG_FORMAT} = "' . $format . "\";\n";
 }
 
 my $start = stripspace <<'END_START';

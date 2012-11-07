@@ -34,9 +34,11 @@ sub arg_levels {
 #this is invoked on all nodes
 sub init_logging {
   my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};
+  my $format = $ENV{OBJECT_REMOTE_LOG_FORMAT};
   return unless defined $level;
+  $format = "[%l %r] %s" unless defined $format;
   my $logger = Object::Remote::Logging::Logger->new(
-    min_level => lc($level),
+    min_level => lc($level), format => $format,
     level_names => Object::Remote::Logging::arg_levels(),
   );
 
