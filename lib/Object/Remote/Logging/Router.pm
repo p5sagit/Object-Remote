@@ -74,7 +74,7 @@ sub handle_log_request {
 }
 
 sub connect {
-  my ($self, $destination) = @_;
+  my ($self, $destination, $is_weak) = @_;
   my $wrapped; 
 
   if (ref($destination) ne 'CODE') {
@@ -84,7 +84,7 @@ sub connect {
   }
 
   push(@{$self->_connections}, $wrapped);
-  weaken($self->_connections->[-1]);
+  weaken($self->_connections->[-1]) if $is_weak;
 }
 
 sub _clean_connections {
