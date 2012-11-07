@@ -35,8 +35,15 @@ sub arg_levels {
 sub init_logging {
   my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};
   my $format = $ENV{OBJECT_REMOTE_LOG_FORMAT};
+  #TODO allow the selections value to be * so it selects everything
+  my $selections = $ENV{OBJECT_REMOTE_LOG_SELECTIONS};
+  my %controller_should_log;
+  
   return unless defined $level;
   $format = "[%l %r] %s" unless defined $format;
+  $selections = __PACKAGE__ unless defined $selections;
+  %controller_should_log = map { $_ => 1 } split(' ', $selections);
+  
   my $logger = Object::Remote::Logging::Logger->new(
     min_level => lc($level), format => $format,
     level_names => Object::Remote::Logging::arg_levels(),
@@ -44,7 +51,9 @@ sub init_logging {
 
   #TODO check on speed of string compare against a hash with a single key
   router()->connect(sub { 
-    return unless $_[1]->{controller} eq __PACKAGE__;
+    my $controller = $_[1]->{controller};
+#    warn $controller;
+    return unless  $controller_should_log{$controller};
     #skip things from remote hosts because they log to STDERR
     #when OBJECT_REMOTE_LOG_LEVEL is in effect
     return if $_[1]->{remote}->{connection_id};

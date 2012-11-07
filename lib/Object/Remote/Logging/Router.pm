@@ -46,6 +46,18 @@ sub _get_loggers {
   return @loggers; 
 }
 
+sub _invoke_logger {
+  my ($self, $logger, $level_name, $content, $metadata) = @_;
+  #Invoking the logger like this gets all available data to the
+  #logging object with out losing any information from the structure.
+  #This is not a backwards compatible way to invoke the loggers
+  #but it enables a lot of flexibility in the logger.
+  #The l-c router could have this method invoke the logger in
+  #a backwards compatible way and router sub classes invoke
+  #it in non-backwards compatible ways if desired
+  $logger->$level_name($content, $metadata);
+}
+
 sub handle_log_request {
   my ($self, $metadata_in, $generator, @args) = @_;
   my %metadata = %{$metadata_in};
@@ -67,9 +79,9 @@ sub handle_log_request {
   @caller_info = caller($caller_level + 1);
   $metadata{method} = $caller_info[3];
   $metadata{method} =~ s/^${package}::// if defined $metadata{method};
-  
+
   foreach my $logger ($self->_get_loggers(%metadata)) {
-    $logger->$level([ $generator->(@args) ], \%metadata);
+    $self->_invoke_logger($logger, $level, [ $generator->(@args) ], \%metadata);
   }
 }
 
