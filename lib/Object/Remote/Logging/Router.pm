@@ -1,6 +1,7 @@
 package Object::Remote::Logging::Router;
 
 use Moo;
+use Scalar::Util qw(weaken);
 
 with 'Log::Contextual::Role::Router';
 with 'Object::Remote::Role::LogForwarder';
@@ -65,7 +66,7 @@ sub handle_log_request {
  
   @caller_info = caller($caller_level + 1);
   $metadata{method} = $caller_info[3];
-  $metadata{method} =~ s/^${package}:://;
+  $metadata{method} =~ s/^${package}::// if defined $metadata{method};
   
   foreach my $logger ($self->_get_loggers(%metadata)) {
     $logger->$level([ $generator->(@args) ], \%metadata);
@@ -83,6 +84,7 @@ sub connect {
   }
 
   push(@{$self->_connections}, $wrapped);
+  weaken($self->_connections->[-1]);
 }
 
 sub _clean_connections {

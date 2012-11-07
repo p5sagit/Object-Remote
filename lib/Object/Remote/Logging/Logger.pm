@@ -59,11 +59,15 @@ sub _log {
 
 sub _create_format_lookup {
   my ($self, $level, $metadata, $content) = @_;
+  my $method = $metadata->{method};
+  
+  $method = '(none)' unless defined $method;
+  
   return { 
     '%' => '%', t => $self->_render_time($metadata->{timestamp}),
     r => $self->_render_remote($metadata->{object_remote}),
     s => $self->_render_log(@$content), l => $level, 
-    p => $metadata->{package}, m => $metadata->{method},
+    p => $metadata->{package}, m => $method,
     f => $metadata->{filename}, i => $metadata->{line},
     
   };
