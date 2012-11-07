@@ -51,7 +51,6 @@ sub _install_methods {
 
 sub _log {
   my ($self, $level, $content, $metadata_in) = @_;
-  #TODO this stinks but is backwards compatible with the original logger api
   my %metadata = %$metadata_in;
   my $rendered = $self->_render($level, \%metadata, @$content);
   $self->_output($rendered);
@@ -59,17 +58,27 @@ sub _log {
 
 sub _render {
   my ($self, $level, $metadata, @content) = @_;
-  my $rendered = "[$level] ";
   my $remote_info = $metadata->{object_remote};
+  my $when = $metadata->{timestamp};
+  my $rendered;
 
-  if ($remote_info) {
-    $rendered .= "[connection #$remote_info->{connection_id}] ";
+  if (defined($when)) {
+    $when = localtime($when);
   } else {
-    $rendered .= "[local] ";
+      $when = 'no time data';
   }
+  
+  if ($remote_info) {
+    $rendered .= "[$level connection #$remote_info->{connection_id}] [$when] ";
+  } else {
+    $rendered .= "[$level local] [$when] ";
+  }
+  
     
   $rendered .= join('', @content);
-  $rendered .= "\n" unless substr($rendered, -1) eq "\n";
+  chomp($rendered);
+  $rendered =~ s/\n/\n /g;
+  $rendered .= "\n";
   return $rendered;
 }
 

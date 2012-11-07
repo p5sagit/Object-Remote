@@ -2,7 +2,7 @@ package Object::Remote::Handle;
 
 use Object::Remote::Proxy;
 use Scalar::Util qw(weaken blessed);
-use Object::Remote::Logging qw ( :log get_router );
+use Object::Remote::Logging qw ( :log router );
 use Object::Remote::Future;
 #must find way to exclude certain log events
 #from being forwarded - log events generated in
@@ -11,7 +11,7 @@ use Object::Remote::Future;
 use Module::Runtime qw(use_module);
 use Moo;
 
-BEGIN { get_router()->exclude_forwarding }
+BEGIN { router()->exclude_forwarding }
 
 has connection => (
   is => 'ro', required => 1,

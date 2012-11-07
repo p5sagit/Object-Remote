@@ -57,7 +57,7 @@ sub handle_log_request {
   #to caller level will be available in the future
   delete $metadata{caller_level};
   $metadata{object_remote} = $self->_remote_metadata;
-
+  $metadata{timestamp} = time;
   foreach my $logger ($self->_get_loggers(%metadata)) {
     $logger->$level([ $generator->(@args) ], \%metadata);
   }
