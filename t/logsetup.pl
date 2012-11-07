@@ -10,10 +10,10 @@ sub _output { }
 
 package main; 
 
-use Object::Remote::Logging qw( get_router ); 
+use Object::Remote::Logging qw( router ); 
 #make sure to enable execution of every logging code block
 #by setting the log level as high as it can go
-get_router->connect(Object::Remote::Logging::TestOutput->new(
+router->connect(Object::Remote::Logging::TestOutput->new(
   min_level => 'trace', max_level => 'error',
   level_names => Object::Remote::Logging->arg_levels(),
 ));

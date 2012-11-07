@@ -1,6 +1,6 @@
 package Object::Remote::Connection;
 
-use Object::Remote::Logging qw (:log :dlog get_router);
+use Object::Remote::Logging qw (:log :dlog router);
 use Object::Remote::Future;
 use Object::Remote::Null;
 use Object::Remote::Handle;
@@ -18,7 +18,7 @@ use JSON::PP qw(encode_json);
 use Moo;
 
 BEGIN { 
-  get_router()->exclude_forwarding;
+  router()->exclude_forwarding;
 
   #this will reap child processes as soon
   #as they are done executing so the process

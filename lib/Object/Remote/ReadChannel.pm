@@ -2,10 +2,10 @@ package Object::Remote::ReadChannel;
 
 use CPS::Future;
 use Scalar::Util qw(weaken openhandle);
-use Object::Remote::Logging qw(:log :dlog get_router );
+use Object::Remote::Logging qw(:log :dlog router );
 use Moo;
 
-BEGIN { get_router()->exclude_forwarding }
+BEGIN { router()->exclude_forwarding }
 
 has fh => (
   is => 'ro', required => 1,
