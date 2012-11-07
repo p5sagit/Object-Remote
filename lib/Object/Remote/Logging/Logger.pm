@@ -3,6 +3,7 @@ package Object::Remote::Logging::Logger;
 use Moo;
 use Scalar::Util qw(weaken);
 
+has format => ( is => 'ro', required => 1, default => sub { '[%l %r] %s' } );
 has level_names => ( is => 'ro', required => 1 );
 has min_level => ( is => 'ro', required => 1 );
 has max_level => ( is => 'ro' );
@@ -40,9 +41,9 @@ sub _install_methods {
   my ($self) = @_;
   my $should_log = 0;
   our $METHODS_INSTALLED = 1;
-    
+
   no strict 'refs';
-    
+
   foreach my $level (@{$self->level_names}) {
     *{"is_$level"} = sub { shift(@_)->_level_active->{$level} };
     *{$level} = sub { shift(@_)->_log($level, @_) };
@@ -56,30 +57,49 @@ sub _log {
   $self->_output($rendered);
 }
 
+sub _create_format_lookup {
+  my ($self, $level, $metadata, $content) = @_;
+  return { 
+    '%' => '%', t => $self->_render_time($metadata->{timestamp}),
+    r => $self->_render_remote($metadata->{object_remote}),
+    s => $self->_render_log(@$content), l => $level, p => $metadata->{package},
+    
+  };
+}
+
+sub _get_format_var_value {
+  my ($self, $name, $data) = @_;
+  my $val = $data->{$name};
+  return $val if defined $val;
+  return '';
+}
+
+sub _render_time {
+  my ($self, $time) = @_;
+  return scalar(localtime($time));
+}
+
+sub _render_remote {
+  my ($self, $remote) = @_;
+  return 'local' if ! defined $remote || ! defined $remote->{connection_id};
+  return 'remote #' . $remote->{connection_id};
+}
+
+sub _render_log {
+  my ($self, @content) = @_;
+  return join('', @content);
+}
 sub _render {
   my ($self, $level, $metadata, @content) = @_;
-  my $remote_info = $metadata->{object_remote};
-  my $when = $metadata->{timestamp};
-  my $rendered;
-
-  if (defined($when)) {
-    $when = localtime($when);
-  } else {
-      $when = 'no time data';
-  }
+  my $var_table = $self->_create_format_lookup($level, $metadata, [@content]);
+  my $template = $self->format;
   
-  if ($remote_info) {
-    $rendered .= "[$level connection #$remote_info->{connection_id}] [$when] ";
-  } else {
-    $rendered .= "[$level local] [$when] ";
-  }
+  $template =~ s/%([\w])/$self->_get_format_var_value($1, $var_table)/ge;
   
-    
-  $rendered .= join('', @content);
-  chomp($rendered);
-  $rendered =~ s/\n/\n /g;
-  $rendered .= "\n";
-  return $rendered;
+  chomp($template);
+  $template =~ s/\n/\n /g;
+  $template .= "\n";
+  return $template;
 }
 
 sub _output {
