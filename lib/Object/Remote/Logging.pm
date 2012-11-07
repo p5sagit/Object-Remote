@@ -7,7 +7,7 @@ use Exporter::Declare;
 
 extends 'Log::Contextual';
 
-exports(qw( router ));
+exports(qw( router arg_levels ));
 
 sub router {
   our $Router_Instance ||= do {
