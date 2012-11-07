@@ -55,9 +55,18 @@ sub handle_log_request {
   #caller_level is useless when log forwarding is in place
   #so we won't tempt people with using it for now - access
   #to caller level will be available in the future
-  delete $metadata{caller_level};
+  my $caller_level = delete $metadata{caller_level};
   $metadata{object_remote} = $self->_remote_metadata;
   $metadata{timestamp} = time;
+
+  my @caller_info = caller($caller_level);
+  $metadata{filename} = $caller_info[1];
+  $metadata{line} = $caller_info[2];
+ 
+  @caller_info = caller($caller_level + 1);
+  $metadata{method} = $caller_info[3];
+  $metadata{method} =~ s/^${package}:://;
+  
   foreach my $logger ($self->_get_loggers(%metadata)) {
     $logger->$level([ $generator->(@args) ], \%metadata);
   }
