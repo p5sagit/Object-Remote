@@ -5,6 +5,7 @@ use Moo;
 extends 'Object::Remote::Logging::Logger';
 
 has format => ( is => 'ro', required => 1, default => sub { '%s at %f line %i, log level: %l' } );
+has max_level => ( is => 'ro', required => 1, default => sub { 'error' } );
 has min_level => ( is => 'ro', required => 1, default => sub { 'warn' } );
 
 sub output { warn $_[1] };
