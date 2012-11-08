@@ -4,10 +4,15 @@ use Moo;
 use Scalar::Util qw(blessed);
 use Object::Remote::Logging::Logger;
 use Exporter::Declare;
+use Carp qw(carp croak);
 
 extends 'Log::Contextual';
 
-exports(qw( router arg_levels ));
+exports(qw( ____ router arg_levels ));
+#exception log - log a message then die with that message
+export_tag elog => ('____');
+#fatal log - log a message then call exit(1)
+export_tag flog => ('____');
 
 sub router {
   our $Router_Instance ||= do {
@@ -29,6 +34,46 @@ sub arg_levels {
   #most verbose level being first in the list and the
   #most quiet as the last item
   return [qw( trace debug verbose info warn error fatal )];
+}
+
+sub before_import {
+   my ($class, $importer, $spec) = @_;
+   my $router = $class->router;
+
+   $class->SUPER::before_import($importer, $spec);
+
+   my @levels = @{$class->arg_levels($spec->config->{levels})};
+   for my $level (@levels) {
+      if ($spec->config->{elog}) {
+         $spec->add_export("&Elog_$level", sub (&) {
+            my ($code, @args) = @_;
+            $router->handle_log_request({
+               controller => $class,
+               package => scalar(caller),
+               caller_level => 1,
+               level => $level,
+            }, $code);
+            #TODO this should get fed into a logger so it can be formatted
+            croak $code->();
+         });
+      }
+      if ($spec->config->{flog}) {
+         #TODO that prototype isn't right
+         $spec->add_export("&Flog_$level", sub (&@) {
+            my ($code, $exit_value) = @_;
+            $exit_value = 1 unless defined $exit_value;
+            $router->handle_log_request({
+               controller => $class,
+               package => scalar(caller),
+               caller_level => 1,
+               level => $level,
+            }, $code);
+            #TODO this should get fed into a logger so it can be formatted
+            carp $code->();
+            exit($exit_value);
+         });
+      }
+   }
 }
 
 #this is invoked on all nodes
