@@ -2,6 +2,7 @@ package Object::Remote::Logging::Router;
 
 use Moo;
 use Scalar::Util qw(weaken);
+use Sys::Hostname;
 
 with 'Log::Contextual::Role::Router';
 with 'Object::Remote::Role::LogForwarder';
@@ -71,6 +72,8 @@ sub handle_log_request {
   my $caller_level = delete $metadata{caller_level};
   $metadata{object_remote} = $self->_remote_metadata;
   $metadata{timestamp} = time;
+  $metadata{pid} = $$;
+  $metadata{hostname} = hostname;
 
   my @caller_info = caller($caller_level);
   $metadata{filename} = $caller_info[1];

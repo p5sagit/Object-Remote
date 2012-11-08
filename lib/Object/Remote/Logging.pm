@@ -49,11 +49,9 @@ sub init_logging {
     level_names => Object::Remote::Logging::arg_levels(),
   );
 
-  #TODO check on speed of string compare against a hash with a single key
   router()->connect(sub { 
     my $controller = $_[1]->{controller};
-#    warn $controller;
-    return unless  $controller_should_log{$controller};
+    return unless  $controller_should_log{'*'} || $controller_should_log{$controller};
     #skip things from remote hosts because they log to STDERR
     #when OBJECT_REMOTE_LOG_LEVEL is in effect
     return if $_[1]->{remote}->{connection_id};
@@ -67,7 +65,7 @@ sub init_logging_forwarding {
   my ($self, %controller_info) = @_;
   
   router()->_remote_metadata({ connection_id => $controller_info{connection_id} });
-  router()->_forward_destination($controller_info{router});
+  router()->_forward_destination($controller_info{router}) if $ENV{OBJECT_REMOTE_LOG_FORWARDING};
 }
 
 1;
