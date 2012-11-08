@@ -6,7 +6,7 @@ use Scalar::Util qw(weaken);
 has format => ( is => 'ro', required => 1, default => sub { '%l: %s' } );
 has level_names => ( is => 'ro', required => 1 );
 has min_level => ( is => 'ro', required => 1 );
-has max_level => ( is => 'ro' );
+has max_level => ( is => 'ro', required => 1, deafult => sub { 'info' } );
 has _level_active => ( is => 'lazy' );
 
 sub BUILD {
