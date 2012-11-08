@@ -68,7 +68,8 @@ sub _create_format_lookup {
     r => $self->_render_remote($metadata->{object_remote}),
     s => $self->_render_log(@$content), l => $level, 
     c => $metadata->{controller}, p => $metadata->{package}, m => $method,
-    f => $metadata->{filename}, i => $metadata->{line},
+    f => $metadata->{filename}, i => $metadata->{line}, 
+    h => $metadata->{hostname}, P => $metadata->{pid},
     
   };
 }
@@ -77,7 +78,7 @@ sub _get_format_var_value {
   my ($self, $name, $data) = @_;
   my $val = $data->{$name};
   return $val if defined $val;
-  return '';
+  return '(undefined)';
 }
 
 sub _render_time {
@@ -100,7 +101,7 @@ sub _render {
   my $var_table = $self->_create_format_lookup($level, $metadata, [@content]);
   my $template = $self->format;
   
-  $template =~ s/%([\w])/$self->_get_format_var_value($1, $var_table)/ge;
+  $template =~ s/%([\w%])/$self->_get_format_var_value($1, $var_table)/ge;
   
   chomp($template);
   $template =~ s/\n/\n /g;
