@@ -5,14 +5,19 @@ use Scalar::Util qw(weaken);
 
 has format => ( is => 'ro', required => 1, default => sub { '%l: %s' } );
 has level_names => ( is => 'ro', required => 1 );
-has min_level => ( is => 'ro', required => 1 );
-has max_level => ( is => 'ro', required => 1, deafult => sub { 'info' } );
+has min_level => ( is => 'ro', required => 1, default => 'info' );
+has max_level => ( is => 'lazy', required => 1 );
 has _level_active => ( is => 'lazy' );
 
 sub BUILD {
   my ($self) = @_;
   our $METHODS_INSTALLED; 
   $self->_install_methods unless $METHODS_INSTALLED;
+}
+
+sub _build_max_level {
+    my ($self) = @_;
+    return $self->level_names->[-1];
 }
 
 sub _build__level_active {
@@ -70,7 +75,6 @@ sub _create_format_lookup {
     c => $metadata->{controller}, p => $metadata->{package}, m => $method,
     f => $metadata->{filename}, i => $metadata->{line}, 
     h => $metadata->{hostname}, P => $metadata->{pid},
-    
   };
 }
 
@@ -114,6 +118,206 @@ sub _output {
   print STDERR $content;
 }
 
-
 1;
+
+__END__
+
+=head1 NAME
+
+Object::Remote::Logging::Logger - Format and output a log message
+
+=head1 SYNOPSIS
+
+  use Object::Remote::Logging::Logger;
+  use Object::Remote::Logging qw( router arg_levels );
+  
+  my $app_output = Object::Remote::Logging::Logger->new(
+    level_names => arg_levels, format => '%t %s',
+    min_level => 'verbose', max_level => 'info',
+  );
+
+  #Selector method can return 0 or more logger
+  #objects that will receive the messages
+  my $selector = sub {
+    my ($generating_package, $metadata) = @_;
+    return unless $metadata->{controller} eq 'App::Logging::Subclass';
+    return $app_output;
+  };
+
+  #true value as second argument causes the selector
+  #to be stored with a weak reference
+  router->connect($selector, 1);
+
+  #disconnect the selector from the router
+  undef($selector);
+  
+  #router will hold this logger forever
+  #and send it all log messages
+  router->connect(Object::Remote::Logging::WarnLogger->new(
+    level_names => arg_levels, format => '%s at %f line %i, log level: %l'
+    min_level => 'warn', max_level => 'error',
+  ));
+
+=head1 DESCRIPTION
+
+This class receives log messages from an instance of L<Object::Remote::Log::Router>,
+formats them according to configuration, and then outputs them to STDERR. In between
+the router and the logger is a selector method which inspects the log message metadata
+and can return 0 or more loggers that should receive the log message.
+
+=head1 USAGE
+
+A logger object receives the log messages that are generated and converts them to
+formatted log entries then displays them to the end user. Each logger has a set
+of active log levels and will only output a log entry if the log message is at
+an active log level. 
+
+To gain access to the stream of log messages a connection is made to the log router.
+A logger can directly connect to the router and receive an unfiltered stream of
+log messages or a selector closure can be used instead. The selector will be executed
+for each log message with the message metadata and returns a list of 0 or more loggers
+that should receive the log message. When the selector is executed the first argument
+is the class name of the package that generated the log message and the second argument
+is a hash reference containing the message metadata.
+
+=head1 METADATA
+
+The message metadata is a hash reference with the following keys:
+
+=over 4
+
+=item level
+
+Name of the log level of the message.
+
+=item controller
+
+Name of the sub-class of Object::Remote::Logging in use by
+the generating package.
+
+=item package
+
+Name of the package that generated the log message.
+
+=item method
+
+Name of the method the message was generated inside of.
+
+=item timestamp
+
+Unix time of the message generation.
+
+=item pid
+
+Process id of the Perl interpreter the message was generated in.
+
+=item hostname
+
+Hostname of the system where the message was generated.
+
+=item filename
+
+Name of the file the message was generated in.
+
+=item line
+
+Line of the source file the message was generated at.
+
+=item object_remote
+
+This is a reference to another hash that contains the Object::Remote
+specific information. The keys are
+
+=over 4
+
+=item connection_id
+
+If the log message was generated on a remote Perl interpreter then the
+Object::Remote::Connection id of that interpreter will be available here.
+
+=back
+
+=back
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item level_names
+
+This is a required attribute. Must be an array ref with the list of log level names
+in it. The list must be ordered with the lowest level as element 0 and the highest 
+level as the last element. There is no default value.
+
+=item min_level
+
+The lowest log level that will be output by the logger. There is no default value.
+
+=item max_level
+
+The highest log level that will be output by the logger. The default value is the
+highest level present in level_names.
+
+=item format
+
+The printf style format string to use when rendering the log message. The following
+sequences are significant:
+
+=over 4
+
+=item %l
+
+Level name that the log message was generated at.
+
+=item %s
+
+Log message rendered into a string with a leading space before any additional lines in a 
+multiple line message.
+
+=item %t
+
+Time the log message was generated rendered into a string. The time value is taken from
+the Perl interpreter that generated the log message; it is not the time that the logger
+received the log message on the local interpreter if the log message was forwarded.
+
+=item %r
+
+Log::Remote connection information rendered into a string.
+
+=item %c
+
+Name of the sub-class of Object::Remote::Logging that was used by the class
+that generated the log message. Can also be Object::Remote::Logging itself.
+
+=item %p
+
+Package name of the class that generated the log message.
+
+=item %m
+
+Method name that generated the log message.
+
+=item %f
+
+Filename that the log message was generated in.
+
+=item %i
+
+Line number the log message was generated at.
+
+=item %h
+
+Hostname the log message was generated on.
+
+=item %P
+
+Process id of the Perl interpreter that generated the log message.
+
+=item %%
+
+A literal %.
+
+=back
+
+=back
 
