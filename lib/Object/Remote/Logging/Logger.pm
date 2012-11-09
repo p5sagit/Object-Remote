@@ -2,17 +2,49 @@ package Object::Remote::Logging::Logger;
 
 use Moo;
 use Scalar::Util qw(weaken);
+use Carp qw(croak);
 
+#TODO sigh invoking a logger with a log level name the same
+#as an attribute could happen - restrict attributes to _ prefix
+#and restrict log levels to not start with out that prefix?
 has format => ( is => 'ro', required => 1, default => sub { '%l: %s' } );
 has level_names => ( is => 'ro', required => 1 );
-has min_level => ( is => 'ro', required => 1, default => 'info' );
+has min_level => ( is => 'ro', required => 1, default => sub { 'info' } );
 has max_level => ( is => 'lazy', required => 1 );
 has _level_active => ( is => 'lazy' );
 
-sub BUILD {
-  my ($self) = @_;
-  our $METHODS_INSTALLED; 
-  $self->_install_methods unless $METHODS_INSTALLED;
+#just a stub so it doesn't get to AUTOLOAD
+sub BUILD { }
+sub DESTROY { }
+
+sub AUTOLOAD {
+  my $self = shift;
+  (my $method) = (our $AUTOLOAD =~ /([^:]+)$/);
+
+  no strict 'refs';
+
+  if ($method =~ m/^_/) {
+    croak "invalid method name $method for " . ref($self);
+  }
+
+  if ($method =~ m/^is_(.+)/) {
+    my $level_name = $1;
+    my $is_method = "is_$level_name";
+    *{$is_method} = sub { shift(@_)->_level_active->{$level_name} };
+    return $self->$is_method;
+  }
+
+  my $level_name = $method;
+  *{$level_name} = sub {
+    my $self = shift;
+    unless(exists($self->_level_active->{$level_name})) {
+      croak "$level_name is not a valid log level name";
+    }
+
+    $self->_log($level_name, @_);
+  };
+  
+  return $self->$level_name(@_);
 }
 
 sub _build_max_level {
@@ -40,19 +72,6 @@ sub _build__level_active {
   }
 
   return \%active;
-}
-
-sub _install_methods {
-  my ($self) = @_;
-  my $should_log = 0;
-  our $METHODS_INSTALLED = 1;
-
-  no strict 'refs';
-
-  foreach my $level (@{$self->level_names}) {
-    *{"is_$level"} = sub { shift(@_)->_level_active->{$level} };
-    *{$level} = sub { shift(@_)->_log($level, @_) };
-  }
 }
 
 sub _log {
