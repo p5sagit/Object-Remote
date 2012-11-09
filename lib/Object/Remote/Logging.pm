@@ -69,9 +69,9 @@ sub before_import {
                caller_level => 1,
                level => $level,
             }, $code) };
-            warn "could not deliver log event during Flog_$level: $@" if defined $@;
+            warn "could not deliver log event during Flog_$level: $@" if $@;
             eval { carp $code->() };
-            warn "could not emit warning during Flog_$level: $@" if defined $@;
+            warn "could not emit warning during Flog_$level: $@" if $@;
             exit($exit_value);
          });
       }
@@ -84,7 +84,13 @@ sub init_logging {
   my $format = $ENV{OBJECT_REMOTE_LOG_FORMAT};
   my $selections = $ENV{OBJECT_REMOTE_LOG_SELECTIONS};
   my %controller_should_log;
-  
+
+  eval { 
+    require Log::Any::Adapter;
+    require Object::Remote::Logging::LogAnyInjector;
+    Log::Any::Adapter->set('+Object::Remote::Logging::LogAnyInjector');
+  };
+
   return unless defined $level;
   $format = "[%l %r] %s" unless defined $format;
   $selections = __PACKAGE__ unless defined $selections;
