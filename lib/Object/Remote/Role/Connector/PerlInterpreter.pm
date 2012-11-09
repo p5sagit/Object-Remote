@@ -45,9 +45,9 @@ sub _build_perl_command {
         $shell_code .= "nice -n $nice ";
     }
 
-    if (defined($ENV{OBJECT_REMOTE_PERL_PATH})) {
-        log_debug { "Using OBJECT_REMOTE_PERL_PATH environment variable as perl path" };
-        $perl_path = $ENV{OBJECT_REMOTE_PERL_PATH};
+    if (defined($ENV{OBJECT_REMOTE_PERL_BIN})) {
+        log_debug { "Using OBJECT_REMOTE_PERL_BIN environment variable as perl path" };
+        $perl_path = $ENV{OBJECT_REMOTE_PERL_BIN};
     }
 
     $shell_code .= $perl_path . ' -';
