@@ -28,16 +28,15 @@ sub AUTOLOAD {
   #skip DESTROY and friends
   return if $log_level =~ m/^[A-Z]+$/;
   
-  if ($log_level =~ s/f$//) {
-      my $format = shift(@content);
-      $generator = sub { sprintf($format, @content) };
+  if ($log_contextual_level = $LEVEL_NAME_MAP{$log_level}) {
+    $generator = sub { @content };
+  } elsif(($log_level =~ s/f$//) && ($log_contextual_level = $LEVEL_NAME_MAP{$log_level})) {
+    my $format = shift(@content);
+    $generator = sub { sprintf($format, @content) };
   } else {
-      $generator = sub { @content };
+   croak "invalid log level: $log_level";
   }
-  
-  $log_contextual_level = $LEVEL_NAME_MAP{$log_level};
-  croak "invalid log level name: $log_level" unless defined $log_contextual_level;
-  
+    
   router->handle_log_request({
     controller => 'Log::Any', 
     package => scalar(caller),
