@@ -61,7 +61,9 @@ my @file_names = keys %mods;
 my @before_inc = grep { filter_not_core() } @file_names;
 my @after_inc;
 
-#TODO obviously this should be made into a method or configurable some how
+#TODO this is the wrong path to go down - fork() will bring
+#the env vars with it and the ssh connector can handle
+#forwarding the env vars
 my $env_pass = '';
 if (defined($ENV{OBJECT_REMOTE_LOG_LEVEL})) {
   my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};

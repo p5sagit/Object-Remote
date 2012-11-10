@@ -281,8 +281,8 @@ value will default to 1 or can be specified as an argument.
 
 =head1 LEVEL NAMES
 
-Object::Remote uses an ordered list of log level names with the minimum level
-first and the maximum level last. The list of level names can be accessed via
+Object::Remote uses an ordered list of log level names with the lowest level
+first and the highest level last. The list of level names can be accessed via
 the arg_levels method which is exportable to the consumer of this class. The log
 level names are:
 

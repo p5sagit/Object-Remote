@@ -88,7 +88,8 @@ sub _create_format_lookup {
   $method = '(none)' unless defined $method;
   
   return { 
-    '%' => '%', t => $self->_render_time($metadata->{timestamp}),
+    '%' => '%', 'n' => "\n",
+    t => $self->_render_time($metadata->{timestamp}),
     r => $self->_render_remote($metadata->{object_remote}),
     s => $self->_render_log(@$content), l => $level, 
     c => $metadata->{controller}, p => $metadata->{package}, m => $method,
