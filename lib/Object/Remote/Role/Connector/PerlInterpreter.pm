@@ -84,7 +84,9 @@ sub _start_perl {
   my $given_stderr = $self->stderr;
   my $foreign_stderr;
  
-  Dlog_verbose { s/\n/ /g; "invoking connection to perl interpreter using command line: $_" } @{$self->final_perl_command};
+  Dlog_verbose {
+    s/\n/ /g; "invoking connection to perl interpreter using command line: $_"
+  } @{$self->final_perl_command};
     
   if (defined($given_stderr)) {
     #if the stderr data goes to an existing file handle
