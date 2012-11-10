@@ -7,29 +7,24 @@ has _forward_destination => ( is => 'rw' );
 has enable_forward => ( is => 'rw', default => sub { 1 } );
 has _forward_stop => ( is => 'ro', required => 1, default => sub { {} } );
 
-around _get_loggers => sub {
-  my ($orig, $self, %metadata) = @_;
-  my $package = $metadata{package};
-  my %clone = %metadata;
+after _deliver_message => sub {
+  my ($self, $level, $generator, $args, $metadata) = @_;
+  my $package = $metadata->{package};
+  my $destination = $self->_forward_destination;
   our $reentrant;
-  
-  return if $reentrant;
-  local($reentrant) = 1; 
-    
-  my @loggers = $orig->($self, %clone);
 
-  if (! $self->enable_forward || $self->_forward_stop->{$package}) {
-    #warn "will not forward log events for '$package'";
-    return @loggers;
+  return unless $self->enable_forward;
+  return unless defined $destination;
+  return if $self->_forward_stop->{$package};
+
+  if (defined $reentrant) {
+    warn "log forwarding went reentrant. bottom: '$reentrant' top: '$package'";
+    return;
   }
   
-  my $forward_to = $self->_forward_destination;
+  local $reentrant = $package;
   
-  if ($forward_to) {
-    push(@loggers, $forward_to->_get_loggers(%clone));
-  }
-  
-  return @loggers;
+  $destination->_deliver_message($level, $generator, $args, $metadata);
 };
 
 sub exclude_forwarding {
