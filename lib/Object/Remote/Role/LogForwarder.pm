@@ -1,10 +1,9 @@
 package Object::Remote::Role::LogForwarder;
 
 use Moo::Role;
-use Carp qw(cluck);
 
-has _forward_destination => ( is => 'rw' );
 has enable_forward => ( is => 'rw', default => sub { 1 } );
+has _forward_destination => ( is => 'rw' );
 has _forward_stop => ( is => 'ro', required => 1, default => sub { {} } );
 
 after _deliver_message => sub {
