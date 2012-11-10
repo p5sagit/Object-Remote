@@ -23,7 +23,7 @@ sub AUTOLOAD {
   our %LEVEL_NAME_MAP;
   
   #just a proof of concept - support for the is_ methods can
-  #be done but requires more modifications to the router
+  #be done but requires modifications to the router
   return 1 if $log_level =~ m/^is_/;
   #skip DESTROY and friends
   return if $log_level =~ m/^[A-Z]+$/;
