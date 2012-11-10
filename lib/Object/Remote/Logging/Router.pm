@@ -35,8 +35,6 @@ sub _get_loggers {
 
     foreach my $logger ($selector->($package, { %metadata })) {
       next unless defined $logger;
-      #my $method = $logger->can($is_level);
-      #next unless defined $method;
       next unless $logger->$is_level;
       push(@loggers, $logger);
     }
@@ -47,6 +45,8 @@ sub _get_loggers {
   return @loggers; 
 }
 
+#overloadable so a router can invoke a logger
+#in a different way
 sub _invoke_logger {
   my ($self, $logger, $level_name, $content, $metadata) = @_;
   #Invoking the logger like this gets all available data to the
@@ -57,6 +57,22 @@ sub _invoke_logger {
   #a backwards compatible way and router sub classes invoke
   #it in non-backwards compatible ways if desired
   $logger->$level_name($content, $metadata);
+}
+
+#overloadable so forwarding can have the updated
+#metadata but does not have to wrap get_loggers
+#which has too many drawbacks
+sub _deliver_message {
+  my ($self, $level, $generator, $args, $metadata) = @_;
+  my @loggers = $self->_get_loggers(%$metadata);
+  
+  return unless @loggers > 0;
+  #this is the point where the user provided log message
+  #code block is executed
+  my @content = $generator->(@$args);
+  foreach my $logger (@loggers) {
+    $self->_invoke_logger($logger, $level, \@content, $metadata);
+  }
 }
 
 sub handle_log_request {
@@ -83,9 +99,7 @@ sub handle_log_request {
   $metadata{method} = $caller_info[3];
   $metadata{method} =~ s/^${package}::// if defined $metadata{method};
 
-  foreach my $logger ($self->_get_loggers(%metadata)) {
-    $self->_invoke_logger($logger, $level, [ $generator->(@args) ], \%metadata);
-  }
+  $self->_deliver_message($level, $generator, [ @args ], \%metadata);
 }
 
 sub connect {
