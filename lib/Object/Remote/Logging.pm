@@ -39,7 +39,13 @@ sub arg_levels {
 sub before_import {
    my ($class, $importer, $spec) = @_;
    my $router = $class->router;
+   our $DID_INIT;
 
+   unless($DID_INIT) {
+     $DID_INIT = 1;
+     init_logging();
+   }
+      
    $class->SUPER::before_import($importer, $spec);
 
    my @levels = @{$class->arg_levels($spec->config->{levels})};
