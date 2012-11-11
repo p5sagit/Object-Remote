@@ -105,14 +105,6 @@ sub init_logging {
   my $selections = $ENV{OBJECT_REMOTE_LOG_SELECTIONS};
   my %controller_should_log;
 
-  #TODO how can a third party module perform an action when a new
-  #interpreter is built on a remote node with out requiring support
-  #for that third party module baked into object::remote?
-  eval {
-    require Log::Any::Adapter;
-    Log::Any::Adapter->set('+Object::Remote::Logging::LogAnyInjector');
-  };
-
   return unless defined $level;
   $format = "[%l %r] %s" unless defined $format;
   $selections = __PACKAGE__ unless defined $selections;
