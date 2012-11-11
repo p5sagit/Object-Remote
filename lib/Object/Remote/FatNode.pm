@@ -77,6 +77,11 @@ if (defined($ENV{OBJECT_REMOTE_LOG_SELECTIONS})) {
   my $selections = $ENV{OBJECT_REMOTE_LOG_SELECTIONS};
   $env_pass .= '$ENV{OBJECT_REMOTE_LOG_SELECTIONS} = "' . $selections . "\";\n";
 }
+if (defined($ENV{OBJECT_REMOTE_LOG_FORWARDING})) {
+  my $forwarding = $ENV{OBJECT_REMOTE_LOG_FORWARDING};
+  $env_pass .= '$ENV{OBJECT_REMOTE_LOG_FORWARDING} = "' . $forwarding . "\";\n";
+}
+
 
 
 my $start = stripspace <<'END_START';
