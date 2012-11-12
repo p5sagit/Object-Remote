@@ -7,7 +7,7 @@ use B qw(perlstring);
 my @exclude_mods = qw(XSLoader.pm DynaLoader.pm);
 
 #used by t/watchdog_fatnode 
-our $INHIBIT_RUN_NODE = 0; 
+our $INHIBIT_RUN_NODE = 0;
 
 sub stripspace {
   my ($text) = @_;

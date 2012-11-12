@@ -112,8 +112,10 @@ sub _render_time {
 
 sub _render_remote {
   my ($self, $remote) = @_;
-  return 'local' if ! defined $remote || ! defined $remote->{connection_id};
-  return 'remote #' . $remote->{connection_id};
+  return 'local' unless defined $remote;
+  my $conn_id = $remote->{connection_id};
+  $conn_id = '(uninit)' unless defined $conn_id;
+  return "remote #$conn_id";
 }
 
 sub _render_log {

@@ -45,10 +45,10 @@ sub connect {
                   ->watch_time(
                       after => $self->timeout,
                       code => sub {
-                        Dlog_trace { "Connection timeout timer has fired for child pid '$child_pid'; is_ready: $_" } $f->is_ready;
+                        Dlog_trace {"Connection timeout timer has fired for child pid '$child_pid'; is_ready: $_" } $f->is_ready;
                         unless($f->is_ready) {
                             log_warn { "Connection with child pid '$child_pid' has timed out" };
-                            $f->fail("Connection timed out") unless $f->is_ready;                                                
+                            $f->fail("Connection timed out") unless $f->is_ready;
                         }
                         undef($channel);
                         

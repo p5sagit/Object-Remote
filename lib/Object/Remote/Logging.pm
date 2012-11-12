@@ -115,7 +115,16 @@ sub init_logging {
   $format = "[%l %r] %s" unless defined $format;
   $selections = __PACKAGE__ unless defined $selections;
   %controller_should_log = _parse_selections($selections);
-  
+
+  {
+    no warnings 'once';
+    if (defined $Object::Remote::FatNode::REMOTE_NODE) {
+      #the connection id for the remote node comes in later
+      #as the controlling node inits remote logging
+      router()->_remote_metadata({ connection_id =>  undef });
+    } 
+  }
+
   my $logger = Object::Remote::Logging::Logger->new(
     min_level => lc($level), format => $format,
     level_names => Object::Remote::Logging::arg_levels(),
@@ -137,10 +146,10 @@ sub init_logging {
 
 #this is invoked by the controlling node
 #on the remote nodes
-sub init_logging_forwarding {
+sub init_remote_logging {
   my ($self, %controller_info) = @_;
   
-  router()->_remote_metadata({ connection_id => $controller_info{connection_id} });
+  router()->_remote_metadata(\%controller_info);
   #TODO having an instance of an object in the remote interpreter causes it to hang
   #on exit intermitently or leave a zombie laying around frequently - not a bug limited
   #to log forwarding
