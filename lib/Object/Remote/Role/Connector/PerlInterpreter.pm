@@ -14,10 +14,12 @@ use Moo::Role;
 with 'Object::Remote::Role::Connector';
 
 has module_sender => (is => 'lazy');
-has ulimit => ( is => 'ro' );
-has nice => ( is => 'ro' );
-has watchdog_timeout => ( is => 'ro', required => 1, default => sub { undef } );
+has ulimit => ( is => 'ro');
+has nice => ( is => 'ro');
+has watchdog_timeout => ( is => 'ro', required => 1, default => sub { undef });
 has perl_command => (is => 'lazy');
+has pid => (is => 'rwp');
+has connection_id => (is => 'rwp');
 
 #if no child_stderr file handle is specified then stderr
 #of the child will be connected to stderr of the parent
@@ -55,15 +57,14 @@ sub _build_perl_command {
     return [ 'bash', '-c', $shell_code ];
 }
 
-
 around connect => sub {
   my ($orig, $self) = (shift, shift);
   my $f = $self->$start::start($orig => @_);
   return future {
     $f->on_done(sub {
       my ($conn) = $f->get;
-      $self->_setup_watchdog_reset($conn); 
-      my $sub = $conn->remote_sub('Object::Remote::Logging::init_logging_forwarding');
+      $self->_setup_watchdog_reset($conn);
+      my $sub = $conn->remote_sub('Object::Remote::Logging::init_remote_logging');
       $sub->('Object::Remote::Logging', router => router(), connection_id => $conn->_id);
       Object::Remote::Handle->new(
         connection => $conn,
@@ -108,6 +109,8 @@ sub _start_perl {
     @{$self->final_perl_command},
   ) or die "Failed to run perl at '$_[0]': $!";
   
+  $self->_set_pid($pid);
+  
   if (defined($given_stderr)) {   
     Dlog_debug { "Child process STDERR is being handled via run loop" };
         
@@ -139,7 +142,7 @@ sub _open2_for {
   my $self = shift;
   my ($foreign_stdin, $foreign_stdout, $pid) = $self->_start_perl(@_);
   my $to_send = $self->fatnode_text;
-  log_debug { my $len = length($to_send); "Sending contents of fat node to remote node; size is '$len' characters"  };
+  log_debug { my $len = length($to_send); "Sending contents of fat node to remote node; size is '$len' characters" };
   Object::Remote->current_loop
                 ->watch_io(
                     handle => $foreign_stdin,
@@ -206,10 +209,12 @@ sub fatnode_text {
   }
   
   if (defined($watchdog_timeout)) {
-    $text .= "my \$WATCHDOG_TIMEOUT = $watchdog_timeout;\n";   
+    $text .= "my \$WATCHDOG_TIMEOUT = $watchdog_timeout;\n";
   } else {
     $text .= "my \$WATCHDOG_TIMEOUT = undef;\n";
   }
+  
+  $text .= '$Object::Remote::FatNode::REMOTE_NODE = "1";' . "\n";
   
   $text .= <<'END';
 $INC{'Object/Remote/FatNode.pm'} = __FILE__;
