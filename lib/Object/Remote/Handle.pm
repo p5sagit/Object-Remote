@@ -2,7 +2,7 @@ package Object::Remote::Handle;
 
 use Object::Remote::Proxy;
 use Scalar::Util qw(weaken blessed);
-use Object::Remote::Logging qw ( :log router );
+use Object::Remote::Logging qw ( :log :dlog router );
 use Object::Remote::Future;
 #must find way to exclude certain log events
 #from being forwarded - log events generated in
@@ -51,7 +51,7 @@ sub BUILD {
       )->{remote}->disarm_free->id
     );
   }
-  log_trace { "finished constructing remote handle; registering it " . ref($self) };
+  Dlog_trace { "finished constructing remote handle; id is $_" } $self->id;
   $self->connection->register_remote($self);
 }
 
@@ -80,7 +80,7 @@ sub call_discard_free {
 
 sub DEMOLISH {
   my ($self, $gd) = @_;
-  log_trace { "Demolishing remote handle" };
+  Dlog_trace { "Demolishing remote handle $_" } $self->id;
   return if $gd or $self->disarmed_free;
   $self->connection->send_free($self->id);
 }

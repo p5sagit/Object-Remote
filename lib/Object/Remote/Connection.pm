@@ -19,35 +19,7 @@ use Moo;
 
 BEGIN { 
   router()->exclude_forwarding;
-
-  #this will reap child processes as soon
-  #as they are done executing so the process
-  #table cleans up as fast as possible but
-  #anything that needs to call waitpid()
-  #in the future to get the exit value of
-  #a child will get trash results if
-  #the signal handler was running. 
-  #If creating a child and getting the
-  #exit value is required then set
-  #a localized version of the signal
-  #handler for CHLD to be 'IGNORE'
-  #in the smallest block possible
-  #and outside the block send
-  #the process a CHLD signal
-  #to reap anything that may
-  #have exited while blocked
-  #in waitpid() 
-  $SIG{CHLD} = sub { 
-    my $kid; 
-    log_trace { "CHLD signal handler is executing" };
-    do {
-      $kid = waitpid(-1, WNOHANG);
-      log_debug { "waitpid() returned '$kid'" };
-    } while $kid > 0;
-    log_trace { "CHLD signal handler is done" };
-  };
-  
-  $SIG{PIPE} = sub { log_debug { "Got a PIPE signal" } };      
+  $SIG{PIPE} = sub { log_debug { "Got a PIPE signal" } };
 }
 
 END {
@@ -73,11 +45,11 @@ has read_channel => (
   trigger => sub {
     my ($self, $ch) = @_;
     my $id = $self->_id; 
-    Dlog_trace { "trigger for read_channel has been invoked for connection $id; file handle is $_" } $ch->fh; 
+    Dlog_trace { "trigger for read_channel has been invoked for connection $id; file handle is $_" } $ch->fh;
     weaken($self);
     $ch->on_line_call(sub { $self->_receive(@_) });
     $ch->on_close_call(sub { 
-      log_trace { "invoking 'done' on on_close handler for connection id '$id'" }; 
+      log_trace { "invoking 'done' on on_close handler for connection id '$id'" };
       $self->on_close->done(@_);
     });
   },
@@ -85,7 +57,10 @@ has read_channel => (
 
 has on_close => (
   is => 'rw', default => sub { $_[0]->_install_future_handlers(CPS::Future->new) },
-  trigger => \&_install_future_handlers,
+  trigger => sub {
+      log_trace { "Installing handlers into future via trigger" };
+      $_[0]->_install_future_handlers($_[1])
+  },
 );
 
 has child_pid => (is => 'ro');
@@ -111,11 +86,15 @@ has _json => (
 );
 
 after BUILD => sub {
-  my ($self) = @_; 
+  my ($self) = @_;
+  my $pid = $self->child_pid;
   
-  return unless defined $self->child_pid; 
-  
-  log_debug { "Setting process group of child process" };
+  unless (defined $pid) {
+      log_trace { "After BUILD invoked for connection but there was no pid" };
+      return;
+  }
+    
+  log_trace { "Setting process group of child process '$pid'" };
   
   setpgrp($self->child_pid, 1);
 };
@@ -124,7 +103,7 @@ sub BUILD { }
 
 sub _fail_outstanding {
   my ($self, $error) = @_;
-  Dlog_debug { "Failing outstanding futures with '$error' for connection $_" } $self->_id;
+  Dlog_debug { "$$ Failing outstanding futures with '$error' for connection $_" } $self->_id;
   my $outstanding = $self->outstanding_futures;
   $_->fail("$error\n") for values %$outstanding;
   %$outstanding = ();
@@ -133,11 +112,26 @@ sub _fail_outstanding {
 
 sub _install_future_handlers {
     my ($self, $f) = @_;
-    Dlog_trace { "trigger for on_close has been invoked for connection $_" } $self->_id;
+    Dlog_trace { "Installing handlers into future for connection $_" } $self->_id;
     weaken($self);
     $f->on_done(sub {
-      Dlog_trace { "failing all of the outstanding futures for connection $_" } $self->_id;
+      my $pid = $self->child_pid;
+      Dlog_trace { "Executing on_done handler in future for connection $_" } $self->_id;
       $self->_fail_outstanding("Object::Remote connection lost: " . ($f->get)[0]);
+      return unless defined $pid;
+      log_debug { "Waiting for child '$pid' to exit" };
+      my $ret = waitpid($pid, 0);
+      if ($ret != $pid) {
+        log_debug { "Waited for pid $pid but waitpid() returned $ret" };
+        return;
+      } elsif ($? & 127) {
+          log_warn { "Remote interpreter did not exit cleanly" };
+      } else {
+        log_verbose {
+          my $exit_value = $? >> 8;
+          "Remote Perl interpreter exited with value '$exit_value'"
+        };
+      }
     });
     return $f; 
 };
@@ -342,7 +336,8 @@ sub _send {
     
   if ($@) {
     Dlog_debug { "exception encountered when trying to write to file handle $_: $@" } $fh;
-    my $error = $@; chomp($error);
+    my $error = $@;
+    chomp($error);
     $self->on_close->done("could not write to file handle: $error") unless $self->on_close->is_ready;
     return; 
   }
