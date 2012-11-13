@@ -25,15 +25,64 @@ sub source_for {
     }
   }
   log_trace { "Searching for module in library directories" };
-  my ($found) = first {  -f $_ }
-                  map File::Spec->catfile($_, $module),
-                    @{$self->dir_list};
+
+  for my $inc (@{$self->dir_list}) {
+    if (!ref $inc) {
+      my $full_module = File::Spec->catfile($inc, $module);
+      next unless -f $full_module;
+      log_debug { "found '$module' at '$found'" };
+      open my $fh, '<', $full_module or die "Couldn't open ${full_module} for ${module}: $!";
+      return do { local $/; <$fh> };
+    }
+    else {
+      my $data = _read_dynamic_inc($inc, $module);
+      return $data
+        if defined $data;
+    }
+  }
   die "Couldn't find ${module} in remote \@INC. dir_list contains:\n"
-      .join("\n", @{$self->dir_list})
-    unless $found;
-  log_debug { "found '$module' at '$found'" };
-  open my $fh, '<', $found or die "Couldn't open ${found} for ${module}: $!";
-  return do { local $/; <$fh> };
+      .join("\n", @{$self->dir_list});
+}
+
+sub _read_dynamic_inc {
+  my ($inc, $module) = @_;
+
+  my ($fh, $cb, $state);
+  if (ref $inc eq 'CODE') {
+    ($fh, $cb, $state) = $inc->($inc, $module);
+  }
+  elsif (ref $inc eq 'ARRAY') {
+    ($fh, $cb, $state) = $inc->[0]->($inc, $module);
+  }
+  elsif ($inc->can('INC')) {
+    ($fh, $cb, $state) = $inc->INC($module);
+  }
+
+  if ($cb && $fh) {
+    my $data = '';
+    while (1) {
+      local $_ = <$fh>;
+      last unless defined;
+      my $res = $cb->($cb, $state);
+      $data .= $_;
+      last unless $res;
+    }
+    return $data;
+  }
+  elsif ($cb) {
+    my $data = '';
+    while (1) {
+      local $_;
+      my $res = $cb->($cb, $state);
+      $data .= $_;
+      last unless $res;
+    }
+    return $data;
+  }
+  elsif ($fh) {
+    return do { local $/; <$fh> };
+  }
+  return;
 }
 
 1;
