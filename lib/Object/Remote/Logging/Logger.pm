@@ -339,6 +339,10 @@ Process id of the Perl interpreter that generated the log message.
 
 A literal %.
 
+=item %n
+
+A newline.
+
 =back
 
 =back
