@@ -9,10 +9,6 @@ use Carp qw(carp croak);
 extends 'Log::Contextual';
 
 exports(qw( ____ router arg_levels ));
-#exception log - log a message then die with that message
-export_tag elog => ('____');
-#fatal log - log a message then call exit(1)
-export_tag flog => ('____');
 
 sub router {
   our $Router_Instance ||= do {
@@ -47,41 +43,6 @@ sub before_import {
    }
       
    $class->SUPER::before_import($importer, $spec);
-
-   my @levels = @{$class->arg_levels($spec->config->{levels})};
-   for my $level (@levels) {
-      if ($spec->config->{elog}) {
-         $spec->add_export("&Elog_$level", sub (&) {
-            my ($code, @args) = @_;
-            $router->handle_log_request({
-               controller => $class,
-               package => scalar(caller),
-               caller_level => 1,
-               level => $level,
-            }, $code);
-            #TODO this should get fed into a logger so it can be formatted
-            croak $code->();
-         });
-      }
-      if ($spec->config->{flog}) {
-         #TODO that prototype isn't right
-         $spec->add_export("&Flog_$level", sub (&@) {
-            my ($code, $exit_value) = @_;
-            $exit_value = 1 unless defined $exit_value;
-            #don't let it going wrong stop us from calling exit()
-            eval { $router->handle_log_request({
-               controller => $class,
-               package => scalar(caller),
-               caller_level => 1,
-               level => $level,
-            }, $code) };
-            warn "could not deliver log event during Flog_$level: $@" if $@;
-            eval { carp $code->() };
-            warn "could not emit warning during Flog_$level: $@" if $@;
-            exit($exit_value);
-         });
-      }
-   }
 }
 
 sub _parse_selections {
@@ -166,7 +127,7 @@ Object::Remote::Logging - Logging subsystem for Object::Remote
 
 =head1 SYNOPSIS
 
-  use Object::Remote::Logging qw( :log :dlog :elog :flog arg_levels router );
+  use Object::Remote::Logging qw( :log :dlog arg_levels router );
   
   @levels = qw( trace debug verbose info warn error fatal );
   @levels = arg_levels(); #same result
@@ -179,8 +140,6 @@ Object::Remote::Logging - Logging subsystem for Object::Remote
   
   log_info { 'Trace log event' };
   Dlog_verbose { "Debug event with Data::Dumper::Concise: $_" } { foo => 'bar' };
-  Elog_error { 'Error event that calls die() with this string' };
-  Flog_fatal { 'Fatal event calls warn() then exit()' } 1;
 
 =head1 DESCRIPTION
 
@@ -270,19 +229,6 @@ to the block as the argument list and returned from the log method as a list.
 Works just like log_ and Dlog_ except returns only the first argument as a scalar value.
 
   my $beverage = log_info { "Customer ordered $_[0]" } 'Coffee';
-
-=item Elog_<level>
-
-Log an event and then generate an exception by calling die() with the log message.
-
-  Elog_error { "Could not open file: $!" };
-
-=item Flog_<level>
-
-Log the event, generate a warning with the log message, then call exit(). The exit
-value will default to 1 or can be specified as an argument.
-
-  Flog_fatal { 'Could not lock resource' } 3;
 
 =back
 
