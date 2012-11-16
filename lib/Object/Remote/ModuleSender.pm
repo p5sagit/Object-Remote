@@ -5,6 +5,7 @@ use Config;
 use File::Spec;
 use List::Util qw(first);
 use Moo;
+use Scalar::Util qw(reftype openhandle blessed);
 
 has dir_list => (is => 'lazy');
 
@@ -20,7 +21,7 @@ sub source_for {
   log_debug { "locating source for module '$module'" };
   if (my $find = Object::Remote::FromData->can('find_module')) {
     if (my $source = $find->($module)) {
-      Dlog_trace { "source of '$module' was found by Object::Remote::FromData" };
+      log_trace { "source of '$module' was found by Object::Remote::FromData" };
       return $source;
     }
   }
@@ -30,7 +31,7 @@ sub source_for {
     if (!ref $inc) {
       my $full_module = File::Spec->catfile($inc, $module);
       next unless -f $full_module;
-      log_debug { "found '$module' at '$found'" };
+      log_debug { "found '$module' at '$full_module'" };
       open my $fh, '<', $full_module or die "Couldn't open ${full_module} for ${module}: $!";
       return do { local $/; <$fh> };
     }
@@ -47,39 +48,34 @@ sub source_for {
 sub _read_dynamic_inc {
   my ($inc, $module) = @_;
 
-  my ($fh, $cb, $state);
-  if (ref $inc eq 'CODE') {
-    ($fh, $cb, $state) = $inc->($inc, $module);
-  }
-  elsif (ref $inc eq 'ARRAY') {
-    ($fh, $cb, $state) = $inc->[0]->($inc, $module);
-  }
-  elsif ($inc->can('INC')) {
-    ($fh, $cb, $state) = $inc->INC($module);
+  my @cb = ref $inc eq 'ARRAY'  ? $inc->[0]->($inc, $module)
+         : blessed $inc         ? $inc->INC($module)
+                                : $inc->($inc, $module);
+
+  my $fh;
+  if (reftype $cb[0] eq 'GLOB' && openhandle $cb[0]) {
+    $fh = shift @cb;
   }
 
-  if ($cb && $fh) {
-    my $data = '';
-    while (1) {
-      local $_ = <$fh>;
-      last unless defined;
-      my $res = $cb->($cb, $state);
-      $data .= $_;
-      last unless $res;
+  if (ref $cb[0] eq 'CODE') {
+    log_debug { "found '$module' using $_" }, $inc;
+    my $cb = shift @cb;
+    # require docs are wrong, perl sends 0 as the first param
+    my @params = (0, @cb ? $cb[0] : ());
+
+    my $continue = 1;
+    my $module = '';
+    while ($continue) {
+      local $_ = $fh ? <$fh> : '';
+      $_ = ''
+        if !defined;
+      $continue = $cb->(@params);
+      $module .= $_;
     }
-    return $data;
-  }
-  elsif ($cb) {
-    my $data = '';
-    while (1) {
-      local $_;
-      my $res = $cb->($cb, $state);
-      $data .= $_;
-      last unless $res;
-    }
-    return $data;
+    return $module;
   }
   elsif ($fh) {
+    log_debug { "found '$module' using $_" }, $inc;
     return do { local $/; <$fh> };
   }
   return;
