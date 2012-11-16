@@ -25,7 +25,7 @@ sub TestModuleProvider::INC {
   my ($self, $module) = @_;
   if (my $data = $self->{modules}{$module}) {
     open my $fh, '<', \$data
-      or die "welp $!";
+      or die "Unable to open in-memory file: $!";
     return $fh;
   }
   return;
@@ -36,7 +36,7 @@ my %sources = (
   sub => [ sub {
     if (my $data = $modules->{$_[1]}) {
       open my $fh, '<', \$data
-        or die "welp $!";
+        or die "Unable to open in-memory file: $!";
       return $fh;
     }
     return;
@@ -45,12 +45,37 @@ my %sources = (
     my $mods = $_[0][1];
     if (my $data = $mods->{$_[1]}) {
       open my $fh, '<', \$data
-        or die "welp $!";
+        or die "Unable to open in-memory file: $!";
       return $fh;
     }
     return;
   }, $modules ] ],
   object => [ bless { modules => $modules }, 'TestModuleProvider' ],
+  filter_sub => [ sub {
+    if (my $data = $modules->{$_[1]}) {
+      my @lines = split /\n/, $data;
+      my $read = join("\n", 0..$#lines);
+      open my $fh, '<', \$read
+        or die "welp $!";
+      return ($fh, sub {
+        chomp;
+        my $ret = $_ != $#lines ? 1 : 0;
+        $_ = $lines[$_];
+        return $ret;
+      });
+    }
+    return;
+  } ],
+  feed_sub => [ sub {
+    if (my $data = $modules->{$_[1]}) {
+      my @lines = split /(\n)/, $data;
+      return sub {
+        $_ = shift @lines;
+        return @lines ? 1 : 0;
+      };
+    }
+    return;
+  } ],
 );
 
 for my $source (sort keys %sources) {
