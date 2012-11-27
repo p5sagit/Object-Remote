@@ -81,6 +81,10 @@ if (defined($ENV{OBJECT_REMOTE_LOG_FORWARDING})) {
   my $forwarding = $ENV{OBJECT_REMOTE_LOG_FORWARDING};
   $env_pass .= '$ENV{OBJECT_REMOTE_LOG_FORWARDING} = "' . $forwarding . "\";\n";
 }
+if (defined($ENV{OBJECT_REMOTE_PERL_BIN})) {
+  my $perl_bin = $ENV{OBJECT_REMOTE_PERL_BIN};
+  $env_pass .= '$ENV{OBJECT_REMOTE_PERL_BIN} = "' . $perl_bin . "\";\n";
+}
 
 
 
