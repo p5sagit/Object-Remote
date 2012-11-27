@@ -136,7 +136,7 @@ Object::Remote::Logging - Logging subsystem for Object::Remote
   $ENV{OBJECT_REMOTE_LOG_FORMAT} = '%l %t: %p::%m %s'; #and more
   $ENV{OBJECT_REMOTE_LOG_SELECTIONS} = 'Object::Remote::Logging Some::Other::Subclass';
   $ENV{OBJECT_REMOTE_LOG_SELECTIONS} = '* -Object::Remote::Logging';
-  $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 0 || 1; #default 0
+  $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 1; #default 0
   
   log_info { 'Trace log event' };
   Dlog_verbose { "Debug event with Data::Dumper::Concise: $_" } { foo => 'bar' };
@@ -228,7 +228,7 @@ to the block as the argument list and returned from the log method as a list.
 
 Works just like log_ and Dlog_ except returns only the first argument as a scalar value.
 
-  my $beverage = log_info { "Customer ordered $_[0]" } 'Coffee';
+  my $beverage = logS_info { "Customer ordered $_[0]" } 'Coffee';
 
 =back
 

@@ -283,6 +283,9 @@ sub register_remote {
 sub send_free {
   my ($self, $id) = @_;
   Dlog_trace { "sending request to free object '$id' for connection $_" } $self->_id;
+  #TODO this shows up some times when a remote side dies in the middle of a remote
+  #method invocation - possibly only when the object is being constructed?
+  #(in cleanup) Use of uninitialized value $id in delete at ../Object-Remote/lib/Object/Remote/Connection.
   delete $self->remote_objects_by_id->{$id};
   $self->_send([ free => $id ]);
 }
