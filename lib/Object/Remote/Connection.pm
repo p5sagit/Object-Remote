@@ -101,11 +101,27 @@ after BUILD => sub {
 
 sub BUILD { }
 
+sub is_valid {
+  my ($self) = @_;
+  my $closed = $self->on_close->is_ready;
+  
+  log_trace { "Connection closed: $closed" };
+  return ! $closed;
+}
+
 sub _fail_outstanding {
   my ($self, $error) = @_;
-  Dlog_debug { "$$ Failing outstanding futures with '$error' for connection $_" } $self->_id;
   my $outstanding = $self->outstanding_futures;
-  $_->fail("$error\n") for values %$outstanding;
+  
+  Dlog_debug { 
+    sprintf "Failing %i outstanding futures with '$error'", scalar(keys(%$outstanding))
+  };
+
+  foreach(keys(%$outstanding)) {
+    log_trace { "Failing future for $_" };
+    my $future = $outstanding->{$_};
+  }
+
   %$outstanding = ();
   return;
 }
@@ -321,6 +337,11 @@ sub send_discard {
 sub _send {
   my ($self, $to_send) = @_;
   my $fh = $self->send_to_fh;
+  
+  unless ($self->is_valid) {
+    die "Attempt to invoke _send on a connection that is not valid";
+  }
+  
   Dlog_trace { "Starting to serialize data in argument to _send for connection $_" } $self->_id;
   my $serialized = $self->_serialize($to_send)."\n";
   Dlog_trace { my $l = length($serialized); "serialization is completed; sending '$l' characters of serialized data to $_" } $fh;
