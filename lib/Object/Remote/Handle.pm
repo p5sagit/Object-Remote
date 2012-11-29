@@ -59,6 +59,7 @@ sub call {
   my ($self, $method, @args) = @_;
   my $w = wantarray;
   log_trace { my $def = defined $w ? 1 : 0; "call() has been invoked on a remote handle; wantarray: '$def'" };
+  
   $method = "start::${method}" if (caller(0)||'') eq 'start';
   future {
     $self->connection->send(call => $self->id, $w, $method, @args)
