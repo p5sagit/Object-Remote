@@ -174,7 +174,7 @@ sub _setup_watchdog_reset {
   my ($self, $conn) = @_;
   my $timer_id; 
     
-  return unless $self->watchdog_timeout; 
+  return unless $self->watchdog_timeout;
         
   Dlog_trace { "Creating Watchdog management timer for connection id $_" } $conn->_id;
     
@@ -184,18 +184,29 @@ sub _setup_watchdog_reset {
     every => $self->watchdog_timeout / 3,
     code => sub {
       unless(defined($conn)) {
-        log_trace { "Weak reference to connection in Watchdog was lost, terminating update timer $timer_id" };
+        log_warn { "Weak reference to connection in Watchdog was lost, terminating update timer $timer_id" };
         Object::Remote->current_loop->unwatch_time($timer_id);
-        return;  
+        return;
       }
-            
+      
+      unless($conn->is_valid) {
+        log_warn { "Watchdog timer found an invalid connection, removing the timer" };
+        Object::Remote->current_loop->unwatch_time($timer_id);
+        return;
+      }
+      
       Dlog_trace { "Reseting Watchdog for connection id $_" } $conn->_id;
       #we do not want to block in the run loop so send the
       #update off and ignore any result, we don't need it
       #anyway
       $conn->send_class_call(0, 'Object::Remote::WatchDog', 'reset');
     }
-  );     
+  );
+  
+  $conn->on_close->on_ready(sub {
+    log_debug { "Removing watchdog for connection that is now closed" };
+    Object::Remote->current_loop->unwatch_time($timer_id);
+  });
 }
 
 sub fatnode_text {

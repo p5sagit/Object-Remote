@@ -25,8 +25,8 @@ sub BUILD {
     #if the Watchdog is killing the process we don't want any chance of the
     #process not actually exiting and die could be caught by an eval which
     #doesn't do us any good 
-    log_error { sprintf("Watchdog has expired, terminating the process at file %s line %s", __FILE__, __LINE__ + 1); };
-    exit(1);     
+    log_fatal { "Watchdog has expired, terminating the process" };
+    exit(1);
   };   
   
   Dlog_debug { "Initializing watchdog with timeout of $_ seconds" } $self->timeout;
