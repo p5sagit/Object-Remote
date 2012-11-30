@@ -86,7 +86,11 @@ sub DEMOLISH {
   my ($self, $gd) = @_;
   Dlog_trace { "Demolishing remote handle $_" } $self->id;
   return if $gd or $self->disarmed_free;
-  $self->connection->send_free($self->id);
+  #this could happen after the connection has gone away
+  eval { $self->connection->send_free($self->id) };
+  if ($@ && $@ !~ m/^Attempt to invoke _send on a connection that is not valid/) {
+    die "Could not invoke send_free on connection for handle " . $self->id;
+  }
 }
 
 1;
