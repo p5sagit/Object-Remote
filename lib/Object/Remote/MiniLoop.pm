@@ -5,7 +5,11 @@ use Time::HiRes qw(time);
 use Object::Remote::Logging qw( :log :dlog router );
 use Moo;
 
-BEGIN { router()->exclude_forwarding }
+BEGIN { 
+  $SIG{PIPE} = sub { log_debug { "Got a PIPE signal" } };
+  
+  router()->exclude_forwarding
+}
 
 # this is ro because we only actually set it using local in sub run
 has is_running => (is => 'ro', clearer => 'stop');
