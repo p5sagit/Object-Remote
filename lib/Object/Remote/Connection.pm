@@ -121,6 +121,7 @@ sub _fail_outstanding {
   foreach(keys(%$outstanding)) {
     log_trace { "Failing future for $_" };
     my $future = $outstanding->{$_};
+    $future->fail("$error\n");
   }
 
   %$outstanding = ();
