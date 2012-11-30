@@ -18,10 +18,7 @@ use JSON::PP qw(encode_json);
 use Moo;
 use Carp qw(croak);
 
-BEGIN { 
-  router()->exclude_forwarding;
-  $SIG{PIPE} = sub { log_debug { "Got a PIPE signal" } };
-}
+BEGIN { router()->exclude_forwarding }
 
 END {
   log_debug { "Killing all child processes in the process group" };
