@@ -16,6 +16,7 @@ use Module::Runtime qw(use_module);
 use Scalar::Util qw(weaken blessed refaddr openhandle);
 use JSON::PP qw(encode_json);
 use Moo;
+use Carp qw(croak);
 
 BEGIN { 
   router()->exclude_forwarding;
@@ -339,7 +340,7 @@ sub _send {
   my $fh = $self->send_to_fh;
   
   unless ($self->is_valid) {
-    die "Attempt to invoke _send on a connection that is not valid";
+    croak "Attempt to invoke _send on a connection that is not valid";
   }
   
   Dlog_trace { "Starting to serialize data in argument to _send for connection $_" } $self->_id;

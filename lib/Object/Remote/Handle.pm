@@ -14,7 +14,7 @@ use Moo;
 BEGIN { router()->exclude_forwarding }
 
 has connection => (
-  is => 'ro', required => 1,
+  is => 'ro', required => 1, handles => ['is_valid'],
   coerce => sub {
     blessed($_[0])
       ? $_[0]
@@ -58,11 +58,14 @@ sub BUILD {
 sub call {
   my ($self, $method, @args) = @_;
   my $w = wantarray;
-  log_trace { my $def = defined $w ? 1 : 0; "call() has been invoked on a remote handle; wantarray: '$def'" };
+  my $id = $self->id;
   
   $method = "start::${method}" if (caller(0)||'') eq 'start';
+  log_trace { "call('$method') has been invoked on remote handle '$id'; creating future" };
+
   future {
-    $self->connection->send(call => $self->id, $w, $method, @args)
+    log_debug { "Invoking send on connection for handle '$id' method $method" };
+    $self->connection->send(call => $id, $w, $method, @args)
   };
 }
 

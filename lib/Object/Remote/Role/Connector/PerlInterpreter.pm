@@ -4,7 +4,7 @@ use IPC::Open2;
 use IPC::Open3; 
 use IO::Handle;
 use Symbol; 
-use Object::Remote::Logging qw( :log :dlog router );
+use Object::Remote::Logging qw(:log :dlog router);
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
 use Object::Remote::Future;
@@ -24,6 +24,8 @@ has connection_id => (is => 'rwp');
 #if no child_stderr file handle is specified then stderr
 #of the child will be connected to stderr of the parent
 has stderr => ( is => 'rw', default => sub { undef } );
+
+BEGIN { router()->exclude_forwarding; }
 
 sub _build_module_sender {
   my ($hook) =

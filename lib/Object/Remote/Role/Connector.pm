@@ -2,12 +2,14 @@ package Object::Remote::Role::Connector;
 
 use Module::Runtime qw(use_module);
 use Object::Remote::Future;
-use Object::Remote::Logging qw(:log :dlog );
+use Object::Remote::Logging qw(:log :dlog router);
 use Moo::Role;
 
 requires '_open2_for';
 
 has timeout => (is => 'ro', default => sub { 10 });
+
+BEGIN { router()->exclude_forwarding; }
 
 sub connect {
   my $self = shift;

@@ -1,10 +1,12 @@
 package Object::Remote::WatchDog; 
 
 use Object::Remote::MiniLoop; 
-use Object::Remote::Logging qw ( :log :dlog );
+use Object::Remote::Logging qw (:log :dlog router);
 use Moo; 
 
 has timeout => ( is => 'ro', required => 1 );
+
+BEGIN { router()->exclude_forwarding; }
 
 around new => sub {
   my ($orig, $self, @args) = @_; 
@@ -12,7 +14,7 @@ around new => sub {
     
   return $WATCHDOG if defined $WATCHDOG;
   log_trace { "Constructing new instance of global watchdog" };
-  return $WATCHDOG = $self->$orig(@args);    
+  return $WATCHDOG = $self->$orig(@args);
 };
 
 #start the watchdog
