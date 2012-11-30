@@ -23,7 +23,11 @@ after _deliver_message => sub {
   
   local $reentrant = $package;
   
-  $destination->_deliver_message($level, $generator, $args, $metadata);
+  eval { $destination->_deliver_message($level, $generator, $args, $metadata) };
+  
+  if ($@ && $@ !~ /^Attempt to use Object::Remote::Proxy backed by an invalid handle/) {
+    die $@;
+  }
 };
 
 sub exclude_forwarding {
