@@ -71,8 +71,12 @@ sub init_logging {
   my $format = $ENV{OBJECT_REMOTE_LOG_FORMAT};
   my $selections = $ENV{OBJECT_REMOTE_LOG_SELECTIONS};
   my %controller_should_log;
+  
+  unless (defined $ENV{OBJECT_REMOTE_LOG_FORWARDING} && $ENV{OBJECT_REMOTE_LOG_FORWARDING} ne '') {
+    $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 1;
+  }
 
-  return unless defined $level;
+  return unless defined $level && $level ne '';
   $format = "[%l %r] %s" unless defined $format;
   $selections = __PACKAGE__ unless defined $selections;
   %controller_should_log = _parse_selections($selections);
@@ -136,7 +140,7 @@ Object::Remote::Logging - Logging subsystem for Object::Remote
   $ENV{OBJECT_REMOTE_LOG_FORMAT} = '%l %t: %p::%m %s'; #and more
   $ENV{OBJECT_REMOTE_LOG_SELECTIONS} = 'Object::Remote::Logging Some::Other::Subclass';
   $ENV{OBJECT_REMOTE_LOG_SELECTIONS} = '* -Object::Remote::Logging';
-  $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 1; #default 0
+  $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 0; #default 1
   
   log_info { 'Trace log event' };
   Dlog_verbose { "Debug event with Data::Dumper::Concise: $_" } { foo => 'bar' };
@@ -195,8 +199,8 @@ remote interpreter and the logger for the message is invoked in the local interp
 Sub-classes of Object::Remote::Logging will have log messages forwarded automatically.
 Loggers receive forwarded log messages exactly the same way as non-forwarded messages
 except a forwarded message includes extra metadata about the remote interpreter. Log
-forwarding is not currently enabled by default; to enable it set the 
-OBJECT_REMOTE_LOG_FORWARDING environment variable to 1. See L<Object::Remote::Logging::Router>.
+forwarding is enabled by default but comes with a performance hit; to disable it set the 
+OBJECT_REMOTE_LOG_FORWARDING environment variable to 0. See L<Object::Remote::Logging::Router>.
 
 =head1 EXPORTABLE SUBROUTINES
 
