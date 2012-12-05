@@ -5,7 +5,7 @@ use FindBin;
 
 use lib "$FindBin::Bin/lib";
 
-require 't/logsetup.pl';
+$ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
 
 use Object::Remote;
 

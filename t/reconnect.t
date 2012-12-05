@@ -1,6 +1,8 @@
 use strictures 1;
 use Test::More;
 
+$ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
+
 use Object::Remote;
 use Object::Remote::FromData;
 
