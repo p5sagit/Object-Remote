@@ -175,7 +175,7 @@ Object::Remote::Logging::Logger - Format and output a log message
   
   #router will hold this logger forever
   #and send it all log messages
-  router->connect(Object::Remote::Logging::WarnLogger->new(
+  router->connect(Object::Remote::Logging::Logger->new(
     level_names => arg_levels, format => '%s at %f line %i, log level: %l'
     min_level => 'warn', max_level => 'error',
   ));
