@@ -140,8 +140,11 @@ sub generate_fatpack_hash {
   (my $stub = $orig) =~ s/\.pm$//;
   my $name = uc join '_', split '/', $stub;
   my $data = $files{$orig} or die $orig; $data =~ s/^/  /mg;
-  return '$'.$hash_name.'{'.perlstring($orig).qq!} = <<'${name}';\n!
-  .qq!${data}${name}\n!;
+  $data .= "\n" unless $data =~ m/\n$/;
+  my $ret = '$'.$hash_name.'{'.perlstring($orig).qq!} = <<'${name}';\n!
+    .qq!${data}${name}\n!;
+#  warn $ret;
+  return $ret;
 }
 
 my @segments = (
