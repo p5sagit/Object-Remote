@@ -150,8 +150,8 @@ L<Object::Remote::Logging::Logger>.
 
 =item OBJECT_REMOTE_LOG_FORWARDING
 
-Forward log events from remote connections to the local Perl interpreter. Set to 1 to enable
-this feature which is disabled by default. See L<Object::Remote::Logging>.
+Forward log events from remote connections to the local Perl interpreter. Set to 0 to disable
+this feature which is enabled by default. See L<Object::Remote::Logging>.
 
 =item OBJECT_REMOTE_LOG_SELECTIONS
 

@@ -146,8 +146,10 @@ sub loop_once {
   my $write_count = 0; 
   my @c = caller;
   my $wait_time = $self->_next_timer_expires_delay;
-  log_trace {  sprintf("Run loop: loop_once() has been invoked by $c[1]:$c[2] with read:%i write:%i select timeout:%s",
-      scalar(keys(%$read)), scalar(keys(%$write)), defined $wait_time ? $wait_time : 'indefinite' ) };
+  log_trace {
+    sprintf("Run loop: loop_once() has been invoked by $c[1]:$c[2] with read:%i write:%i select timeout:%s",
+      scalar(keys(%$read)), scalar(keys(%$write)), defined $wait_time ? $wait_time : 'indefinite' )
+  };
   my ($readable, $writeable) = IO::Select->select(
     $self->_read_select, $self->_write_select, undef, $wait_time
   ); 

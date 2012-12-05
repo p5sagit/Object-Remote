@@ -32,9 +32,9 @@ has _id => ( is => 'ro', required => 1, default => sub { our $NEXT_CONNECTION_ID
 has send_to_fh => (
   is => 'ro', required => 1,
   trigger => sub {
-      my $self = $_[0];
-      $_[1]->autoflush(1);
-      Dlog_trace { my $id = $self->_id; "connection had send_to_fh set to $_"  } $_[1];
+    my $self = $_[0];
+    $_[1]->autoflush(1);
+    Dlog_trace { my $id = $self->_id; "connection had send_to_fh set to $_"  } $_[1];
   },
 );
 
@@ -56,8 +56,8 @@ has read_channel => (
 has on_close => (
   is => 'rw', default => sub { $_[0]->_install_future_handlers(CPS::Future->new) },
   trigger => sub {
-      log_trace { "Installing handlers into future via trigger" };
-      $_[0]->_install_future_handlers($_[1])
+    log_trace { "Installing handlers into future via trigger" };
+    $_[0]->_install_future_handlers($_[1])
   },
 );
 
@@ -88,8 +88,8 @@ after BUILD => sub {
   my $pid = $self->child_pid;
   
   unless (defined $pid) {
-      log_trace { "After BUILD invoked for connection but there was no pid" };
-      return;
+    log_trace { "After BUILD invoked for connection but there was no pid" };
+    return;
   }
     
   log_trace { "Setting process group of child process '$pid'" };

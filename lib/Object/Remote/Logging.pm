@@ -46,23 +46,23 @@ sub before_import {
 }
 
 sub _parse_selections {
-    my ($selections_string) = @_;
-    my %log_ok;
+  my ($selections_string) = @_;
+  my %log_ok;
     
-    #example string:
-    #"  * -Object::Remote::Logging    Foo::Bar::Baz   "
-    foreach(split(/\s+/, $selections_string)) {
-        next if $_ eq '';
-        if ($_ eq '*') {
-            $log_ok{$_} = 1;
-        } elsif (s/^-//) {
-            $log_ok{$_} = 0;
-        } else {
-            $log_ok{$_} = 1;
-        }
+  #example string:
+  #"  * -Object::Remote::Logging    Foo::Bar::Baz   "
+  foreach(split(/\s+/, $selections_string)) {
+    next if $_ eq '';
+    if ($_ eq '*') {
+      $log_ok{$_} = 1;
+    } elsif (s/^-//) {
+      $log_ok{$_} = 0;
+    } else {
+      $log_ok{$_} = 1;
     }
+  }
     
-    return %log_ok;
+  return %log_ok;
 }
 
 #this is invoked on all nodes

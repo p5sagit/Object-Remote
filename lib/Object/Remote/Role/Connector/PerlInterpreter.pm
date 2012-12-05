@@ -35,28 +35,28 @@ sub _build_module_sender {
 }
 
 sub _build_perl_command {
-    my ($self) = @_;
-    my $nice = $self->nice;
-    my $ulimit = $self->ulimit;
-    my $perl_path = 'perl';
-    my $shell_code = '';
+  my ($self) = @_;
+  my $nice = $self->nice;
+  my $ulimit = $self->ulimit;
+  my $perl_path = 'perl';
+  my $shell_code = '';
 
-    if (defined($ulimit)) {
-        $shell_code .= "ulimit $ulimit || exit 1; ";
-    }
+  if (defined($ulimit)) {
+    $shell_code .= "ulimit $ulimit || exit 1; ";
+  }
 
-    if (defined($nice)) {
-        $shell_code .= "nice -n $nice ";
-    }
+  if (defined($nice)) {
+    $shell_code .= "nice -n $nice ";
+  }
 
-    if (defined($ENV{OBJECT_REMOTE_PERL_BIN})) {
-        log_debug { "Using OBJECT_REMOTE_PERL_BIN environment variable as perl path" };
-        $perl_path = $ENV{OBJECT_REMOTE_PERL_BIN};
-    }
+  if (defined($ENV{OBJECT_REMOTE_PERL_BIN})) {
+    log_debug { "Using OBJECT_REMOTE_PERL_BIN environment variable as perl path" };
+    $perl_path = $ENV{OBJECT_REMOTE_PERL_BIN};
+  }
 
-    $shell_code .= $perl_path . ' -';
+  $shell_code .= $perl_path . ' -';
 
-    return [ 'bash', '-c', $shell_code ];
+  return [ 'bash', '-c', $shell_code ];
 }
 
 around connect => sub {
