@@ -3,7 +3,7 @@ use Test::More;
 use Test::Fatal;
 use FindBin;
 
-require 't/logsetup.pl';
+$ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
 
 $ENV{PERL5LIB} = join(
   ':', ($ENV{PERL5LIB} ? $ENV{PERL5LIB} : ()), qw(lib t/lib)

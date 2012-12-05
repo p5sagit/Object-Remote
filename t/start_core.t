@@ -3,7 +3,7 @@ use Test::More;
 use Object::Remote;
 use File::Spec;
 
-require 't/logsetup.pl';
+$ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
 
 {
   package S1S;

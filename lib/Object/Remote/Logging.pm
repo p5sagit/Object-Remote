@@ -70,10 +70,19 @@ sub init_logging {
   my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};
   my $format = $ENV{OBJECT_REMOTE_LOG_FORMAT};
   my $selections = $ENV{OBJECT_REMOTE_LOG_SELECTIONS};
+  my $test_logging = $ENV{OBJECT_REMOTE_TEST_LOGGER};
   my %controller_should_log;
   
   unless (defined $ENV{OBJECT_REMOTE_LOG_FORWARDING} && $ENV{OBJECT_REMOTE_LOG_FORWARDING} ne '') {
     $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 1;
+  }
+  
+  if ($test_logging) {
+    require Object::Remote::Logging::TestLogger;
+    router->connect(Object::Remote::Logging::TestOutput->new(
+      min_level => 'trace', max_level => 'error',
+      level_names => Object::Remote::Logging->arg_levels(),
+    ));
   }
 
   return unless defined $level && $level ne '';

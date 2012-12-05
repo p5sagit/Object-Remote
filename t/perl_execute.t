@@ -3,7 +3,7 @@ use Test::More;
 
 use Data::Dumper; 
 
-require 't/logsetup.pl';
+$ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
 
 use Object::Remote::Connector::Local; 
 use Object::Remote::Connector::SSH; 
