@@ -51,15 +51,25 @@ foreach(keys(%mods)) {
   }
 }
 
-sub filter_not_core {
+my @non_core_non_arch = ( $mods{'Devel/GlobalDestruction.pm'} );
+push @non_core_non_arch, grep +(
   not (
-    /^\Q$Config{privlibexp}/ or /^\Q$Config{archlibexp}/
-  )        
-}
+    #some of the config variables can be empty which will eval as a matching regex
+    $Config{privlibexp} ne '' && /^\Q$Config{privlibexp}/ 
+      or $Config{archlibexp} ne '' && /^\Q$Config{archlibexp}/
+      or $Config{vendorarchexp} ne '' && /^\Q$Config{vendorarchexp}/
+      or $Config{sitearchexp} ne '' && /^\Q$Config{sitearchexp}/
+  )
+), grep !/\Q$Config{archname}/, grep !/\Q$Config{myarchname}/, keys %mods;
 
-my @file_names = keys %mods;
-my @before_inc = grep { filter_not_core() } @file_names;
-my @after_inc;
+my @core_non_arch = grep +(
+  $Config{privlibexp} ne '' && /^\Q$Config{privlibexp}/
+  and not($Config{archlibexp} ne '' && /^\Q$Config{archlibexp}/
+    or /\Q$Config{archname}/ or /\Q$Config{myarchname}/)
+), keys %mods;
+
+#print STDERR "non-core non-arch ", Dumper(\@non_core_non_arch);
+#print STDERR "core non-arch ", Dumper(\@core_non_arch);
 
 #TODO this is the wrong path to go down - fork() will bring
 #the env vars with it and the ssh connector can handle
@@ -133,7 +143,7 @@ my $end = stripspace <<'END_END';
 END_END
 
 my %files = map +($mods{$_} => scalar do { local (@ARGV, $/) = ($_); <> }),
-              @before_inc, @after_inc;
+              @non_core_non_arch, @core_non_arch;
 
 sub generate_fatpack_hash {
   my ($hash_name, $orig) = @_;
@@ -148,8 +158,8 @@ sub generate_fatpack_hash {
 }
 
 my @segments = (
-  map(generate_fatpack_hash('fatpacked', $_), sort map $mods{$_}, @before_inc),
-  map(generate_fatpack_hash('fatpacked_extra', $_), sort map $mods{$_}, @after_inc),
+  map(generate_fatpack_hash('fatpacked', $_), sort map $mods{$_}, @non_core_non_arch),
+  map(generate_fatpack_hash('fatpacked_extra', $_), sort map $mods{$_}, @core_non_arch),
 );
 
 our $DATA = join "\n", $start, $env_pass, @segments, $end;
