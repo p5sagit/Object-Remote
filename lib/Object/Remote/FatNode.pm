@@ -160,8 +160,11 @@ sub generate_fatpack_hash {
   my $data = $files{$orig} or die $orig; $data =~ s/^/  /mg;
   return () if $did_pack{$hash_name}{$orig};
   $did_pack{$hash_name}{$orig} = 1;
-  return '$'.$hash_name.'{'.perlstring($orig).qq!} = <<'${name}';\n!
-  .qq!${data}${name}\n!;
+  $data .= "\n" unless $data =~ m/\n$/;
+  my $ret = '$'.$hash_name.'{'.perlstring($orig).qq!} = <<'${name}';\n!
+    .qq!${data}${name}\n!;
+#  warn $ret;
+  return $ret;
 }
 
 my @segments = (
