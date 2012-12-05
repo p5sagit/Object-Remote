@@ -54,16 +54,10 @@ foreach(keys(%mods)) {
   }
 }
 
-#TODO quick and dirty mod for testing - vendorarchexp from a perlbrew build
-#was set to '' which evaluates as a true regex
-
-#use Data::Dumper;
-#print STDERR Dumper([keys %mod_files]);
-#print STDERR Dumper([keys %mods]);
-
 my @non_core_non_arch = ( $mod_files{'Devel/GlobalDestruction.pm'} );
 push @non_core_non_arch, grep +(
   not (
+    #some of the config variables can be empty which will eval as a matching regex
     $Config{privlibexp} ne '' && /^\Q$Config{privlibexp}/ 
       or $Config{archlibexp} ne '' && /^\Q$Config{archlibexp}/
       or $Config{vendorarchexp} ne '' && /^\Q$Config{vendorarchexp}/
