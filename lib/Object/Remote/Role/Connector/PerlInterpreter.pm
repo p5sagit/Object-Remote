@@ -1,6 +1,5 @@
 package Object::Remote::Role::Connector::PerlInterpreter;
 
-use IPC::Open2;
 use IPC::Open3; 
 use IO::Handle;
 use Symbol; 
