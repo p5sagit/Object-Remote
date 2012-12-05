@@ -115,9 +115,6 @@ sub init_remote_logging {
   my ($self, %controller_info) = @_;
   
   router()->_remote_metadata(\%controller_info);
-  #TODO having an instance of an object in the remote interpreter causes it to hang
-  #on exit intermitently or leave a zombie laying around frequently - not a bug limited
-  #to log forwarding
   router()->_forward_destination($controller_info{router}) if $ENV{OBJECT_REMOTE_LOG_FORWARDING};
 }
 
