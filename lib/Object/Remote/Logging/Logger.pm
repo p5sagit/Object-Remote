@@ -48,8 +48,8 @@ sub AUTOLOAD {
 }
 
 sub _build_max_level {
-    my ($self) = @_;
-    return $self->level_names->[-1];
+  my ($self) = @_;
+  return $self->level_names->[-1];
 }
 
 sub _build__level_active {

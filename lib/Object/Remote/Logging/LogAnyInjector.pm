@@ -1,5 +1,8 @@
 package Object::Remote::Logging::LogAnyInjector;
 
+#Experimental object that can be used to receive Log::Any
+#generated log messages and inject them into the log router
+
 use Moo;
 use Object::Remote::Logging qw( router );
 use Carp qw(croak);

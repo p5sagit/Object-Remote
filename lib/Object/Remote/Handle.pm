@@ -4,10 +4,6 @@ use Object::Remote::Proxy;
 use Scalar::Util qw(weaken blessed);
 use Object::Remote::Logging qw ( :log :dlog router );
 use Object::Remote::Future;
-#must find way to exclude certain log events
-#from being forwarded - log events generated in
-#response to log events cause exploding
-#use Object::Remote::Logging qw(:log);
 use Module::Runtime qw(use_module);
 use Moo;
 
