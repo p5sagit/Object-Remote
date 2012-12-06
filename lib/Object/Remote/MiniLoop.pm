@@ -209,7 +209,7 @@ sub loop_once {
 
 sub want_run {
   my ($self) = @_;
-  Dlog_debug { "Run loop: Incrimenting want_running, is now $_" }
+  Dlog_debug { "Run loop: Incremeting want_running, is now $_" }
     ++$self->{want_running};
 }
 
