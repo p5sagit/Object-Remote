@@ -1,5 +1,6 @@
 package Object::Remote::Connector::LocalSudo;
-
+	
+use Object::Remote::Logging qw (:log :dlog);
 use Symbol qw(gensym);
 use Module::Runtime qw(use_module);
 use IPC::Open3;
