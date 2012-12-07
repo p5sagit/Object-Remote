@@ -7,7 +7,6 @@ use Sys::Hostname;
 with 'Log::Contextual::Role::Router';
 with 'Object::Remote::Role::LogForwarder';
 
-has _controller_package => ( is => 'rwp' );
 #lookup table for package names that should not
 #be forwarded across Object::Remote connections
 has _connections => ( is => 'ro', required => 1, default => sub { [] } );
