@@ -79,7 +79,7 @@ sub init_logging {
   
   if ($test_logging) {
     require Object::Remote::Logging::TestLogger;
-    router->connect(Object::Remote::Logging::TestOutput->new(
+    router->connect(Object::Remote::Logging::TestLogger->new(
       min_level => 'trace', max_level => 'error',
       level_names => Object::Remote::Logging->arg_levels(),
     ));
