@@ -1,4 +1,4 @@
-package Object::Remote::Logging::TestOutput;
+package Object::Remote::Logging::TestLogger;
 
 use base qw ( Object::Remote::Logging::Logger );
 
