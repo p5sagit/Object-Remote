@@ -4,6 +4,8 @@ use Moo::Role;
 
 has enable_forward => ( is => 'rw', default => sub { 1 } );
 has _forward_destination => ( is => 'rw' );
+#lookup table for package names that should not
+#be forwarded across Object::Remote connections
 has _forward_stop => ( is => 'ro', required => 1, default => sub { {} } );
 
 after _deliver_message => sub {

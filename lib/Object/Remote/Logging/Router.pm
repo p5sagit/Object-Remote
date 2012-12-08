@@ -7,8 +7,6 @@ use Sys::Hostname;
 with 'Log::Contextual::Role::Router';
 with 'Object::Remote::Role::LogForwarder';
 
-#lookup table for package names that should not
-#be forwarded across Object::Remote connections
 has _connections => ( is => 'ro', required => 1, default => sub { [] } );
 has _remote_metadata => ( is => 'rw' );
 
@@ -49,7 +47,7 @@ sub _get_loggers {
 sub _invoke_logger {
   my ($self, $logger, $level_name, $content, $metadata) = @_;
   #Invoking the logger like this gets all available data to the
-  #logging object with out losing any information from the structure.
+  #logging object with out losing any information from the datastructure.
   #This is not a backwards compatible way to invoke the loggers
   #but it enables a lot of flexibility in the logger.
   #The l-c router could have this method invoke the logger in
