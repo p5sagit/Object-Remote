@@ -85,11 +85,6 @@ sub init_logging {
     ));
   }
 
-  return unless defined $level && $level ne '';
-  $format = "[%l %r] %s" unless defined $format;
-  $selections = __PACKAGE__ unless defined $selections;
-  %controller_should_log = _parse_selections($selections);
-
   {
     no warnings 'once';
     if (defined $Object::Remote::FatNode::REMOTE_NODE) {
@@ -98,6 +93,12 @@ sub init_logging {
       router()->_remote_metadata({ connection_id =>  undef });
     } 
   }
+
+  return unless defined $level && $level ne '';
+  
+  $format = "[%l %r] %s" unless defined $format;
+  $selections = __PACKAGE__ unless defined $selections;
+  %controller_should_log = _parse_selections($selections);
 
   my $logger = Object::Remote::Logging::Logger->new(
     min_level => lc($level), format => $format,
