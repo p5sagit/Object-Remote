@@ -304,7 +304,7 @@ received the log message on the local interpreter if the log message was forward
 
 =item %r
 
-Log::Remote connection information rendered into a string.
+Object::Remote connection information rendered into a string.
 
 =item %c
 
