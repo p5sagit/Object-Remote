@@ -114,7 +114,7 @@ sub init_logging {
     return unless $will_log;
     #skip things from remote hosts because they log to STDERR
     #when OBJECT_REMOTE_LOG_LEVEL is in effect
-    return if $_[1]->{remote}->{connection_id};
+    return if $_[1]->{remote}->{object_remote};
     $logger
   });
 }
