@@ -236,9 +236,9 @@ sub conn_from_spec {
 }
 
 sub new_from_spec {
-  my ($class, $spec) = @_;
+  my ($class, $spec, @args) = @_;
   return $spec if blessed $spec;
-  my $conn = $class->conn_from_spec($spec); 
+  my $conn = $class->conn_from_spec($spec, @args);
   
   die "Couldn't figure out what to do with ${spec}"
     unless defined $conn;

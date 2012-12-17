@@ -8,7 +8,7 @@ use Object::Remote::FromData;
 
 $SIG{ALRM} = sub {  fail("Watchdog killed remote process in time"); die "test failed" };
 
-my $conn = Object::Remote::Connection->conn_from_spec("-", watchdog_timeout => 1)->connect;
+my $conn = Object::Remote->connect("-", watchdog_timeout => 1);
 
 my $remote = HangClass->new::on($conn);
 

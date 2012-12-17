@@ -27,8 +27,8 @@ sub new {
 }
 
 sub connect {
-  my ($class, $to) = @_;
-  use_module('Object::Remote::Connection')->maybe::start::new_from_spec($to);
+  my ($class, $to, @args) = @_;
+  use_module('Object::Remote::Connection')->maybe::start::new_from_spec($to, @args);
 }
 
 sub current_loop {
