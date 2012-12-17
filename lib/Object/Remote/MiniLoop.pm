@@ -141,7 +141,6 @@ sub loop_once {
   my ($self) = @_;
   my $read = $self->_read_watches;
   my $write = $self->_write_watches;
-  our $Loop_Entered = 1; 
   my $read_count = 0;
   my $write_count = 0; 
   my @c = caller;
@@ -162,21 +161,23 @@ sub loop_once {
   # differentiate between an error and a timeout.
   #   -- no, love, mst.
 
-  local $Loop_Entered;
-
   log_trace { "Reading from all ready filehandles" };
   foreach my $fh (@$readable) {
     next unless $read->{$fh};
     $read_count++;
     $read->{$fh}();
-    last if $Loop_Entered;
+    #FIXME this is a rough workaround for race conditions that can cause deadlocks
+    #under load
+    last;
   }
   log_trace { "Writing to all ready filehandles" };
   foreach my $fh (@$writeable) {
     next unless $write->{$fh};
     $write_count++;
     $write->{$fh}();
-    last if $Loop_Entered;
+    #FIXME this is a rough workaround for race conditions that can cause deadlocks
+    #under load
+    last;
   }
   
   log_trace { "Read from $read_count filehandles; wrote to $write_count filehandles" };
@@ -189,18 +190,16 @@ sub loop_once {
      
     if (defined($active->[2])) {
       #handle the case of an 'every' timer
-      $active->[0] = time() + $active->[2]; 
+      $active->[0] = time() + $active->[2];
       Dlog_trace { "scheduling timer for repeat execution at $_"} $active->[0];
       $self->_sort_timers;
     } else {
       #it doesn't repeat again so get rid of it  
-      shift(@$timers);    
+      shift(@$timers);
     }
 
     #execute the timer
     $active->[1]->();
-     
-    last if $Loop_Entered;
   }
   
   log_trace { "Run loop: single loop is completed" };
