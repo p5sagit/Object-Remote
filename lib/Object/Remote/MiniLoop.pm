@@ -180,6 +180,7 @@ sub loop_once {
     last;
   }
   
+  #moving the timers above the read() section exposes a deadlock
   log_trace { "Read from $read_count filehandles; wrote to $write_count filehandles" };
   my $timers = $self->_timers;
   my $now = time();
