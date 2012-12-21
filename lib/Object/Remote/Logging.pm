@@ -108,14 +108,15 @@ sub init_logging {
   router()->connect(sub { 
     my $controller = $_[1]->{controller};
     my $will_log = $controller_should_log{$controller};
+    my $remote_info = $_[1]->{object_remote};
     
     $will_log = $controller_should_log{'*'} unless defined $will_log;
     
     return unless $will_log;
     #skip things from remote hosts because they log to STDERR
     #when OBJECT_REMOTE_LOG_LEVEL is in effect
-    return if $_[1]->{remote}->{object_remote};
-    $logger
+    return if $remote_info->{forwarded};
+    return $logger;
   });
 }
 

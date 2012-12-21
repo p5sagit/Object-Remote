@@ -12,7 +12,14 @@ after _deliver_message => sub {
   my ($self, $level, $generator, $args, $metadata) = @_;
   my $package = $metadata->{package};
   my $destination = $self->_forward_destination;
+  my %metadata = %$metadata;
   our $reentrant;
+  
+  if (defined $metadata->{object_remote}) {
+    $metadata{object_remote} = { %{$metadata->{object_remote}} };
+  }
+  
+  $metadata{object_remote}->{forwarded} = 1;
 
   return unless $self->enable_forward;
   return unless defined $destination;
@@ -25,7 +32,7 @@ after _deliver_message => sub {
   
   local $reentrant = $package;
   
-  eval { $destination->_deliver_message($level, $generator, $args, $metadata) };
+  eval { $destination->_deliver_message($level, $generator, $args, \%metadata) };
   
   if ($@ && $@ !~ /^Attempt to use Object::Remote::Proxy backed by an invalid handle/) {
     die $@;
