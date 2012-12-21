@@ -74,7 +74,7 @@ sub init_logging {
   my %controller_should_log;
   
   unless (defined $ENV{OBJECT_REMOTE_LOG_FORWARDING} && $ENV{OBJECT_REMOTE_LOG_FORWARDING} ne '') {
-    $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 1;
+    $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 0;
   }
   
   if ($test_logging) {
@@ -206,8 +206,8 @@ remote interpreter and the logger for the message is invoked in the local interp
 Sub-classes of Object::Remote::Logging will have log messages forwarded automatically.
 Loggers receive forwarded log messages exactly the same way as non-forwarded messages
 except a forwarded message includes extra metadata about the remote interpreter. Log
-forwarding is enabled by default but comes with a performance hit; to disable it set the 
-OBJECT_REMOTE_LOG_FORWARDING environment variable to 0. See L<Object::Remote::Logging::Router>.
+forwarding is disabled by default because it comes with a performance hit; to enable
+it set the OBJECT_REMOTE_LOG_FORWARDING environment variable to 1.
 
 =head1 EXPORTABLE SUBROUTINES
 
