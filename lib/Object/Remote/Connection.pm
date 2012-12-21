@@ -500,8 +500,82 @@ sub _invoke {
 
 Object::Remote::Connection - An underlying connection for L<Object::Remote>
 
-=head1 LAME
+  use Object::Remote;
+  
+  my %opts = (
+    nice => '10', ulimit => '-v 400000',
+    watchdog_timeout => 120, stderr => \*STDERR,
+  );
+  
+  my $local = Object::Remote->connect('-');
+  my $remote = Object::Remote->connect('myserver', nice => 5);
+  my $remote_user = Object::Remote->connect('user@myserver', %opts);
+  my $local_sudo = Object::Remote->connect('user@');
+  
+  #$remote can be any other connection object
+  my $hostname = Sys::Hostname->can::on($remote, 'hostname');
+  
+=head1 DESCRIPTION
 
-Shipping prioritised over writing this part up. Blame mst.
+This is the class that supports connections to a Perl interpreter that is executed in a
+different process. The new Perl interpreter can be either on the local or a remote machine
+and is configurable via arguments passed to the constructor.
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item nice
+
+If this value is defined then it will be used as the nice value of the Perl process when it
+is started. The default is the undefined value and will not nice the process.
+
+=item stderr
+
+If this value is defined then it will be used as the file handle that receives the output
+of STDERR from the Perl interpreter process and I/O will be performed by the run loop in a
+non-blocking way. If the value is undefined then STDERR of the remote process will be connected
+directly to STDERR of the local process with out the run loop managing I/O. The default value
+is undefined.
+
+There are a few ways to use this feature. By default the behavior is to form one unified STDERR
+across all of the Perl interpreters including the local one. For small scale and quick operation
+this offers a predictable and easy to use way to get at error messages generated anywhere. If
+the local Perl interpreter crashes then the remote Perl interpreters still have an active STDERR
+and it is possible to still receive output from them. This is generally a good thing but can
+cause issues.
+
+When using a file handle as the output for STDERR once the local Perl interpreter is no longer
+running there is no longer a valid STDERR for the remote interpreters to send data to. This means
+that it is no longer possible to receive error output from the remote interpreters and that the
+shell will start to kill off the child processes. Passing a reference to STDERR for the local
+interpreter (as the SYNOPSIS shows) causes the run loop to manage I/O, one unified STDERR for
+all Perl interpreters that ends as soon as the local interpreter process does, and the shell will
+start killing children when the local interpreter exits.
+
+It is also possible to pass in a file handle that has been opened for writing. This would be
+useful for logging the output of the remote interpreter directly into a dedicated file.
+
+=item ulimit
+
+If this string is defined then it will be passed unmodified as the arguments to ulimit when
+the Perl process is started. The default value is the undefined value and will not limit the
+process in any way.
+
+=item watchdog_timeout
+
+If this value is defined then it will be used as the number of seconds the watchdog will wait
+for an update before it terminates the Perl interpreter process. The default value is undefined
+and will not use the watchdog. See C<Object::Remote::Watchdog> for more information.
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item C<Object::Remote>
+
+=back
 
 =cut
