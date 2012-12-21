@@ -14,7 +14,10 @@ is($router, router(), 'Router object is a singleton');
 
 my $levels = arg_levels();
 is(ref($levels), 'ARRAY', 'arg_levels returns array reference');
-ok(scalar(@$levels) > 0, 'arg_levels has at least one level in it');
+is_deeply(
+  $levels, [qw( trace debug verbose info warn error fatal )],
+  'arg_levels has correct names'
+);
 
 #adds some noise into the string that's not significant just to be more thorough
 my $selections_string = "Acme::Matt::Daemon \t  *\t\t-Acme::POE::Knee";
