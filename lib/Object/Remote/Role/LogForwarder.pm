@@ -9,17 +9,17 @@ has _forward_destination => ( is => 'rw' );
 has _forward_stop => ( is => 'ro', required => 1, default => sub { {} } );
 
 after _deliver_message => sub {
-  my ($self, $level, $generator, $args, $metadata) = @_;
-  my $package = $metadata->{package};
+#  my ($self, $level, $generator, $args, $metadata) = @_;
+  my ($self, %message_info) = @_;
+  my $package = $message_info{caller_package};
   my $destination = $self->_forward_destination;
-  my %metadata = %$metadata;
   our $reentrant;
   
-  if (defined $metadata->{object_remote}) {
-    $metadata{object_remote} = { %{$metadata->{object_remote}} };
+  if (defined $message_info{object_remote}) {
+    $message_info{object_remote} = { %{$message_info{object_remote}} };
   }
   
-  $metadata{object_remote}->{forwarded} = 1;
+  $message_info{object_remote}->{forwarded} = 1;
 
   return unless $self->enable_forward;
   return unless defined $destination;
@@ -32,7 +32,7 @@ after _deliver_message => sub {
   
   local $reentrant = $package;
   
-  eval { $destination->_deliver_message($level, $generator, $args, \%metadata) };
+  eval { $destination->_deliver_message(%message_info) };
   
   if ($@ && $@ !~ /^Attempt to use Object::Remote::Proxy backed by an invalid handle/) {
     die $@;

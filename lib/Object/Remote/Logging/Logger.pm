@@ -92,7 +92,7 @@ sub _create_format_lookup {
     t => $self->_render_time($metadata->{timestamp}),
     r => $self->_render_remote($metadata->{object_remote}),
     s => $self->_render_log(@$content), l => $level, 
-    c => $metadata->{controller}, p => $metadata->{package}, m => $method,
+    c => $metadata->{exporter}, p => $metadata->{caller_package}, m => $method,
     f => $metadata->{filename}, i => $metadata->{line}, 
     h => $metadata->{hostname}, P => $metadata->{pid},
   };

@@ -10,16 +10,14 @@ with 'Object::Remote::Role::LogForwarder';
 has _connections => ( is => 'ro', required => 1, default => sub { [] } );
 has _remote_metadata => ( is => 'rw' );
 
-sub before_import {
-  my ($self, $controller, $importer, $spec) = @_;
-}
+sub before_import { }
 
 sub after_import { }
 
 sub _get_loggers {
   my ($self, %metadata) = @_;
-  my $package = $metadata{package};
-  my $level = $metadata{level};
+  my $package = $metadata{caller_package};
+  my $level = $metadata{log_level};
   my $is_level = "is_$level";
   my $need_clean = 0;
   my @loggers;
@@ -60,43 +58,43 @@ sub _invoke_logger {
 #metadata but does not have to wrap get_loggers
 #which has too many drawbacks
 sub _deliver_message {
-  my ($self, $level, $generator, $args, $metadata) = @_;
-  my @loggers = $self->_get_loggers(%$metadata);
+  my ($self, %message_info) = @_;
+  my @loggers = $self->_get_loggers(%message_info);
+  my $generator = $message_info{message_sub};
+  my $args = $message_info{message_args};
+  my $level = $message_info{log_level};
   
   return unless @loggers > 0;
-  #this is the point where the user provided log message
-  #code block is executed
+  #this is the point where the user provided log message code block is executed
   my @content = $generator->(@$args);
   foreach my $logger (@loggers) {
-    $self->_invoke_logger($logger, $level, \@content, $metadata);
+    $self->_invoke_logger($logger, $level, \@content, \%message_info);
   }
 }
 
 sub handle_log_request {
-  my ($self, $metadata_in, $generator, @args) = @_;
-  my %metadata = %{$metadata_in};
-  my $level = $metadata{level};
-  my $package = $metadata{package};
+  my ($self, %message_info) = @_;
+  my $level = $message_info{log_level};
+  my $package = $message_info{caller_package};
   my $need_clean = 0;
 
   #caller_level is useless when log forwarding is in place
-  #so we won't tempt people with using it for now - access
-  #to caller level will be available in the future
-  my $caller_level = delete $metadata{caller_level};
-  $metadata{object_remote} = $self->_remote_metadata;
-  $metadata{timestamp} = time;
-  $metadata{pid} = $$;
-  $metadata{hostname} = hostname;
+  #so we won't tempt people with using it
+  my $caller_level = delete $message_info{caller_level};
+  $message_info{object_remote} = $self->_remote_metadata;
+  $message_info{timestamp} = time;
+  $message_info{pid} = $$;
+  $message_info{hostname} = hostname;
 
   my @caller_info = caller($caller_level);
-  $metadata{filename} = $caller_info[1];
-  $metadata{line} = $caller_info[2];
+  $message_info{filename} = $caller_info[1];
+  $message_info{line} = $caller_info[2];
  
   @caller_info = caller($caller_level + 1);
-  $metadata{method} = $caller_info[3];
-  $metadata{method} =~ s/^${package}::// if defined $metadata{method};
+  $message_info{method} = $caller_info[3];
+  $message_info{method} =~ s/^${package}::// if defined $message_info{method};
 
-  $self->_deliver_message($level, $generator, [ @args ], \%metadata);
+  $self->_deliver_message(%message_info);
 }
 
 sub connect {
