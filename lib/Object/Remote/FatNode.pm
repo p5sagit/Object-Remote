@@ -68,12 +68,8 @@ my @core_non_arch = grep +(
     or /\Q$Config{archname}/ or /\Q$Config{myarchname}/)
 ), keys %mods;
 
-#print STDERR "non-core non-arch ", Dumper(\@non_core_non_arch);
-#print STDERR "core non-arch ", Dumper(\@core_non_arch);
-
-#TODO this is the wrong path to go down - fork() will bring
-#the env vars with it and the ssh connector can handle
-#forwarding the env vars
+#FIXME - encode the env vars in YAML or something similiar and make the
+#env vars that will be forwarded driven by a list
 my $env_pass = '';
 if (defined($ENV{OBJECT_REMOTE_LOG_LEVEL})) {
   my $level = $ENV{OBJECT_REMOTE_LOG_LEVEL};

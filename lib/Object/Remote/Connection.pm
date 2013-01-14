@@ -23,6 +23,9 @@ BEGIN { router()->exclude_forwarding }
 END {
   log_debug { "Killing all child processes in the process group" };
     
+  #FIXME update along with setpgrp() to not use a process
+  #group anymore
+  
   #send SIGINT to the process group for our children
   kill(1, -2);
 }
@@ -94,6 +97,8 @@ after BUILD => sub {
     
   log_trace { "Setting process group of child process '$pid'" };
   
+  #FIXME moving things into a process group has side effects for
+  #users of the library - move to a list
   setpgrp($self->child_pid, 1);
 };
 

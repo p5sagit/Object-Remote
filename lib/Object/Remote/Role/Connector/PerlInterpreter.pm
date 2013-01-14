@@ -33,6 +33,7 @@ sub _build_module_sender {
   return $hook ? $hook->sender : Object::Remote::ModuleSender->new;
 }
 
+#FIXME by policy object-remote does not invoke a shell
 sub _build_perl_command {
   my ($self) = @_;
   my $nice = $self->nice;
