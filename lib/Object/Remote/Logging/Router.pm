@@ -17,7 +17,7 @@ sub after_import { }
 sub _get_loggers {
   my ($self, %metadata) = @_;
   my $package = $metadata{caller_package};
-  my $level = $metadata{log_level};
+  my $level = $metadata{message_level};
   my $is_level = "is_$level";
   my $need_clean = 0;
   my @loggers;
@@ -62,7 +62,7 @@ sub _deliver_message {
   my @loggers = $self->_get_loggers(%message_info);
   my $generator = $message_info{message_sub};
   my $args = $message_info{message_args};
-  my $level = $message_info{log_level};
+  my $level = $message_info{message_level};
   
   return unless @loggers > 0;
   #this is the point where the user provided log message code block is executed
@@ -74,7 +74,7 @@ sub _deliver_message {
 
 sub handle_log_request {
   my ($self, %message_info) = @_;
-  my $level = $message_info{log_level};
+  my $level = $message_info{message_level};
   my $package = $message_info{caller_package};
   my $need_clean = 0;
 

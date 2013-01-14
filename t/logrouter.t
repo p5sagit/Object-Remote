@@ -11,7 +11,7 @@ my $generator = sub { "Generator output" };
 my %metadata = (
   exporter => $controller_name, 
   caller_package => __PACKAGE__,  caller_level => 0,
-  log_level => 'test1', message_sub => $generator, message_args => [],
+  message_level => 'test1', message_sub => $generator, message_args => [],
 );
 
 my $router = Object::Remote::Logging::Router->new;
@@ -37,7 +37,7 @@ is(ref $logger->feedback_input->[2]->{message_sub}, 'CODE', 'message sub did exi
 delete $logger->feedback_input->[2]->{message_sub};
 is_deeply($logger->feedback_input, [
   'test1', [ 'Generator output' ], {
-    exporter => 'Test::Log::Controller', log_level => 'test1',
+    exporter => 'Test::Log::Controller', message_level => 'test1',
     hostname => hostname(), pid => $$, caller_package => __PACKAGE__,
     line => $linenum, method => undef, filename => __FILE__,
     message_args => [], object_remote => {
