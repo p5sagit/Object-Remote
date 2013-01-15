@@ -60,7 +60,7 @@ sub call {
   log_trace { "call('$method') has been invoked on remote handle '$id'; creating future" };
 
   future {
-    log_debug { "Invoking send on connection for handle '$id' method $method" };
+    log_debug { "Invoking send on connection for handle '$id' method '$method'" };
     $self->connection->send(call => $id, $w, $method, @args)
   };
 }

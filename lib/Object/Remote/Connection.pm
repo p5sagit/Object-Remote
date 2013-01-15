@@ -106,10 +106,20 @@ sub BUILD { }
 
 sub is_valid {
   my ($self) = @_;
-  my $closed = $self->on_close->is_ready;
+  my $valid = ! $self->on_close->is_ready;
   
-  log_trace { "Connection closed: $closed" };
-  return ! $closed;
+  log_trace {
+    my $id = $self->_id;
+    my $text;
+    if ($valid) {
+      $text = 'yes';
+    } else {
+      $text = 'no';
+    }
+    "Connection '$id' is valid: '$text'"
+  };
+  
+  return $valid;
 }
 
 sub _fail_outstanding {
@@ -269,7 +279,7 @@ sub connect {
 sub remote_sub {
   my ($self, $sub) = @_;
   my ($pkg, $name) = $sub =~ m/^(.*)::([^:]+)$/;
-  Dlog_debug { "Invoking remote sub '$sub' for connection $_" } $self->_id;
+  Dlog_debug { "Invoking remote sub '$sub' for connection '$_'" } $self->_id;
   return await_future($self->send_class_call(0, $pkg, can => $name));
 }
 

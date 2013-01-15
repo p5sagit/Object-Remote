@@ -126,7 +126,7 @@ sub _next_timer_expires_delay {
   return $delay_max unless @$timers;
   my $duration = $timers->[0]->[0] - time;
 
-  log_trace { "next timer fires in '$duration' seconds " };
+  log_trace { "next timer fires in '$duration' seconds" };
   
   if ($duration < 0) {
     $duration = 0; 
@@ -161,7 +161,7 @@ sub loop_once {
   # differentiate between an error and a timeout.
   #   -- no, love, mst.
 
-  log_trace { "Reading from all ready filehandles" };
+  log_trace { "Reading from ready filehandles" };
   foreach my $fh (@$readable) {
     next unless $read->{$fh};
     $read_count++;
@@ -170,7 +170,7 @@ sub loop_once {
     #under load
     last;
   }
-  log_trace { "Writing to all ready filehandles" };
+  log_trace { "Writing to ready filehandles" };
   foreach my $fh (@$writeable) {
     next unless $write->{$fh};
     $write_count++;
