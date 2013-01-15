@@ -162,7 +162,7 @@ Object::Remote::Logging::Logger - Format and output a log message
   #objects that will receive the messages
   my $selector = sub {
     my ($generating_package, $metadata) = @_;
-    return unless $metadata->{controller} eq 'App::Logging::Subclass';
+    return unless $metadata->{exporter} eq 'App::Logging::Subclass';
     return $app_output;
   };
 

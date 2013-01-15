@@ -4,7 +4,6 @@ use Moo;
 use Scalar::Util qw(blessed);
 use Object::Remote::Logging::Logger;
 use Exporter::Declare;
-use Carp qw(carp croak);
 
 extends 'Log::Contextual';
 
@@ -106,7 +105,7 @@ sub init_logging {
   );
 
   router()->connect(sub { 
-    my $controller = $_[1]->{controller};
+    my $controller = $_[1]->{exporter};
     my $will_log = $controller_should_log{$controller};
     my $remote_info = $_[1]->{object_remote};
     
