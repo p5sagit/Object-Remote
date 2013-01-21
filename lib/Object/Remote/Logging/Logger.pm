@@ -182,7 +182,7 @@ Object::Remote::Logging::Logger - Format and output a log message
 
 =head1 DESCRIPTION
 
-This class receives log messages from an instance of L<Object::Remote::Log::Router>,
+This class receives log messages from an instance of L<Object::Remote::Logging::Router>,
 formats them according to configuration, and then outputs them to STDERR. In between
 the router and the logger is a selector method which inspects the log message metadata
 and can return 0 or more loggers that should receive the log message.
@@ -199,7 +199,7 @@ A logger can directly connect to the router and receive an unfiltered stream of
 log messages or a selector closure can be used instead. The selector will be executed
 for each log message with the message metadata and returns a list of 0 or more loggers
 that should receive the log message. When the selector is executed the first argument
-is the class name of the package that generated the log message and the second argument
+is the name of the package that generated the log message and the second argument
 is a hash reference containing the message metadata.
 
 =head1 METADATA
@@ -208,16 +208,15 @@ The message metadata is a hash reference with the following keys:
 
 =over 4
 
-=item level
+=item message_level
 
 Name of the log level of the message.
 
-=item controller
+=item exporter
 
-Name of the sub-class of Object::Remote::Logging in use by
-the generating package.
+Package name of the logging API that was used to generate the log message.
 
-=item package
+=item caller_package
 
 Name of the package that generated the log message.
 
@@ -308,12 +307,11 @@ Object::Remote connection information rendered into a string.
 
 =item %c
 
-Name of the sub-class of Object::Remote::Logging that was used by the class
-that generated the log message. Can also be Object::Remote::Logging itself.
+Package name of the logging API that was used to generate the log message.
 
 =item %p
 
-Package name of the class that generated the log message.
+Name of the package that generated the log message.
 
 =item %m
 
