@@ -16,6 +16,7 @@ has module_sender => (is => 'lazy');
 has ulimit => ( is => 'ro');
 has nice => ( is => 'ro');
 has watchdog_timeout => ( is => 'ro', required => 1, default => sub { undef });
+has forward_env => (is => 'ro', required => 1, builder => 1);
 has perl_command => (is => 'lazy');
 has pid => (is => 'rwp');
 has connection_id => (is => 'rwp');
@@ -57,6 +58,14 @@ sub _build_perl_command {
   $shell_code .= $perl_path . ' -';
 
   return [ 'bash', '-c', $shell_code ];
+}
+
+sub _build_forward_env {
+  return [qw(
+    OBJECT_REMOTE_PERL_BIN
+    OBJECT_REMOTE_LOG_LEVEL OBJECT_REMOTE_LOG_FORMAT OBJECT_REMOTE_LOG_SELECTIONS
+    OBJECT_REMOTE_LOG_FORWARDING
+  )];
 }
 
 around connect => sub {
@@ -227,6 +236,7 @@ sub fatnode_text {
     $text .= "my \$WATCHDOG_TIMEOUT = undef;\n";
   }
   
+  $text .= $self->_create_env_forward(@{$self->forward_env});
   $text .= '$Object::Remote::FatNode::REMOTE_NODE = "1";' . "\n";
   
   $text .= <<'END';
@@ -242,6 +252,26 @@ END
   
   $text .= "__END__\n";
   return $text;
+}
+
+sub _create_env_forward {
+  my ($self, @env_names) = @_;
+  my $code = '';
+
+  foreach my $name (@env_names) {
+    next unless exists $ENV{$name};
+    my $value = $ENV{$name};
+    $name =~ s/'/\\'/g;
+    if(defined($value)) {
+      $value =~ s/'/\\'/g;
+      $value = "'$value'";
+    } else {
+      $value = 'undef';
+    }
+    $code .= "\$ENV{'$name'} = $value;\n";
+  }
+
+  return $code;
 }
 
 1;
