@@ -237,6 +237,12 @@ sub fatnode_text {
   }
   
   $text .= $self->_create_env_forward(@{$self->forward_env});
+
+  #Action at a distance but at least it's not spooky - the logging
+  #system needs to know if a node is remote but there is a period
+  #during init where the remote connection information has not been
+  #setup on the remote side yet so this flag allows a graceful
+  #degredation to happen
   $text .= '$Object::Remote::FatNode::REMOTE_NODE = "1";' . "\n";
   
   $text .= <<'END';
