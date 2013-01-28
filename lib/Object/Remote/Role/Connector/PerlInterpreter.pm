@@ -13,8 +13,6 @@ use Moo::Role;
 with 'Object::Remote::Role::Connector';
 
 has module_sender => (is => 'lazy');
-has ulimit => ( is => 'ro');
-has nice => ( is => 'ro');
 has watchdog_timeout => ( is => 'ro', required => 1, default => sub { undef });
 has forward_env => (is => 'ro', required => 1, builder => 1);
 has perl_command => (is => 'lazy');
@@ -34,30 +32,14 @@ sub _build_module_sender {
   return $hook ? $hook->sender : Object::Remote::ModuleSender->new;
 }
 
-#FIXME by policy object-remote does not invoke a shell
+#By policy object-remote does not invoke a shell
 sub _build_perl_command {
-  my ($self) = @_;
-  my $nice = $self->nice;
-  my $ulimit = $self->ulimit;
-  my $perl_path = 'perl';
-  my $shell_code = '';
-
-  if (defined($ulimit)) {
-    $shell_code .= "ulimit $ulimit || exit 1; ";
+  my $perl_bin = 'perl';
+  
+  if (exists $ENV{OBJECT_REMOTE_PERL_BIN}) {
+    $perl_bin = $ENV{OBJECT_REMOTE_PERL_BIN};
   }
-
-  if (defined($nice)) {
-    $shell_code .= "nice -n $nice ";
-  }
-
-  if (defined($ENV{OBJECT_REMOTE_PERL_BIN})) {
-    log_debug { "Using OBJECT_REMOTE_PERL_BIN environment variable as perl path" };
-    $perl_path = $ENV{OBJECT_REMOTE_PERL_BIN};
-  }
-
-  $shell_code .= $perl_path . ' -';
-
-  return [ 'bash', '-c', $shell_code ];
+  return [qw(perl -)];
 }
 
 sub _build_forward_env {
