@@ -21,13 +21,14 @@ use Carp qw(croak);
 BEGIN { router()->exclude_forwarding }
 
 END {
-  log_debug { "Killing all child processes in the process group" };
-    
-  #FIXME update along with setpgrp() to not use a process
-  #group anymore
+  our %child_pids;
   
-  #send SIGINT to the process group for our children
-  kill(1, -2);
+  log_trace { "END handler is being invoked in " . __PACKAGE__ };
+  
+  foreach(keys(%child_pids)) {
+    log_debug { "Killing child process '$_'" };
+    kill('TERM', $_);
+  }
 }
 
 has _id => ( is => 'ro', required => 1, default => sub { our $NEXT_CONNECTION_ID++ } );
@@ -89,17 +90,10 @@ has _json => (
 after BUILD => sub {
   my ($self) = @_;
   my $pid = $self->child_pid;
-  
-  unless (defined $pid) {
-    log_trace { "After BUILD invoked for connection but there was no pid" };
-    return;
-  }
-    
-  log_trace { "Setting process group of child process '$pid'" };
-  
-  #FIXME moving things into a process group has side effects for
-  #users of the library - move to a list
-  setpgrp($self->child_pid, 1);
+  our %child_pids;
+  return unless defined $pid;
+  $child_pids{$pid} = 1;
+  return;
 };
 
 sub BUILD { }
@@ -142,6 +136,7 @@ sub _fail_outstanding {
 
 sub _install_future_handlers {
     my ($self, $f) = @_;
+    our %child_pids;
     Dlog_trace { "Installing handlers into future for connection $_" } $self->_id;
     weaken($self);
     $f->on_done(sub {
@@ -162,6 +157,8 @@ sub _install_future_handlers {
           "Remote Perl interpreter exited with value '$exit_value'"
         };
       }
+      
+      delete $child_pids{$pid};
     });
     return $f; 
 };
