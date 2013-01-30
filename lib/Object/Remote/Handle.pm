@@ -55,7 +55,7 @@ sub call {
   my ($self, $method, @args) = @_;
   my $w = wantarray;
   my $id = $self->id;
-  
+
   $method = "start::${method}" if (caller(0)||'') eq 'start';
   log_trace { "call('$method') has been invoked on remote handle '$id'; creating future" };
 

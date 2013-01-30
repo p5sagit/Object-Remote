@@ -64,7 +64,7 @@ sub _listen_ready {
   $f->on_ready(sub { undef($c) });
   log_trace { "marking the future as done" };
   $c->ready_future->done;
-  Dlog_trace { "Sending 'Shere' to socket $_" } $new; 
+  Dlog_trace { "Sending 'Shere' to socket $_" } $new;
   print $new "Shere\n" or die "Couldn't send to new socket: $!";
   log_debug { "Connection has been fully handled" };
   return $c;

@@ -10,11 +10,11 @@ sub AUTOLOAD {
   if ((caller(0)||'') eq 'start') {
     $to_fire = "start::${to_fire}";
   }
-  
+
   unless ($self->{remote}->is_valid) {
     croak "Attempt to use Object::Remote::Proxy backed by an invalid handle";
   }
-  
+
   $self->{remote}->$to_fire($method => @_);
 }
 

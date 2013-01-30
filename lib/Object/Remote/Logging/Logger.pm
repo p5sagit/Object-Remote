@@ -43,7 +43,7 @@ sub AUTOLOAD {
 
     $self->_log($level_name, @_);
   };
-  
+
   return $self->$level_name(@_);
 }
 
@@ -53,19 +53,19 @@ sub _build_max_level {
 }
 
 sub _build__level_active {
-  my ($self) = @_; 
+  my ($self) = @_;
   my $should_log = 0;
   my $min_level = $self->min_level;
   my $max_level = $self->max_level;
   my %active;
-    
+
   foreach my $level (@{$self->level_names}) {
     if($level eq $min_level) {
-      $should_log = 1; 
+      $should_log = 1;
     }
 
     $active{$level} = $should_log;
-        
+
     if (defined $max_level && $level eq $max_level) {
       $should_log = 0;
     }
@@ -84,16 +84,16 @@ sub _log {
 sub _create_format_lookup {
   my ($self, $level, $metadata, $content) = @_;
   my $method = $metadata->{method};
-  
+
   $method = '(none)' unless defined $method;
-  
-  return { 
+
+  return {
     '%' => '%', 'n' => "\n",
     t => $self->_render_time($metadata->{timestamp}),
     r => $self->_render_remote($metadata->{object_remote}),
-    s => $self->_render_log(@$content), l => $level, 
+    s => $self->_render_log(@$content), l => $level,
     c => $metadata->{exporter}, p => $metadata->{caller_package}, m => $method,
-    f => $metadata->{filename}, i => $metadata->{line}, 
+    f => $metadata->{filename}, i => $metadata->{line},
     h => $metadata->{hostname}, P => $metadata->{pid},
   };
 }
@@ -126,9 +126,9 @@ sub _render {
   my ($self, $level, $metadata, @content) = @_;
   my $var_table = $self->_create_format_lookup($level, $metadata, [@content]);
   my $template = $self->format;
-  
+
   $template =~ s/%([\w%])/$self->_get_format_var_value($1, $var_table)/ge;
-  
+
   chomp($template);
   $template =~ s/\n/\n /g;
   $template .= "\n";
@@ -152,7 +152,7 @@ Object::Remote::Logging::Logger - Format and output a log message
 
   use Object::Remote::Logging::Logger;
   use Object::Remote::Logging qw( router arg_levels );
-  
+
   my $app_output = Object::Remote::Logging::Logger->new(
     level_names => arg_levels, format => '%t %s',
     min_level => 'verbose', max_level => 'info',
@@ -172,7 +172,7 @@ Object::Remote::Logging::Logger - Format and output a log message
 
   #disconnect the selector from the router
   undef($selector);
-  
+
   #router will hold this logger forever
   #and send it all log messages
   router->connect(Object::Remote::Logging::Logger->new(
@@ -192,7 +192,7 @@ and can return 0 or more loggers that should receive the log message.
 A logger object receives the log messages that are generated and converts them to
 formatted log entries then displays them to the end user. Each logger has a set
 of active log levels and will only output a log entry if the log message is at
-an active log level. 
+an active log level.
 
 To gain access to the stream of log messages a connection is made to the log router.
 A logger can directly connect to the router and receive an unfiltered stream of
@@ -267,7 +267,7 @@ Object::Remote::Connection id of that interpreter will be available here.
 =item level_names
 
 This is a required attribute. Must be an array ref with the list of log level names
-in it. The list must be ordered with the lowest level as element 0 and the highest 
+in it. The list must be ordered with the lowest level as element 0 and the highest
 level as the last element. There is no default value.
 
 =item min_level
@@ -292,7 +292,7 @@ Level name that the log message was generated at.
 
 =item %s
 
-Log message rendered into a string with a leading space before any additional lines in a 
+Log message rendered into a string with a leading space before any additional lines in a
 multiple line message.
 
 =item %t

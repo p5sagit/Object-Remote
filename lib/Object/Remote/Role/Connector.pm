@@ -53,10 +53,10 @@ sub connect {
                             $f->fail("Connection timed out") unless $f->is_ready;
                         }
                         undef($channel);
-                        
+
                       }
                     );
-    log_trace { "connection for child pid '$child_pid' has been initialized" }; 
+    log_trace { "connection for child pid '$child_pid' has been initialized" };
     $f;
   }
 }

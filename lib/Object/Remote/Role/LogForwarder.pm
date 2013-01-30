@@ -14,11 +14,11 @@ after _deliver_message => sub {
   my $package = $message_info{caller_package};
   my $destination = $self->_forward_destination;
   our $reentrant;
-  
+
   if (defined $message_info{object_remote}) {
     $message_info{object_remote} = { %{$message_info{object_remote}} };
   }
-  
+
   $message_info{object_remote}->{forwarded} = 1;
 
   return unless $self->enable_forward;
@@ -29,11 +29,11 @@ after _deliver_message => sub {
     warn "log forwarding went reentrant. bottom: '$reentrant' top: '$package'";
     return;
   }
-  
+
   local $reentrant = $package;
-  
+
   eval { $destination->_deliver_message(%message_info) };
-  
+
   if ($@ && $@ !~ /^Attempt to use Object::Remote::Proxy backed by an invalid handle/) {
     die $@;
   }

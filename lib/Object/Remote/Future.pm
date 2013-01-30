@@ -32,7 +32,7 @@ sub await_future {
       log_trace { my $l = @await; "future has become ready, length of \@await: '$l'" };
       if ($f == $await[-1]) {
         log_trace { "This future is not waiting on anything so calling stop on the run loop" };
-        $loop->stop;         
+        $loop->stop;
       }
     });
     log_trace { "Starting run loop for newly created future" };

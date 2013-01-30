@@ -47,7 +47,7 @@ my %mods = reverse @inc;
 
 foreach(keys(%mods)) {
   if ($exclude{ $mods{$_} }) {
-    delete($mods{$_});    
+    delete($mods{$_});
   }
 }
 
@@ -55,7 +55,7 @@ my @non_core_non_arch = ( $mods{'Devel/GlobalDestruction.pm'} );
 push @non_core_non_arch, grep +(
   not (
     #some of the config variables can be empty which will eval as a matching regex
-    $Config{privlibexp} ne '' && /^\Q$Config{privlibexp}/ 
+    $Config{privlibexp} ne '' && /^\Q$Config{privlibexp}/
       or $Config{archlibexp} ne '' && /^\Q$Config{archlibexp}/
       or $Config{vendorarchexp} ne '' && /^\Q$Config{vendorarchexp}/
       or $Config{sitearchexp} ne '' && /^\Q$Config{sitearchexp}/
@@ -85,14 +85,14 @@ my $end = stripspace <<'END_END';
     if (my $fat = $_[0]->{$_[1]}) {
       if ($exclude{$_[1]}) {
         warn "Will not pre-load '$_[1]'";
-        return undef; 
+        return undef;
       }
- 
+
       #warn "Handling $_[1]";
       open my $fh, '<', \$fat;
       return $fh;
     }
-    
+
     #Uncomment this to find brokenness
     #warn "Missing $_[1]";
     return;
@@ -105,11 +105,11 @@ my $end = stripspace <<'END_END';
 
   use strictures 1;
   use Object::Remote::Node;
-  
+
   unless ($Object::Remote::FatNode::INHIBIT_RUN_NODE) {
-    Object::Remote::Node->run(watchdog_timeout => $WATCHDOG_TIMEOUT);    
+    Object::Remote::Node->run(watchdog_timeout => $WATCHDOG_TIMEOUT);
   }
-  
+
 END_END
 
 my %files = map +($mods{$_} => scalar do { local (@ARGV, $/) = ($_); <> }),

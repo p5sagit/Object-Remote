@@ -163,7 +163,7 @@ See L<Object::Remote::Logging::Router>.
 
 =head1 KNOWN ISSUES
 
-=over 4 
+=over 4
 
 =item Large data structures
 
@@ -204,7 +204,7 @@ timeouts taking longer than configured.
 
 =item Deadlocks
 
-Deadlocks can happen quite easily because of flaws in programs that use Object::Remote or 
+Deadlocks can happen quite easily because of flaws in programs that use Object::Remote or
 Object::Remote itself so the C<Object::Remote::WatchDog> is available. When used the run
 loop will periodically update the watch dog object on the remote Perl interpreter. If the
 watch dog goes longer than the configured interval with out being updated then it will

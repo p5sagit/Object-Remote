@@ -40,14 +40,14 @@ sub before_import {
      $DID_INIT = 1;
      init_logging();
    }
-      
+
    $class->SUPER::before_import($importer, $spec);
 }
 
 sub _parse_selections {
   my ($selections_string) = @_;
   my %log_ok;
-    
+
   #example string:
   #"  * -Object::Remote::Logging    Foo::Bar::Baz   "
   foreach(split(/\s+/, $selections_string)) {
@@ -60,7 +60,7 @@ sub _parse_selections {
       $log_ok{$_} = 1;
     }
   }
-    
+
   return %log_ok;
 }
 
@@ -71,11 +71,11 @@ sub init_logging {
   my $selections = $ENV{OBJECT_REMOTE_LOG_SELECTIONS};
   my $test_logging = $ENV{OBJECT_REMOTE_TEST_LOGGER};
   my %controller_should_log;
-  
+
   unless (defined $ENV{OBJECT_REMOTE_LOG_FORWARDING} && $ENV{OBJECT_REMOTE_LOG_FORWARDING} ne '') {
     $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 0;
   }
-  
+
   if ($test_logging) {
     require Object::Remote::Logging::TestLogger;
     router->connect(Object::Remote::Logging::TestLogger->new(
@@ -90,11 +90,11 @@ sub init_logging {
       #the connection id for the remote node comes in later
       #as the controlling node inits remote logging
       router()->_remote_metadata({ connection_id =>  undef });
-    } 
+    }
   }
 
   return unless defined $level && $level ne '';
-  
+
   $format = "[%l %r] %s" unless defined $format;
   $selections = __PACKAGE__ unless defined $selections;
   %controller_should_log = _parse_selections($selections);
@@ -104,13 +104,13 @@ sub init_logging {
     level_names => Object::Remote::Logging::arg_levels(),
   );
 
-  router()->connect(sub { 
+  router()->connect(sub {
     my $controller = $_[1]->{exporter};
     my $will_log = $controller_should_log{$controller};
     my $remote_info = $_[1]->{object_remote};
-    
+
     $will_log = $controller_should_log{'*'} unless defined $will_log;
-    
+
     return unless $will_log;
     #skip things from remote hosts because they log to STDERR
     #when OBJECT_REMOTE_LOG_LEVEL is in effect
@@ -123,7 +123,7 @@ sub init_logging {
 #on the remote nodes
 sub init_remote_logging {
   my ($self, %controller_info) = @_;
-  
+
   router()->_remote_metadata(\%controller_info);
   router()->_forward_destination($controller_info{router}) if $ENV{OBJECT_REMOTE_LOG_FORWARDING};
 }
@@ -139,23 +139,23 @@ Object::Remote::Logging - Logging subsystem for Object::Remote
 =head1 SYNOPSIS
 
   use Object::Remote::Logging qw( :log :dlog arg_levels router );
-  
+
   @levels = qw( trace debug verbose info warn error fatal );
   @levels = arg_levels(); #same result
-  
+
   $ENV{OBJECT_REMOTE_LOG_LEVEL} = 'trace'; #or other level name
   $ENV{OBJECT_REMOTE_LOG_FORMAT} = '%l %t: %p::%m %s'; #and more
   $ENV{OBJECT_REMOTE_LOG_SELECTIONS} = 'Object::Remote::Logging Some::Other::Subclass';
   $ENV{OBJECT_REMOTE_LOG_SELECTIONS} = '* -Object::Remote::Logging';
   $ENV{OBJECT_REMOTE_LOG_FORWARDING} = 0; #default 1
-  
+
   log_info { 'Trace log event' };
   Dlog_verbose { "Debug event with Data::Dumper::Concise: $_" } { foo => 'bar' };
 
 =head1 DESCRIPTION
 
 This is the logging framework for Object::Remote implemented as a subclass of
-L<Log::Contextual> with a slightly incompatible API. This system allows 
+L<Log::Contextual> with a slightly incompatible API. This system allows
 developers using Object::Remote and end users of that software to control
 Object::Remote logging so operation can be tracked if needed. This is also
 the API used to generate log messages inside the Object::Remote source code.
@@ -168,7 +168,7 @@ which delivers log events to the loggers.
 
 Object::Remote logging is not enabled by default. If you need to immediately start
 debugging set the OBJECT_REMOTE_LOG_LEVEL environment variable to either 'trace'
-or 'debug'. This will enable logging to STDERR on the local and all remote Perl 
+or 'debug'. This will enable logging to STDERR on the local and all remote Perl
 interpreters. By default STDERR for all remote interpreters is passed through
 unmodified so this is sufficient to receive logs generated anywhere Object::Remote
 is running.
@@ -178,13 +178,13 @@ is given an id that is unique to that connection on the local interpreter. The c
 id and other metadata is available in the log output via a log format string that can
 be set via the OBJECT_REMOTE_LOG_FORMAT environment variable. The format string and
 available metadata is documented in L<Object::Remote::Logging::Logger>. Setting this
-environment variable on the local interpreter will cause it to be propagated to the 
+environment variable on the local interpreter will cause it to be propagated to the
 remote interpreter so all logs will be formated the same way.
 
 This class is designed so any module can create their own logging sub-class using it.
 With out any additional configuration the consumers of this logging class will
-automatically be enabled via OBJECT_REMOTE_LOG_LEVEL and formated with 
-OBJECT_REMOTE_LOG_FORMAT but those additional log messages are not sent to STDERR. 
+automatically be enabled via OBJECT_REMOTE_LOG_LEVEL and formated with
+OBJECT_REMOTE_LOG_FORMAT but those additional log messages are not sent to STDERR.
 By setting the  OBJECT_REMOTE_LOG_SELECTIONS environment variable to a list of
 class names seperated by spaces then logs generated by packages that use those classes
 will be sent to STDERR. If the asterisk character (*) is used in the place of a class
@@ -226,7 +226,7 @@ select then render and output log messages.
 
 =item log_<level> and Dlog_<level>
 
-These methods come direct from L<Log::Contextual>; see that documentation for a 
+These methods come direct from L<Log::Contextual>; see that documentation for a
 complete reference. For each of the log level names there are subroutines with the log_
 and Dlog_ prefix that will generate the log message. The first argument is a code block
 that returns the log message contents and the optional further arguments are both passed
@@ -259,7 +259,7 @@ large content. Tripple verbose operation (-v -v -v).
 
 =item debug
 
-Messages about operations that could hang as well as internal state changes, 
+Messages about operations that could hang as well as internal state changes,
 results from method invocations, and information useful when looking for faults.
 Double verbose operation (-v -v).
 

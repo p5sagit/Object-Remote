@@ -33,7 +33,7 @@ sub _build_inc_hook {
   log_debug { "Constructing module builder hook" };
   my $hook = Object::Remote::ModuleLoader::Hook->new(sender => $self->module_sender);
   log_trace { "Done constructing module builder hook" };
-  return $hook;   
+  return $hook;
 }
 
 sub BUILD { shift->enable }

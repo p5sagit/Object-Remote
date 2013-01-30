@@ -37,7 +37,7 @@ sub _get_loggers {
 
   $self->_clean_connections if $need_clean;
 
-  return @loggers; 
+  return @loggers;
 }
 
 #overloadable so a router can invoke a logger
@@ -63,7 +63,7 @@ sub _deliver_message {
   my $generator = $message_info{message_sub};
   my $args = $message_info{message_args};
   my $level = $message_info{message_level};
-  
+
   return unless @loggers > 0;
   #this is the point where the user provided log message code block is executed
   my @content = $generator->(@$args);
@@ -89,7 +89,7 @@ sub handle_log_request {
   my @caller_info = caller($caller_level);
   $message_info{filename} = $caller_info[1];
   $message_info{line} = $caller_info[2];
- 
+
   @caller_info = caller($caller_level + 1);
   $message_info{method} = $caller_info[3];
   $message_info{method} =~ s/^${package}::// if defined $message_info{method};
@@ -99,7 +99,7 @@ sub handle_log_request {
 
 sub connect {
   my ($self, $destination, $is_weak) = @_;
-  my $wrapped; 
+  my $wrapped;
 
   if (ref($destination) ne 'CODE') {
     $wrapped = sub { $destination };

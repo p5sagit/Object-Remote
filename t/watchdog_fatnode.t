@@ -3,7 +3,7 @@ use Test::More;
 
 $ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
 
-use Object::Remote::Connector::Local; 
+use Object::Remote::Connector::Local;
 
 $SIG{ALRM} = sub { die "alarm signal\n" };
 
@@ -15,13 +15,13 @@ my $fatnode_text = Object::Remote::Connector::Local->new(timeout => 1)->fatnode_
 #if it's not handled right
 eval {
   no warnings 'once';
-  $Object::Remote::FatNode::INHIBIT_RUN_NODE = 1; 
+  $Object::Remote::FatNode::INHIBIT_RUN_NODE = 1;
   eval $fatnode_text;
-  
+
   if ($@) {
       die "could not eval fatnode text: $@";
-  } 
-  
+  }
+
   while(1) {
       sleep(1);
   }
@@ -29,5 +29,5 @@ eval {
 
 is($@, "alarm signal\n", "Alarm handler was invoked");
 
-done_testing; 
+done_testing;
 

@@ -9,7 +9,7 @@ use Object::Remote::Logging::Router;
 my $controller_name = 'Test::Log::Controller';
 my $generator = sub { "Generator output" };
 my %metadata = (
-  exporter => $controller_name, 
+  exporter => $controller_name,
   caller_package => __PACKAGE__,  caller_level => 0,
   message_level => 'test1', message_sub => $generator, message_args => [],
 );

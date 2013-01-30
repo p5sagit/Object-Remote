@@ -1,5 +1,5 @@
 package Object::Remote::Connector::LocalSudo;
-	
+
 use Object::Remote::Logging qw (:log :dlog);
 use Symbol qw(gensym);
 use Module::Runtime qw(use_module);
@@ -69,7 +69,7 @@ sub _start_perl {
                       if (sysread($sudo_stderr, my $buf, 32768) > 0) {
                         log_trace { "LocalSudo: successfully read data, printing it to STDERR" };
                         print STDERR $buf;
-                        log_trace { "LocalSudo: print() to STDERR is done" };                   
+                        log_trace { "LocalSudo: print() to STDERR is done" };
                       } else {
                         log_debug { "LocalSudo: received EOF or error on file handle, unwatching it" };
                         Object::Remote->current_loop

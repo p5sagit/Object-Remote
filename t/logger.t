@@ -58,5 +58,4 @@ sub render_log {
   router->connect($selector, 1);
   log_info { "Test message" };
   return [$logger->feedback_output, __LINE__ - 1];
-  
 }

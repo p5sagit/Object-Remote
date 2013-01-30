@@ -17,7 +17,7 @@ has ssh_command => (is => 'ro', default => sub { 'ssh' });
 
 sub _build_ssh_perl_command {
   my ($self) = @_;
-  my $perl_command = $self->perl_command; 
+  my $perl_command = $self->perl_command;
 
   return [
     do { my $c = $self->ssh_command; ref($c) ? @$c : $c },
@@ -30,7 +30,7 @@ sub final_perl_command { shift->ssh_perl_command }
 
 no warnings 'once';
 
-push @Object::Remote::Connection::Guess, sub { 
+push @Object::Remote::Connection::Guess, sub {
   for ($_[0]) {
     # 0-9 a-z _ - first char, those or . subsequent - hostnamish
     if (defined and !ref and /^(?:.*?\@)?[\w\-][\w\-\.]/) {

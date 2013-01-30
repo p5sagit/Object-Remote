@@ -17,7 +17,7 @@ sub _open2_for {
 
 no warnings 'once';
 
-push @Object::Remote::Connection::Guess, sub { 
+push @Object::Remote::Connection::Guess, sub {
   for ($_[0]) {
     if (defined and !ref and /^(?:\.\/|\/)/) {
       my $socket = shift(@_);

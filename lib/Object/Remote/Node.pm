@@ -8,18 +8,18 @@ use Object::Remote;
 use CPS::Future;
 
 sub run {
-  my ($class, %args) = @_; 
+  my ($class, %args) = @_;
   log_trace { "run() has been invoked on remote node" };
-    
+
   my $c = Object::Remote::Connector::STDIO->new->connect;
-  
+
   $c->register_class_call_handler;
 
   my $loop = Object::Remote->current_loop;
-  
-  $c->on_close->on_ready(sub { 
+
+  $c->on_close->on_ready(sub {
     log_debug { "Node connection with call handler has closed" };
-    $loop->want_stop 
+    $loop->want_stop
   });
 
   Dlog_trace { "Node is sending 'Shere' to $_" } $c->send_to_fh;
@@ -28,8 +28,8 @@ sub run {
   log_debug { "Node is going to start the run loop" };
   #TODO the alarm should be reset after the run loop starts
   #at a minimum - the remote side node should probably send
-  #a command that clears the alarm in all instances - even 
-  #if the Object::Remote::Watchdog is not being used 
+  #a command that clears the alarm in all instances - even
+  #if the Object::Remote::Watchdog is not being used
   if ($args{watchdog_timeout}) {
     Object::Remote::WatchDog->new(timeout => $args{watchdog_timeout});
   } else {

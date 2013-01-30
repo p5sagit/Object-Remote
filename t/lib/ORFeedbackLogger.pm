@@ -12,15 +12,15 @@ sub reset {
   my ($self) = @_;
   $self->feedback_output(undef);
   $self->feedback_input(undef);
-  
+
   ok(! defined $self->feedback_output && ! defined $self->feedback_input, 'Reset successful');
 }
 
 sub _log {
   my $self = shift;
-  
+
   $self->feedback_input([@_]);
-  
+
   $self->SUPER::_log(@_);
 }
 

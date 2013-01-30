@@ -22,9 +22,9 @@ BEGIN { router()->exclude_forwarding }
 
 END {
   our %child_pids;
-  
+
   log_trace { "END handler is being invoked in " . __PACKAGE__ };
-  
+
   foreach(keys(%child_pids)) {
     log_debug { "Killing child process '$_'" };
     kill('TERM', $_);
@@ -46,11 +46,11 @@ has read_channel => (
   is => 'ro', required => 1,
   trigger => sub {
     my ($self, $ch) = @_;
-    my $id = $self->_id; 
+    my $id = $self->_id;
     Dlog_trace { "trigger for read_channel has been invoked for connection $id; file handle is $_" } $ch->fh;
     weaken($self);
     $ch->on_line_call(sub { $self->_receive(@_) });
-    $ch->on_close_call(sub { 
+    $ch->on_close_call(sub {
       log_trace { "invoking 'done' on on_close handler for connection id '$id'" };
       $self->on_close->done(@_);
     });
@@ -101,7 +101,7 @@ sub BUILD { }
 sub is_valid {
   my ($self) = @_;
   my $valid = ! $self->on_close->is_ready;
-  
+
   log_trace {
     my $id = $self->_id;
     my $text;
@@ -112,15 +112,15 @@ sub is_valid {
     }
     "Connection '$id' is valid: '$text'"
   };
-  
+
   return $valid;
 }
 
 sub _fail_outstanding {
   my ($self, $error) = @_;
   my $outstanding = $self->outstanding_futures;
-  
-  Dlog_debug { 
+
+  Dlog_debug {
     sprintf "Failing %i outstanding futures with '$error'", scalar(keys(%$outstanding))
   };
 
@@ -157,10 +157,10 @@ sub _install_future_handlers {
           "Remote Perl interpreter exited with value '$exit_value'"
         };
       }
-      
+
       delete $child_pids{$pid};
     });
-    return $f; 
+    return $f;
 };
 
 sub _id_to_remote_object {
@@ -216,9 +216,9 @@ sub _build__json {
 }
 
 sub _load_if_possible {
-  my ($class) = @_; 
+  my ($class) = @_;
 
-  use_module($class); 
+  use_module($class);
 
   if ($@) {
     log_debug { "Attempt at loading '$class' failed with '$@'" };
@@ -233,7 +233,7 @@ BEGIN {
     Object::Remote::Connector::LocalSudo
     Object::Remote::Connector::SSH
     Object::Remote::Connector::UNIX
-  ); 
+  );
 }
 
 sub conn_from_spec {
@@ -243,7 +243,7 @@ sub conn_from_spec {
       return $conn;
     }
   }
-  
+
   return undef;
 }
 
@@ -251,11 +251,11 @@ sub new_from_spec {
   my ($class, $spec, @args) = @_;
   return $spec if blessed $spec;
   my $conn = $class->conn_from_spec($spec, @args);
-  
+
   die "Couldn't figure out what to do with ${spec}"
     unless defined $conn;
-    
-  return $conn->maybe::start::connect;  
+
+  return $conn->maybe::start::connect;
 }
 
 sub remote_object {
@@ -352,32 +352,32 @@ sub send_discard {
 sub _send {
   my ($self, $to_send) = @_;
   my $fh = $self->send_to_fh;
-  
+
   unless ($self->is_valid) {
     croak "Attempt to invoke _send on a connection that is not valid";
   }
-  
+
   Dlog_trace { "Starting to serialize data in argument to _send for connection $_" } $self->_id;
   my $serialized = $self->_serialize($to_send)."\n";
   Dlog_trace { my $l = length($serialized); "serialization is completed; sending '$l' characters of serialized data to $_" } $fh;
-  my $ret; 
-  eval { 
+  my $ret;
+  eval {
     #TODO this should be converted over to a non-blocking ::WriteChannel class
     die "filehandle is not open" unless openhandle($fh);
     log_trace { "file handle has passed openhandle() test; printing to it" };
     $ret = print $fh $serialized;
     die "print was not successful: $!" unless defined $ret
   };
-    
+
   if ($@) {
     Dlog_debug { "exception encountered when trying to write to file handle $_: $@" } $fh;
     my $error = $@;
     chomp($error);
     $self->on_close->done("could not write to file handle: $error") unless $self->on_close->is_ready;
-    return; 
+    return;
   }
-      
-  return $ret; 
+
+  return $ret;
 }
 
 sub _serialize {
@@ -419,14 +419,14 @@ sub _deobjectify {
     if ($ref eq 'HASH') {
       my $tied_to = tied(%$data);
       if(defined($tied_to)) {
-        return +{__remote_tied_hash__ => $self->_local_object_to_id($tied_to)}; 
+        return +{__remote_tied_hash__ => $self->_local_object_to_id($tied_to)};
       } else {
         return +{ map +($_ => $self->_deobjectify($data->{$_})), keys %$data };
       }
     } elsif ($ref eq 'ARRAY') {
       my $tied_to = tied(@$data);
       if (defined($tied_to)) {
-        return +{__remote_tied_array__ => $self->_local_object_to_id($tied_to)}; 
+        return +{__remote_tied_array__ => $self->_local_object_to_id($tied_to)};
       } else {
         return [ map $self->_deobjectify($_), @$data ];
       }
@@ -513,20 +513,20 @@ sub _invoke {
 Object::Remote::Connection - An underlying connection for L<Object::Remote>
 
   use Object::Remote;
-  
+
   my %opts = (
     nice => '10', ulimit => '-v 400000',
     watchdog_timeout => 120, stderr => \*STDERR,
   );
-  
+
   my $local = Object::Remote->connect('-');
   my $remote = Object::Remote->connect('myserver', nice => 5);
   my $remote_user = Object::Remote->connect('user@myserver', %opts);
   my $local_sudo = Object::Remote->connect('user@');
-  
+
   #$remote can be any other connection object
   my $hostname = Sys::Hostname->can::on($remote, 'hostname');
-  
+
 =head1 DESCRIPTION
 
 This is the class that supports connections to a Perl interpreter that is executed in a

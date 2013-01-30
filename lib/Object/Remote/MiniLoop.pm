@@ -5,9 +5,9 @@ use Time::HiRes qw(time);
 use Object::Remote::Logging qw( :log :dlog router );
 use Moo;
 
-BEGIN { 
+BEGIN {
   $SIG{PIPE} = sub { log_debug { "Got a PIPE signal" } };
-  
+
   router()->exclude_forwarding
 }
 
@@ -46,7 +46,7 @@ sub watch_io {
   my ($self, %watch) = @_;
   my $fh = $watch{handle};
   Dlog_debug { "Adding IO watch for $_" } $fh;
-  
+
   if (my $cb = $watch{on_read_ready}) {
     log_trace { "IO watcher is registering with select for reading" };
     $self->_read_select->add($fh);
@@ -79,34 +79,34 @@ sub unwatch_io {
 
 sub _sort_timers {
   my ($self, @new) = @_;
-  my $timers = $self->_timers; 
-  
+  my $timers = $self->_timers;
+
   log_trace { "Sorting timers" };
-  
+
   @{$timers} = sort { $a->[0] <=> $b->[0] } @{$timers}, @new;
-  return;   
+  return;
 }
 
 sub watch_time {
   my ($self, %watch) = @_;
-  my $at; 
-  
+  my $at;
+
   Dlog_trace { "watch_time() invoked with $_" } \%watch;
- 
+
   if (exists($watch{every})) {
     $at = time() + $watch{every};
   } elsif (exists($watch{after})) {
-    $at = time() + $watch{after}; 
+    $at = time() + $watch{after};
   } elsif (exists($watch{at})) {
-    $at = $watch{at}; 
+    $at = $watch{at};
   } else {
     die "watch_time requires every, after or at";
   }
-  
+
   die "watch_time requires code" unless my $code = $watch{code};
   my $timers = $self->_timers;
   my $new = [ $at => $code, $watch{every} ];
-  $self->_sort_timers($new); 
+  $self->_sort_timers($new);
   log_debug { "Created new timer with id '$new' that expires at '$at'" };
   return "$new";
 }
@@ -122,19 +122,19 @@ sub _next_timer_expires_delay {
   my ($self) = @_;
   my $timers = $self->_timers;
   my $delay_max = $self->block_duration;
-    
+
   return $delay_max unless @$timers;
   my $duration = $timers->[0]->[0] - time;
 
   log_trace { "next timer fires in '$duration' seconds" };
-  
+
   if ($duration < 0) {
-    $duration = 0; 
+    $duration = 0;
   } elsif (defined $delay_max && $duration > $delay_max) {
     $duration = $delay_max;
   }
-  
-  return $duration; 
+
+  return $duration;
 }
 
 sub loop_once {
@@ -142,7 +142,7 @@ sub loop_once {
   my $read = $self->_read_watches;
   my $write = $self->_write_watches;
   my $read_count = 0;
-  my $write_count = 0; 
+  my $write_count = 0;
   my @c = caller;
   my $wait_time = $self->_next_timer_expires_delay;
   log_trace {
@@ -151,8 +151,8 @@ sub loop_once {
   };
   my ($readable, $writeable) = IO::Select->select(
     $self->_read_select, $self->_write_select, undef, $wait_time
-  ); 
-  log_trace { 
+  );
+  log_trace {
     my $readable_count = defined $readable ? scalar(@$readable) : 0;
     my $writable_count = defined $writeable ? scalar(@$writeable) : 0;
     "Run loop: select returned readable:$readable_count writeable:$writable_count";
@@ -179,30 +179,30 @@ sub loop_once {
     #under load
     last;
   }
-  
+
   #moving the timers above the read() section exposes a deadlock
   log_trace { "Read from $read_count filehandles; wrote to $write_count filehandles" };
   my $timers = $self->_timers;
   my $now = time();
   log_trace { "Checking timers" };
   while (@$timers and $timers->[0][0] <= $now) {
-    my $active = $timers->[0]; 
+    my $active = $timers->[0];
     Dlog_trace { "Found timer that needs to be executed: '$active'" };
-     
+
     if (defined($active->[2])) {
       #handle the case of an 'every' timer
       $active->[0] = time() + $active->[2];
       Dlog_trace { "scheduling timer for repeat execution at $_"} $active->[0];
       $self->_sort_timers;
     } else {
-      #it doesn't repeat again so get rid of it  
+      #it doesn't repeat again so get rid of it
       shift(@$timers);
     }
 
     #execute the timer
     $active->[1]->();
   }
-  
+
   log_trace { "Run loop: single loop is completed" };
   return;
 }
@@ -225,7 +225,7 @@ sub want_stop {
   my ($self) = @_;
   if (! $self->{want_running}) {
     log_debug { "Run loop: want_stop() was called but want_running was not true" };
-    return; 
+    return;
   }
   Dlog_debug { "Run loop: decrimenting want_running, is now $_" }
     --$self->{want_running};

@@ -10,8 +10,8 @@ BEGIN {  }
 
 push @Object::Remote::Connection::Guess, sub {
   if (($_[0]||'') eq '-') {
-      shift(@_); 
-      __PACKAGE__->new(@_); 
+      shift(@_);
+      __PACKAGE__->new(@_);
   }
 };
 

@@ -24,13 +24,13 @@ sub AUTOLOAD {
   my $generator;
   my $log_contextual_level;
   our %LEVEL_NAME_MAP;
-  
+
   #just a proof of concept - support for the is_ methods can
   #be done but requires modifications to the router
   return 1 if $log_level =~ m/^is_/;
   #skip DESTROY and friends
   return if $log_level =~ m/^[A-Z]+$/;
-  
+
   if ($log_contextual_level = $LEVEL_NAME_MAP{$log_level}) {
     $generator = sub { @content };
   } elsif(($log_level =~ s/f$//) && ($log_contextual_level = $LEVEL_NAME_MAP{$log_level})) {
@@ -39,14 +39,14 @@ sub AUTOLOAD {
   } else {
    croak "invalid log level: $log_level";
   }
-    
+
   router->handle_log_request({
-    controller => 'Log::Any', 
+    controller => 'Log::Any',
     package => scalar(caller),
     caller_level => 1,
     level => $log_contextual_level,
   }, $generator);
-  
+
   return;
 }
 

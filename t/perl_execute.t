@@ -3,8 +3,8 @@ use Test::More;
 
 $ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
 
-use Object::Remote::Connector::Local; 
-use Object::Remote::Connector::SSH; 
+use Object::Remote::Connector::Local;
+use Object::Remote::Connector::SSH;
 
 my $defaults = Object::Remote::Connector::Local->new;
 my $normal = $defaults->final_perl_command;
@@ -17,5 +17,5 @@ is($defaults->stderr, undef, 'Child process STDERR is clone of parent process ST
 is_deeply($normal, ['perl', '-'], 'Default Perl interpreter arguments correct');
 is_deeply($ssh, [qw(ssh -A testhost), "perl -"], "Arguments using ssh are correct");
 
-done_testing; 
+done_testing;
 

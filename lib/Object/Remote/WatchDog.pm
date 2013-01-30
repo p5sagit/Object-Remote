@@ -1,17 +1,17 @@
-package Object::Remote::WatchDog; 
+package Object::Remote::WatchDog;
 
-use Object::Remote::MiniLoop; 
+use Object::Remote::MiniLoop;
 use Object::Remote::Logging qw (:log :dlog router);
-use Moo; 
+use Moo;
 
 has timeout => ( is => 'ro', required => 1 );
 
 BEGIN { router()->exclude_forwarding; }
 
 around new => sub {
-  my ($orig, $self, @args) = @_; 
+  my ($orig, $self, @args) = @_;
   our ($WATCHDOG);
-    
+
   return $WATCHDOG if defined $WATCHDOG;
   log_trace { "Constructing new instance of global watchdog" };
   return $WATCHDOG = $self->$orig(@args);
@@ -20,28 +20,28 @@ around new => sub {
 #start the watchdog
 sub BUILD {
   my ($self) = @_;
-  
+
   $SIG{ALRM} = sub {
     #if the Watchdog is killing the process we don't want any chance of the
     #process not actually exiting and die could be caught by an eval which
-    #doesn't do us any good 
+    #doesn't do us any good
     log_fatal { "Watchdog has expired, terminating the process" };
     exit(1);
-  };   
-  
+  };
+
   Dlog_debug { "Initializing watchdog with timeout of $_ seconds" } $self->timeout;
   alarm($self->timeout);
 }
 
 #invoke at least once per timeout to stop
-#the watchdog from killing the process 
+#the watchdog from killing the process
 sub reset {
   our ($WATCHDOG);
   die "Attempt to reset the watchdog before it was constructed"
-    unless defined $WATCHDOG; 
-  
+    unless defined $WATCHDOG;
+
   log_debug { "Watchdog has been reset" };
-  alarm($WATCHDOG->timeout); 
+  alarm($WATCHDOG->timeout);
 }
 
 #must explicitly call this method to stop the
@@ -51,7 +51,7 @@ sub reset {
 sub shutdown {
   my ($self) = @_;
   log_debug { "Watchdog is shutting down" };
-  alarm(0); 
+  alarm(0);
 }
 
 1;

@@ -1,8 +1,8 @@
 package Object::Remote::Role::Connector::PerlInterpreter;
 
-use IPC::Open3; 
+use IPC::Open3;
 use IO::Handle;
-use Symbol; 
+use Symbol;
 use Object::Remote::Logging qw(:log :dlog router);
 use Object::Remote::ModuleSender;
 use Object::Remote::Handle;
@@ -35,7 +35,7 @@ sub _build_module_sender {
 #By policy object-remote does not invoke a shell
 sub _build_perl_command {
   my $perl_bin = 'perl';
-  
+
   if (exists $ENV{OBJECT_REMOTE_PERL_BIN}) {
     $perl_bin = $ENV{OBJECT_REMOTE_PERL_BIN};
   }
@@ -77,11 +77,11 @@ sub _start_perl {
   my $self = shift;
   my $given_stderr = $self->stderr;
   my $foreign_stderr;
- 
+
   Dlog_verbose {
     s/\n/ /g; "invoking connection to perl interpreter using command line: $_"
   } @{$self->final_perl_command};
-    
+
   if (defined($given_stderr)) {
     #if the stderr data goes to an existing file handle
     #an anonymous file handle is required
@@ -94,24 +94,24 @@ sub _start_perl {
     #the child stderr to the parent stderr
     $foreign_stderr = ">&STDERR";
   }
-  
+
   my $pid = open3(
     my $foreign_stdin,
     my $foreign_stdout,
     $foreign_stderr,
     @{$self->final_perl_command},
   ) or die "Failed to run perl at '$_[0]': $!";
-  
+
   $self->_set_pid($pid);
-  
-  if (defined($given_stderr)) {   
+
+  if (defined($given_stderr)) {
     Dlog_debug { "Child process STDERR is being handled via run loop" };
-        
+
     Object::Remote->current_loop
                   ->watch_io(
                       handle => $foreign_stderr,
                       on_read_ready => sub {
-                        my $buf = ''; 
+                        my $buf = '';
                         my $len = sysread($foreign_stderr, $buf, 32768);
                         if (!defined($len) or $len == 0) {
                           log_trace { "Got EOF or error on child stderr, removing from watcher" };
@@ -124,10 +124,10 @@ sub _start_perl {
                             Dlog_trace { "got $len characters of stderr data for connection" };
                             print $given_stderr $buf or die "could not send stderr data: $!";
                           }
-                         } 
-                      );     
+                         }
+                      );
   }
-      
+
   return ($foreign_stdin, $foreign_stdout, $pid);
 }
 
@@ -163,14 +163,14 @@ sub _open2_for {
 
 sub _setup_watchdog_reset {
   my ($self, $conn) = @_;
-  my $timer_id; 
-    
+  my $timer_id;
+
   return unless $self->watchdog_timeout;
-        
+
   Dlog_trace { "Creating Watchdog management timer for connection id $_" } $conn->_id;
-    
+
   weaken($conn);
-        
+
   $timer_id = Object::Remote->current_loop->watch_time(
     every => $self->watchdog_timeout / 3,
     code => sub {
@@ -179,13 +179,13 @@ sub _setup_watchdog_reset {
         Object::Remote->current_loop->unwatch_time($timer_id);
         return;
       }
-      
+
       unless($conn->is_valid) {
         log_warn { "Watchdog timer found an invalid connection, removing the timer" };
         Object::Remote->current_loop->unwatch_time($timer_id);
         return;
       }
-      
+
       Dlog_trace { "Reseting Watchdog for connection id $_" } $conn->_id;
       #we do not want to block in the run loop so send the
       #update off and ignore any result, we don't need it
@@ -193,7 +193,7 @@ sub _setup_watchdog_reset {
       $conn->send_class_call(0, 'Object::Remote::WatchDog', 'reset');
     }
   );
-  
+
   $conn->on_close->on_ready(sub {
     log_debug { "Removing watchdog for connection that is now closed" };
     Object::Remote->current_loop->unwatch_time($timer_id);
@@ -207,17 +207,17 @@ sub fatnode_text {
   my $text = '';
 
   require Object::Remote::FatNode;
-  
+
   if (defined($connection_timeout)) {
     $text .= "alarm($connection_timeout);\n";
   }
-  
+
   if (defined($watchdog_timeout)) {
     $text .= "my \$WATCHDOG_TIMEOUT = $watchdog_timeout;\n";
   } else {
     $text .= "my \$WATCHDOG_TIMEOUT = undef;\n";
   }
-  
+
   $text .= $self->_create_env_forward(@{$self->forward_env});
 
   #Action at a distance but at least it's not spooky - the logging
@@ -226,7 +226,7 @@ sub fatnode_text {
   #setup on the remote side yet so this flag allows a graceful
   #degredation to happen
   $text .= '$Object::Remote::FatNode::REMOTE_NODE = "1";' . "\n";
-  
+
   $text .= <<'END';
 $INC{'Object/Remote/FatNode.pm'} = __FILE__;
 $Object::Remote::FatNode::DATA = <<'ENDFAT';
@@ -237,7 +237,7 @@ END
 eval $Object::Remote::FatNode::DATA;
 die $@ if $@;
 END
-  
+
   $text .= "__END__\n";
   return $text;
 }
