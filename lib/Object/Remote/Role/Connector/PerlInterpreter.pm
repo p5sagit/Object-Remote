@@ -263,3 +263,78 @@ sub _create_env_forward {
 }
 
 1;
+
+=head1 NAME
+
+Object::Remote::Role::Connector::PerlInterpreter - Role for connections to a Perl interpreter
+
+=head1 SYNOPSIS
+
+  use Object::Remote;
+
+  my %opts = (
+    perl_command => [qw(nice -n 10 perl -)],
+    watchdog_timeout => 120, stderr => \*STDERR,
+  );
+
+  my $local_connection = Object::Remote->connect('-', %opts);
+  my $hostname = Sys::Hostname->can::on($remote, 'hostname');
+
+=head1 DESCRIPTION
+
+This is the role that supports connections to a Perl interpreter that is executed in a
+different process. The new Perl interpreter can be either on the local or a remote machine
+and is configurable via arguments passed to the constructor.
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item perl_command
+
+By default the Perl interpeter will be executed as "perl -" but this can be changed by
+providing an array reference as the value to the perl_command attribute during construction.
+
+=item stderr
+
+If this value is defined then it will be used as the file handle that receives the output
+of STDERR from the Perl interpreter process and I/O will be performed by the run loop in a
+non-blocking way. If the value is undefined then STDERR of the remote process will be connected
+directly to STDERR of the local process with out the run loop managing I/O. The default value
+is undefined.
+
+There are a few ways to use this feature. By default the behavior is to form one unified STDERR
+across all of the Perl interpreters including the local one. For small scale and quick operation
+this offers a predictable and easy to use way to get at error messages generated anywhere. If
+the local Perl interpreter crashes then the remote Perl interpreters still have an active STDERR
+and it is possible to still receive output from them. This is generally a good thing but can
+cause issues.
+
+When using a file handle as the output for STDERR once the local Perl interpreter is no longer
+running there is no longer a valid STDERR for the remote interpreters to send data to. This means
+that it is no longer possible to receive error output from the remote interpreters and that the
+shell will start to kill off the child processes. Passing a reference to STDERR for the local
+interpreter (as the SYNOPSIS shows) causes the run loop to manage I/O, one unified STDERR for
+all Perl interpreters that ends as soon as the local interpreter process does, and the shell will
+start killing children when the local interpreter exits.
+
+It is also possible to pass in a file handle that has been opened for writing. This would be
+useful for logging the output of the remote interpreter directly into a dedicated file.
+
+=item watchdog_timeout
+
+If this value is defined then it will be used as the number of seconds the watchdog will wait
+for an update before it terminates the Perl interpreter process. The default value is undefined
+and will not use the watchdog. See C<Object::Remote::Watchdog> for more information.
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item C<Object::Remote>
+
+=back
+
+=cut

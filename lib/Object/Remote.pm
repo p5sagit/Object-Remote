@@ -174,8 +174,9 @@ for serialization and deserialization can be either painful or unworkable. Durin
 serialization the local or remote nodes will be blocked potentially causing all remote
 interpreters to block as well under worse case conditions.
 
-To help deal with this issue it is possible to configure the ulimits for a Perl interpreter
-that is executed by Object::Remote. See C<Object::Remote::Connection> for details.
+To help deal with this issue it is possible to configure resource ulimits for a Perl interpreter
+that is executed by Object::Remote. See C<Object::Remote::Role::Connector::PerlInterpreter>
+for details on the perl_command attribute.
 
 =item User can starve run loop of execution opportunities
 
