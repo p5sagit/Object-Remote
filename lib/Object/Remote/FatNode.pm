@@ -44,6 +44,7 @@ chomp(my @inc = qx($command));
 
 my %exclude = map { $_ => 1 } @exclude_mods; 
 my %mods = reverse @inc;
+my %file_names = @inc;
 
 foreach(keys(%mods)) {
   if ($exclude{ $mods{$_} }) {
@@ -51,7 +52,7 @@ foreach(keys(%mods)) {
   }
 }
 
-my @non_core_non_arch = ( $mods{'Devel/GlobalDestruction.pm'} );
+my @non_core_non_arch = ( $file_names{'Devel/GlobalDestruction.pm'} );
 push @non_core_non_arch, grep +(
   not (
     #some of the config variables can be empty which will eval as a matching regex
