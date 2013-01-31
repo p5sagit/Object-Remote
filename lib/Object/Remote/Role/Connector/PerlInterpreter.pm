@@ -39,7 +39,7 @@ sub _build_perl_command {
   if (exists $ENV{OBJECT_REMOTE_PERL_BIN}) {
     $perl_bin = $ENV{OBJECT_REMOTE_PERL_BIN};
   }
-  return [qw(perl -)];
+  return [$perl_bin, '-'];
 }
 
 sub _build_forward_env {
