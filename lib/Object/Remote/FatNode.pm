@@ -5,7 +5,7 @@ use Config;
 use B qw(perlstring);
 
 my @exclude_mods = qw(XSLoader.pm DynaLoader.pm);
-#used by t/watchdog_fatnode 
+#used by t/watchdog_fatnode
 our $INHIBIT_RUN_NODE = 0;
 
 sub stripspace {
@@ -42,7 +42,7 @@ $command =~ s/\n/ /g;
 
 chomp(my @inc = qx($command));
 
-my %exclude = map { $_ => 1 } @exclude_mods; 
+my %exclude = map { $_ => 1 } @exclude_mods;
 my %mods = reverse @inc;
 my %file_names = @inc;
 

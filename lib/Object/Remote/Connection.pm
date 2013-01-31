@@ -212,7 +212,7 @@ sub _build__json {
       tie @tied_array, 'Object::Remote::Tied', $self->_id_to_remote_object(@_);
       return \@tied_array;
     }
-  ); 
+  );
 }
 
 sub _load_if_possible {
