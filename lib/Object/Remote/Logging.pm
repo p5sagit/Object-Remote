@@ -1,7 +1,6 @@
 package Object::Remote::Logging;
 
 use Moo;
-use Scalar::Util qw(blessed);
 use Object::Remote::Logging::Logger;
 use Exporter::Declare;
 

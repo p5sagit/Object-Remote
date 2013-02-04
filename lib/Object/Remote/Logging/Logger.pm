@@ -1,7 +1,6 @@
 package Object::Remote::Logging::Logger;
 
 use Moo;
-use Scalar::Util qw(weaken);
 use Carp qw(croak);
 
 #TODO sigh invoking a logger with a log level name the same
