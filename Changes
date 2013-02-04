@@ -1,3 +1,13 @@
+  - Allow STDERR of remote interpreters to be sent to a
+      connection specific filehandle
+  - Proxy dies() when a method is invoked and the handle is not valid
+  - Introduced the Watchdog class
+  - Added support for local object, tied hashes, and tied
+      arrays in the Connection class
+  - White listed Devel::GlobalDestruction and black listed
+      XSLoader and DynaLoader in FatNode
+  - Dead locks found and partially worked around
+  - Logging system introduced
   - Propagate errors from FatNode code
   - Fall back to core non-arch modules in FatNode
   - Fix module name in Makefile.PL
