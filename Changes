@@ -1,3 +1,4 @@
+0.003001_01 - 2013-02-04
   - Allow STDERR of remote interpreters to be sent to a
       connection specific filehandle
   - Proxy dies() when a method is invoked and the handle is not valid
