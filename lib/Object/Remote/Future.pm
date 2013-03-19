@@ -99,17 +99,10 @@ sub AUTOLOAD {
   my $invocant = shift;
   my ($method) = our $AUTOLOAD =~ /^then::(.+)$/;
   my @args = @_;
-  # Need two copies since if we're called on an already complete future
-  # $f will be freed immediately
-  my $ret = my $f = Future->new;
-  $invocant->on_fail(sub { $f->fail(@_); undef($f); });
-  $invocant->on_done(sub {
-    my ($obj) = @_;
-    my $next = $obj->${\"start::${method}"}(@args);
-    $next->on_done(sub { $f->done(@_); undef($f); });
-    $next->on_fail(sub { $f->fail(@_); undef($f); });
+  return $invocant->and_then(sub {
+    my ($obj) = $_[0]->get;
+    return $obj->${\"start::${method}"}(@args);
   });
-  return $ret;
 }
 
 1;
