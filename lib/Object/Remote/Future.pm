@@ -8,12 +8,12 @@ use Object::Remote::Logging qw( :log router );
 
 BEGIN { router()->exclude_forwarding }
 
-use CPS::Future;
+use Future;
 
 our @EXPORT = qw(future await_future await_all);
 
 sub future (&;$) {
-  my $f = $_[0]->(CPS::Future->new);
+  my $f = $_[0]->(Future->new);
   return $f if ((caller(1+($_[1]||0))||'') eq 'start');
   await_future($f);
 }
@@ -48,7 +48,7 @@ sub await_future {
 
 sub await_all {
   log_trace { my $l = @_; "await_all() invoked with '$l' futures to wait on" };
-  await_future(CPS::Future->wait_all(@_));
+  await_future(Future->wait_all(@_));
   map $_->get, @_;
 }
 
@@ -61,12 +61,12 @@ sub AUTOLOAD {
   my ($method) = our $AUTOLOAD =~ /^start::(.+)$/;
   my $res;
   unless (eval { $res = $invocant->$method(@_); 1 }) {
-    my $f = CPS::Future->new;
+    my $f = Future->new;
     $f->fail($@);
     return $f;
   }
-  unless (Scalar::Util::blessed($res) and $res->isa('CPS::Future')) {
-    my $f = CPS::Future->new;
+  unless (Scalar::Util::blessed($res) and $res->isa('Future')) {
+    my $f = Future->new;
     $f->done($res);
     return $f;
   }
@@ -101,7 +101,7 @@ sub AUTOLOAD {
   my @args = @_;
   # Need two copies since if we're called on an already complete future
   # $f will be freed immediately
-  my $ret = my $f = CPS::Future->new;
+  my $ret = my $f = Future->new;
   $invocant->on_fail(sub { $f->fail(@_); undef($f); });
   $invocant->on_done(sub {
     my ($obj) = @_;

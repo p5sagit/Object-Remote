@@ -25,7 +25,7 @@ my $command = qq(
   $extra_libs
   -mObject::Remote
   -mObject::Remote::Connector::STDIO
-  -mCPS::Future
+  -mFuture
   -mMRO::Compat
   -mClass::C3
   -mClass::C3::next

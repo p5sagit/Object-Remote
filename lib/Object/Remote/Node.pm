@@ -5,7 +5,6 @@ use Object::Remote::Connector::STDIO;
 use Object::Remote::Logging qw(:log :dlog);
 use Object::Remote::WatchDog;
 use Object::Remote;
-use CPS::Future;
 
 sub run {
   my ($class, %args) = @_;

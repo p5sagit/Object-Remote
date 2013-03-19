@@ -1,6 +1,5 @@
 package Object::Remote::ReadChannel;
 
-use CPS::Future;
 use Scalar::Util qw(weaken openhandle);
 use Object::Remote::Logging qw(:log :dlog router );
 use Moo;

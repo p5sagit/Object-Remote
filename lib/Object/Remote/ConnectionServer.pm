@@ -4,6 +4,7 @@ use Scalar::Util qw(blessed weaken);
 use Module::Runtime qw(use_module);
 use Object::Remote;
 use Object::Remote::Logging qw( :log :dlog );
+use Future;
 use IO::Socket::UNIX;
 use Moo;
 
@@ -53,7 +54,7 @@ sub _listen_ready {
   my $new = $fh->accept or die "Couldn't accept: $!";
   log_trace { "Setting file handle non-blocking" };
   $new->blocking(0);
-  my $f = CPS::Future->new;
+  my $f = Future->new;
   log_trace { "Creating a new connection with the remote node" };
   my $c = use_module('Object::Remote::Connection')->new(
     receive_from_fh => $new,

@@ -15,8 +15,9 @@ use POSIX ":sys_wait_h";
 use Module::Runtime qw(use_module);
 use Scalar::Util qw(weaken blessed refaddr openhandle);
 use JSON::PP qw(encode_json);
-use Moo;
+use Future;
 use Carp qw(croak);
+use Moo;
 
 BEGIN { router()->exclude_forwarding }
 
@@ -58,7 +59,7 @@ has read_channel => (
 );
 
 has on_close => (
-  is => 'rw', default => sub { $_[0]->_install_future_handlers(CPS::Future->new) },
+  is => 'rw', default => sub { $_[0]->_install_future_handlers(Future->new) },
   trigger => sub {
     log_trace { "Installing handlers into future via trigger" };
     $_[0]->_install_future_handlers($_[1])
@@ -324,7 +325,7 @@ sub send_free {
 sub send {
   my ($self, $type, @call) = @_;
 
-  my $future = CPS::Future->new;
+  my $future = Future->new;
   my $remote = $self->remote_objects_by_id->{$call[0]};
 
   unshift @call, $type => $self->_local_object_to_id($future);
