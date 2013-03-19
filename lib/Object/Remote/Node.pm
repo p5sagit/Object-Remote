@@ -30,7 +30,7 @@ sub run {
   #a command that clears the alarm in all instances - even
   #if the Object::Remote::Watchdog is not being used
   if ($args{watchdog_timeout}) {
-    Object::Remote::WatchDog->new(timeout => $args{watchdog_timeout});
+    Object::Remote::WatchDog->instance(timeout => $args{watchdog_timeout});
   } else {
     #reset connection watchdog from the fatnode
     alarm(0);

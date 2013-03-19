@@ -8,13 +8,13 @@ has timeout => ( is => 'ro', required => 1 );
 
 BEGIN { router()->exclude_forwarding; }
 
-around new => sub {
-  my ($orig, $self, @args) = @_;
-  our ($WATCHDOG);
+sub instance {
+  my ($class, @args) = @_;
 
-  return $WATCHDOG if defined $WATCHDOG;
-  log_trace { "Constructing new instance of global watchdog" };
-  return $WATCHDOG = $self->$orig(@args);
+  return our $WATCHDOG ||= do {
+    log_trace { "Constructing new instance of global watchdog" };
+    $class->new(@args);
+  };
 };
 
 #start the watchdog
@@ -36,9 +36,8 @@ sub BUILD {
 #invoke at least once per timeout to stop
 #the watchdog from killing the process
 sub reset {
-  our ($WATCHDOG);
   die "Attempt to reset the watchdog before it was constructed"
-    unless defined $WATCHDOG;
+    unless defined our $WATCHDOG;
 
   log_debug { "Watchdog has been reset" };
   alarm($WATCHDOG->timeout);
