@@ -1,3 +1,5 @@
+  - Switch from CPS::Future to Future.pm
+
 0.003001_01 - 2013-02-11
   - Allow STDERR of remote interpreters to be sent to a
       connection specific filehandle
