@@ -139,6 +139,7 @@ sub _next_timer_expires_delay {
 
 sub loop_once {
   my ($self) = @_;
+  $self->{was_re_entered} = 1 if exists $self->{was_re_entered};
   my $read = $self->_read_watches;
   my $write = $self->_write_watches;
   my $read_count = 0;
@@ -165,19 +166,23 @@ sub loop_once {
   foreach my $fh (@$readable) {
     next unless $read->{$fh};
     $read_count++;
-    $read->{$fh}();
-    #FIXME this is a rough workaround for race conditions that can cause deadlocks
-    #under load
-    last;
+    my $was_re_entered = do {
+      local $self->{was_re_entered};
+      $read->{$fh}();
+      $self->{was_re_entered};
+    };
+    return if $was_re_entered;
   }
   log_trace { "Writing to ready filehandles" };
   foreach my $fh (@$writeable) {
     next unless $write->{$fh};
     $write_count++;
-    $write->{$fh}();
-    #FIXME this is a rough workaround for race conditions that can cause deadlocks
-    #under load
-    last;
+    my $was_re_entered = do {
+      local $self->{was_re_entered};
+      $write->{$fh}();
+      $self->{was_re_entered};
+    };
+    return if $was_re_entered;
   }
 
   #moving the timers above the read() section exposes a deadlock
