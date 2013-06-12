@@ -19,6 +19,7 @@ my %maybe_libs = map +($_ => 1), grep defined, (values %Config, '.');
 my @extra_libs = grep not(ref($_) or $maybe_libs{$_}), @INC;
 
 my $extra_libs = join '', map "  -I$_\n", @extra_libs;
+my $perl_quote = $^O eq "MSWin32" ? q["] : q['];
 
 my $command = qq(
   $^X
@@ -35,7 +36,7 @@ my $command = qq(
   -mMethod::Generate::BuildAll
   -mMethod::Generate::DemolishAll
   -mJSON::PP
-  -e 'print join "\\n", \%INC'
+  -e $perl_quote print join qq[\\n], \%INC $perl_quote
 );
 
 $command =~ s/\n/ /g;
