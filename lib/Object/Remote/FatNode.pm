@@ -16,7 +16,7 @@ sub stripspace {
 
 my %maybe_libs = map +($_ => 1), grep defined, (values %Config, '.');
 
-my @extra_libs = grep not(ref($_) or $maybe_libs{$_}), @INC;
+my @extra_libs = grep -e not(ref($_) or $maybe_libs{$_}), @INC;
 
 my $extra_libs = join '', map "  -I$_\n", @extra_libs;
 
