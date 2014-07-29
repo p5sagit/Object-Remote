@@ -1,3 +1,5 @@
+  - Use newer Future API, fix broken test
+
 0.003002 - 2013-03-19
   - Switch from CPS::Future to Future.pm
 

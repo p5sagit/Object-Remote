@@ -11,7 +11,7 @@ WriteMakefile(
     Moo => 1.001,
     'Module::Runtime' => 0,
     'JSON::PP' => 0,
-    'Future' => 0.10,
+    'Future' => 0.29,
     'MRO::Compat' => 0, # required to fatpack Moo
     'Class::C3' => 0, # required to fatpack Moo
     'String::ShellQuote' => 0, # required for ssh argument manipulation

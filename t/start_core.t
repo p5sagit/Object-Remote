@@ -63,13 +63,17 @@ $ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
 
 my $res;
 
-S1S->start::get_s2->then::get_s3->on_ready(sub { ($res) = $_[0]->get });
+my @keep;
+
+push @keep,
+  S1S->start::get_s2->then::get_s3->on_ready(sub { ($res) = $_[0]->get });
 
 is($res, 'S3', 'Synchronous code ok');
 
 undef($res);
 
-S1F->start::get_s2->then::get_s3->on_ready(sub { ($res) = $_[0]->get });
+push @keep,
+  S1F->start::get_s2->then::get_s3->on_ready(sub { ($res) = $_[0]->get });
 
 ok(!$S2F::C, 'Second future not yet constructed');
 

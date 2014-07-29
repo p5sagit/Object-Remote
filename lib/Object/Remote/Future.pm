@@ -99,8 +99,8 @@ sub AUTOLOAD {
   my $invocant = shift;
   my ($method) = our $AUTOLOAD =~ /^then::(.+)$/;
   my @args = @_;
-  return $invocant->and_then(sub {
-    my ($obj) = $_[0]->get;
+  return $invocant->then(sub {
+    my ($obj) = @_;
     return $obj->${\"start::${method}"}(@args);
   });
 }
