@@ -1,3 +1,4 @@
+  - Make watchdog test handle death-by-send as well as death-by-receive
   - Use newer Future API, fix broken test
 
 0.003002 - 2013-03-19

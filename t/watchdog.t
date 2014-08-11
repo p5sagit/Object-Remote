@@ -19,7 +19,7 @@ alarm(3);
 
 eval { $remote->hang };
 
-like($@, qr/^Object::Remote connection lost: eof/, "Correct error message");
+like($@, qr/^Object::Remote connection lost: (?:eof|.*Broken pipe)/, "Correct error message");
 
 done_testing;
 
