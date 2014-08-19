@@ -8,7 +8,7 @@ WriteMakefile(
   NAME => 'Object::Remote',
   VERSION_FROM => 'lib/Object/Remote.pm',
   PREREQ_PM => {
-    Moo => 1.001,
+    Moo => 1.006,
     'Module::Runtime' => 0,
     'JSON::PP' => 0,
     'Future' => 0.29,

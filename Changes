@@ -1,3 +1,6 @@
+  - Explicitly load Moo::HandleMoose::_TypeMap since it isn't loaded sans
+    ithreads but we don't know if the foreign perl requires it
+
 0.003003 - 2014-08-11
   - Make watchdog test handle death-by-send as well as death-by-receive
   - Use newer Future API, fix broken test

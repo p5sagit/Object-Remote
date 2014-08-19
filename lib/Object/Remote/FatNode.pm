@@ -37,6 +37,7 @@ my $command = qq(
   -mObject::Remote::Node
   -mMethod::Generate::BuildAll
   -mMethod::Generate::DemolishAll
+  -mMoo::HandleMoose::_TypeMap
   -mJSON::PP
   -e 'print join "\\n", \%INC'
 );
