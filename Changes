@@ -1,3 +1,4 @@
+0.003004 - 2014-10-04
   - Explicitly load Moo::HandleMoose::_TypeMap since it isn't loaded sans
     ithreads but we don't know if the foreign perl requires it
 
