@@ -47,8 +47,15 @@ $command =~ s/\n/ /g;
 chomp(my @inc = qx($command));
 
 my %exclude = map { $_ => 1 } @exclude_mods;
-my %mods = reverse @inc;
+
 my %file_names = @inc;
+
+# only include mods that match the filename,
+# ie ones that will succeed with a require $module
+# https://rt.cpan.org/Ticket/Display.html?id=100478
+my %mods =
+  map { $file_names{$_} => $_ }
+  grep { $file_names{$_} =~ /\Q$_\E$/ } keys %file_names;
 
 foreach(keys(%mods)) {
   if ($exclude{ $mods{$_} }) {
