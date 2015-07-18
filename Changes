@@ -1,3 +1,4 @@
+0.003005 - 2015-07-18
   - Skip non-primary modules in a file to ensure we generate a sane fatpack
 
 0.003004 - 2014-10-04
