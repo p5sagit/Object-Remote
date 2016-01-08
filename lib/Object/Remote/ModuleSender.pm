@@ -28,7 +28,7 @@ sub source_for {
   my ($found) = first {  -f $_ }
                   map File::Spec->catfile($_, $module),
                     @{$self->dir_list};
-  die "Couldn't find ${module} in remote \@INC. dir_list contains:\n"
+  die "Can't locate ${module} in \@INC. (on remote host) dir_list contains:\n"
       .join("\n", @{$self->dir_list})
     unless $found;
   log_debug { "found '$module' at '$found'" };

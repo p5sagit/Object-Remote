@@ -239,6 +239,8 @@ phaylon - Robert Sedlacek (cpan:PHAYLON) <r.sedlacek@shadowcat.co.uk>
 
 triddle - Tyler Riddle (cpan:TRIDDLE) <t.riddle@shadowcat.co.uk>
 
+bfwg - Colin Newell (cpan:NEWELLC) <colin.newell@gmail.com>
+
 =head1 SPONSORS
 
 Parts of this code were paid for by
