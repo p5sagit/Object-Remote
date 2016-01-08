@@ -10,6 +10,7 @@ WriteMakefile(
   PREREQ_PM => {
     Moo => 1.006,
     'Module::Runtime' => 0,
+    'Try::Tiny' => 0,
     'JSON::PP' => 0,
     'Future' => 0.29,
     'MRO::Compat' => 0, # required to fatpack Moo

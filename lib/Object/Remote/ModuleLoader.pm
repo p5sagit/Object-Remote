@@ -4,19 +4,36 @@ BEGIN {
   package Object::Remote::ModuleLoader::Hook;
   use Moo;
   use Object::Remote::Logging qw( :log :dlog );
+  use Try::Tiny;
   has sender => (is => 'ro', required => 1);
 
   # unqualified INC forced into package main
   sub Object::Remote::ModuleLoader::Hook::INC {
     my ($self, $module) = @_;
     log_debug { "Loading $module via " . ref($self) };
-    if (my $code = $self->sender->source_for($module)) {
-      open my $fh, '<', \$code;
-      Dlog_trace { "Module sender successfully sent code for '$module': $code" } $code;
-      return $fh;
+    try
+    {
+      if (my $code = $self->sender->source_for($module)) {
+        open my $fh, '<', \$code;
+        Dlog_trace { "Module sender successfully sent code for '$module': $code" } $code;
+        return $fh;
+      }
+      log_trace { "Module sender did not return code for '$module'" };
+      return;
     }
-    log_trace { "Module sender did not return code for '$module'" };
-    return;
+    catch
+    {
+      log_trace { "Module sender blew up - $_" };
+      if($_ =~ /Can't locate/)
+      {
+        # Fudge the error messge to make it work with
+        # Module::Runtime use_package_optimistically
+        # Module::Runtime wants - /\ACan't locate \Q$fn\E .+ at \Q@{[__FILE__]}\E line/
+        my ($package, $file, $line) = caller(9);
+        s/(in \@INC.)/$1 at $file line $line/;
+      }
+      die $_;
+    }
   }
 }
 
