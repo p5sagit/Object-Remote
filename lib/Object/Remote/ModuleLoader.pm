@@ -28,8 +28,10 @@ BEGIN {
         # Fudge the error messge to make it work with
         # Module::Runtime use_package_optimistically
         # Module::Runtime wants - /\ACan't locate \Q$fn\E .+ at \Q@{[__FILE__]}\E line/
-        # the callstack range is a bit of a guess, we want
-        # to make a reasonable effort, but not spend forever.
+        # We could probably measure and hard-code this but that could easily
+        # be a forwards compatibility disaster, so do a quick search of caller
+        # with a reasonable range; we're already into a woefully inefficient
+        # situation here so a little defensiveness won't make things much worse
         for(my $i = 4; $i < 20; $i++)
         {
             my ($package, $file, $line) = caller($i);
