@@ -4,14 +4,13 @@ BEGIN {
   package Object::Remote::ModuleLoader::Hook;
   use Moo;
   use Object::Remote::Logging qw( :log :dlog );
-  use Try::Tiny;
   has sender => (is => 'ro', required => 1);
 
   # unqualified INC forced into package main
   sub Object::Remote::ModuleLoader::Hook::INC {
     my ($self, $module) = @_;
     log_debug { "Loading $module via " . ref($self) };
-    try
+    my $ret = eval
     {
       if (my $code = $self->sender->source_for($module)) {
         open my $fh, '<', \$code;
@@ -20,20 +19,33 @@ BEGIN {
       }
       log_trace { "Module sender did not return code for '$module'" };
       return;
-    }
-    catch
+    };
+    if($@)
     {
-      log_trace { "Module sender blew up - $_" };
-      if($_ =~ /Can't locate/)
+      log_trace { "Module sender blew up - $@" };
+      if($@ =~ /Can't locate/)
       {
         # Fudge the error messge to make it work with
         # Module::Runtime use_package_optimistically
         # Module::Runtime wants - /\ACan't locate \Q$fn\E .+ at \Q@{[__FILE__]}\E line/
-        my ($package, $file, $line) = caller(9);
-        s/(in \@INC.)/$1 at $file line $line/;
+        # the callstack range is a bit of a guess, we want
+        # to make a reasonable effort, but not spend forever.
+        for(my $i = 4; $i < 20; $i++)
+        {
+            my ($package, $file, $line) = caller($i);
+            last unless $package;
+            if($package eq 'Module::Runtime')
+            {
+                # we want to fill in the error message with the 
+                # module runtime module call info.
+                $@ =~ s/(in \@INC.)/$1 at $file line $line/;
+                last;
+            }
+        }
       }
-      die $_;
+      die $@;
     }
+    return $ret;
   }
 }
 
