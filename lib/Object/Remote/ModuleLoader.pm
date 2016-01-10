@@ -10,8 +10,7 @@ BEGIN {
   sub Object::Remote::ModuleLoader::Hook::INC {
     my ($self, $module) = @_;
     log_debug { "Loading $module via " . ref($self) };
-    my $ret = eval
-    {
+    my $ret = eval {
       if (my $code = $self->sender->source_for($module)) {
         open my $fh, '<', \$code;
         Dlog_trace { "Module sender successfully sent code for '$module': $code" } $code;
@@ -20,11 +19,9 @@ BEGIN {
       log_trace { "Module sender did not return code for '$module'" };
       return;
     };
-    if($@)
-    {
+    if ($@) {
       log_trace { "Module sender blew up - $@" };
-      if($@ =~ /Can't locate/)
-      {
+      if ($@ =~ /Can't locate/) {
         # Fudge the error messge to make it work with
         # Module::Runtime use_package_optimistically
         # Module::Runtime wants - /\ACan't locate \Q$fn\E .+ at \Q@{[__FILE__]}\E line/
@@ -32,17 +29,15 @@ BEGIN {
         # be a forwards compatibility disaster, so do a quick search of caller
         # with a reasonable range; we're already into a woefully inefficient
         # situation here so a little defensiveness won't make things much worse
-        for(my $i = 4; $i < 20; $i++)
-        {
-            my ($package, $file, $line) = caller($i);
-            last unless $package;
-            if($package eq 'Module::Runtime')
-            {
-                # we want to fill in the error message with the 
-                # module runtime module call info.
-                $@ =~ s/(in \@INC.)/$1 at $file line $line/;
-                last;
-            }
+        foreach my $i (4..20) {
+          my ($package, $file, $line) = caller($i);
+          last unless $package;
+          if ($package eq 'Module::Runtime') {
+            # we want to fill in the error message with the 
+            # module runtime module call info.
+            $@ =~ s/(in \@INC.)/$1 at $file line $line/;
+            last;
+          }
         }
       }
       die $@;
