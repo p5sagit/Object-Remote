@@ -235,11 +235,11 @@ mst - Matt S. Trout (cpan:MSTROUT) <mst@shadowcat.co.uk>
 
 =head1 CONTRIBUTORS
 
+bfwg - Colin Newell (cpan:NEWELLC) <colin.newell@gmail.com>
+
 phaylon - Robert Sedlacek (cpan:PHAYLON) <r.sedlacek@shadowcat.co.uk>
 
 triddle - Tyler Riddle (cpan:TRIDDLE) <t.riddle@shadowcat.co.uk>
-
-bfwg - Colin Newell (cpan:NEWELLC) <colin.newell@gmail.com>
 
 =head1 SPONSORS
 
