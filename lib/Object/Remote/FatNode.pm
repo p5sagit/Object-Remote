@@ -14,13 +14,14 @@ sub stripspace {
   $text;
 }
 
-my %maybe_libs = map +($_ => 1), grep defined, (values %Config, '.');
+chomp(my @base_libs = `"$^X" -le"print for grep defined and !ref, \@INC"`);
+my %base_libs = map +($_ => 1), @base_libs;
 
-my @extra_libs = grep not(ref($_) or $maybe_libs{$_}), @INC;
-my $extra_libs = join '', map {
-    my $lib = $_;
-    $lib =~ s{'}{'\\''}g;
-    "  -I'$lib'\n";
+my @extra_libs = grep not(ref($_) or $base_libs{$_}), @INC;
+my $extra_libs = join ' ', map {
+  my $lib = $_;
+  $lib =~ s{'}{'\\''}g;
+  "-I'$lib'\n";
 } @extra_libs;
 
 my $command = qq(
