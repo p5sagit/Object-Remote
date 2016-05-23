@@ -22,6 +22,10 @@ BEGIN {
     if ($@) {
       log_trace { "Module sender blew up - $@" };
       if ($@ =~ /Can't locate/) {
+        my @caller = caller(0);
+        if ($caller[0] eq 'base') {
+          $@ =~ s/(in \@INC.)/$1 at $caller[1] line $caller[2]/;
+        }
         # Fudge the error messge to make it work with
         # Module::Runtime use_package_optimistically
         # Module::Runtime wants - /\ACan't locate \Q$fn\E .+ at \Q@{[__FILE__]}\E line/
