@@ -1,3 +1,5 @@
+  - Make strictures dep explicit
+
 0.003006 - 2016-01-10
   - Produce an error message comprehensible by Class::Load and Module::Runtime
 

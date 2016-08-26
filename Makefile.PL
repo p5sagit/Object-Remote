@@ -15,7 +15,8 @@ WriteMakefile(
     'MRO::Compat' => 0, # required to fatpack Moo
     'Class::C3' => 0, # required to fatpack Moo
     'String::ShellQuote' => 0, # required for ssh argument manipulation
-    'Log::Contextual' => 0.005000
+    'Log::Contextual' => 0.005000,
+    strictures => 2,
   },
   EXE_FILES => [
     'bin/object-remote-node',
