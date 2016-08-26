@@ -234,6 +234,7 @@ BEGIN {
     Object::Remote::Connector::LocalSudo
     Object::Remote::Connector::SSH
     Object::Remote::Connector::UNIX
+    Object::Remote::Connector::INET
   );
 }
 
