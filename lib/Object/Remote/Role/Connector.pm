@@ -62,3 +62,13 @@ sub connect {
 }
 
 1;
+
+=head1 NAME
+
+Object::Remote::Role::Connector - Basic Future-compatible connector capability
+
+=head1 ARGUMENTS
+
+=head2 timeout
+
+=cut

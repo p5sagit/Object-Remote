@@ -42,3 +42,22 @@ push @Object::Remote::Connection::Guess, sub {
 };
 
 1;
+
+=head1 NAME
+
+Object::Remote::Connector::SSH - A connector for SSH servers
+
+=head1 ARGUMENTS
+
+Inherits arguments from L<Object::Remote::Role::Connector::PerlInterpreter> and
+provides the following:
+
+=head2 ssh_to
+
+=head2 ssh_perl_command
+
+=head2 ssh_options
+
+=head2 ssh_command
+
+=cut

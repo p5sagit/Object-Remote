@@ -97,3 +97,21 @@ push @Object::Remote::Connection::Guess, sub {
 };
 
 1;
+
+=head1 NAME
+
+Object::Remote::Connector::LocalSudo - A connector for a local Perl process with
+sudo
+
+=head1 ARGUMENTS
+
+Inherits arguments from L<Object::Remote::Connector::Local> and provides the
+following:
+
+=head2 target_user
+
+=head2 password_callback
+
+=head2 sudo_perl_command
+
+=cut

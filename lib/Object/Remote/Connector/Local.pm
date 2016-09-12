@@ -16,3 +16,14 @@ push @Object::Remote::Connection::Guess, sub {
 };
 
 1;
+
+=head1 NAME
+
+Object::Remote::Connector::Local - A connector for a local Perl process
+
+=head1 ARGUMENTS
+
+Inherits arguments from L<Object::Remote::Role::Connector::PerlInterpreter> and
+provides no own arguments.
+
+=cut

@@ -28,3 +28,16 @@ push @Object::Remote::Connection::Guess, sub {
 };
 
 1;
+
+=head1 NAME
+
+Object::Remote::Connector::UNIX - A connector for UNIX sockets
+
+=head1 ARGUMENTS
+
+Inherits arguments from L<Object::Remote::Role::Connector> and provides the
+following:
+
+=head2 socket_path
+
+=cut

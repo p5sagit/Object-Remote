@@ -112,6 +112,11 @@ to block until an asynchronous call completes or fails.
 
   my $conn = Object::Remote->connect('root@'); # connection over sudo
 
+  my $conn = Object::Remote->connect('root@', %args); # can take optional args
+
+Convenience method for calling L<Object::Remote::Connection/new_from_spec> in a
+L<Future>-compatible way.
+
 =head2 new::on
 
   my $eval = Eval::WithLexicals->new::on($conn);

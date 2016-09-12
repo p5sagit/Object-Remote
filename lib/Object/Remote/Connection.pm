@@ -528,6 +528,19 @@ Object::Remote::Connection - An underlying connection for L<Object::Remote>
 
 This is the class that supports connections to remote objects.
 
+=head1 METHODS
+
+=head2 new_from_spec
+
+  my $conn = Object::Remote::Connection->new_from_spec($spec, %args);
+
+Not intended for direct use, called by L<Object::Remote/connect> in a
+L<Future>-compatible way.
+
+Uses the spec to guess the appropiate Object::Remote::Connector::* class to use,
+instantiates it with the spec and any further arguments given, then calls
+C<connect> on it in a L<Future>-compatible way.
+
 =head1 SEE ALSO
 
 =over 4

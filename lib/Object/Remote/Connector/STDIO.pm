@@ -24,3 +24,13 @@ sub connect {
 }
 
 1;
+
+=head1 NAME
+
+Object::Remote::Connector::STDIO - ???
+
+=head1 ARGUMENTS
+
+Provides no arguments.
+
+=cut

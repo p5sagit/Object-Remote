@@ -288,6 +288,9 @@ and is configurable via arguments passed to the constructor.
 
 =head1 ARGUMENTS
 
+Inherits arguments from L<Object::Remote::Role::Connector> and provides the
+following:
+
 =over 4
 
 =item perl_command
