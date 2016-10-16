@@ -103,6 +103,12 @@ push @Object::Remote::Connection::Guess, sub {
 Object::Remote::Connector::LocalSudo - A connector for a local Perl process with
 sudo
 
+=head1 DESCRIPTION
+
+Used to create a connector that talks to a Perl process started on the local
+machine, via sudo as a specific user. Invoked by L<Object::Remote/connect> if
+the connection spec is a username followed by a @.
+
 =head1 ARGUMENTS
 
 Inherits arguments from L<Object::Remote::Connector::Local> and provides the
@@ -110,8 +116,19 @@ following:
 
 =head2 target_user
 
+When invoked via L<Object::Remote/connect>, specified via the connection spec,
+and not overridable.
+
+The name of the user to run the process as.
+
 =head2 password_callback
 
+A function that returns the password to be passed on to sudo. Defaults to asking
+the operator via command line.
+
 =head2 sudo_perl_command
+
+An arrayref containing a list of strings to be passed to L<IPC::Open3> to open
+the perl process. Defaults to a specific sudo incantation.
 
 =cut

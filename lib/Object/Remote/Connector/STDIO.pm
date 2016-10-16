@@ -27,10 +27,17 @@ sub connect {
 
 =head1 NAME
 
-Object::Remote::Connector::STDIO - ???
+Object::Remote::Connector::STDIO - A connector used in remote OR nodes
+
+=head1 DESCRIPTION
+
+This connector only exists to provide L<Object:Remote::Node> with a connection
+that handles its OR JSON command and response processing. Reads from STDIN and
+prints to STDOUT.
 
 =head1 ARGUMENTS
 
-Provides no arguments.
+Provides no arguments. However the adventurous can replace STDIN/STDOUT of the
+current process with other filehandles.
 
 =cut

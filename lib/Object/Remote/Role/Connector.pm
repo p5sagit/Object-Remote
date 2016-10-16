@@ -71,4 +71,7 @@ Object::Remote::Role::Connector - Basic Future-compatible connector capability
 
 =head2 timeout
 
+Time in seconds after which the current connection is closed if there was no
+activity. Defaults to 10 seconds.
+
 =cut

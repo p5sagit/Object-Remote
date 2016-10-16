@@ -41,3 +41,30 @@ sub run {
 }
 
 1;
+
+=head1 NAME
+
+Object::Remote::Node - A minimum remote OR command processing loop
+
+=head1 SYNOPSIS
+
+  use Object::Remote::Node;
+  
+  Object::Remote::Node->run(%args);
+
+=head1 DESCRIPTION
+
+The minimum amount of code necessary to read OR JSON commands from STDIN and
+send responses to STDOUT after processing. Uses
+L<Object::Remote::Connector::STDIO>.
+
+=head1 ARGUMENTS
+
+=head2 watchdog_timeout
+
+If provided sets up a L<Object::Remote::WatchDog> with the timeout set to the
+value in seconds specified by this argument.
+
+If not provided or undef/0, attempts to cancel any existing watch dogs. ???
+
+=cut

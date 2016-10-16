@@ -47,6 +47,12 @@ push @Object::Remote::Connection::Guess, sub {
 
 Object::Remote::Connector::SSH - A connector for SSH servers
 
+=head1 DESCRIPTION
+
+Used to create a connector that talks to an SSH server. Invoked by
+L<Object::Remote/connect> if the connection spec looks like a hostname or
+user@hostname combo.
+
 =head1 ARGUMENTS
 
 Inherits arguments from L<Object::Remote::Role::Connector::PerlInterpreter> and
@@ -54,10 +60,25 @@ provides the following:
 
 =head2 ssh_to
 
-=head2 ssh_perl_command
+When invoked via L<Object::Remote/connect>, specified via the connection spec,
+and not overridable.
+
+String that contains hostname or user@hostname to connect to.
 
 =head2 ssh_options
 
+An arrayref containing a list of strings to be passed to L<IPC::Open3> with
+options to be passed specifically to the ssh client. Defaults to C<-A>.
+
 =head2 ssh_command
+
+A string or arrayref of strings with the ssh command to be run. Defaults to
+C<ssh>.
+
+=head2 ssh_perl_command
+
+An arrayref containing a list of strings to be passed to L<IPC::Open3> to open
+the perl process. Defaults to constructing an ssh client incantation with the
+other arguments here.
 
 =cut

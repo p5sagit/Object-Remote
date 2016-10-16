@@ -21,6 +21,11 @@ push @Object::Remote::Connection::Guess, sub {
 
 Object::Remote::Connector::Local - A connector for a local Perl process
 
+=head1 DESCRIPTION
+
+Used to create a connector that talks to a Perl process started on the local
+machine. Invoked by L<Object::Remote/connect> if the connection spec is C<->.
+
 =head1 ARGUMENTS
 
 Inherits arguments from L<Object::Remote::Role::Connector::PerlInterpreter> and

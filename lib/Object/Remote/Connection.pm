@@ -526,7 +526,10 @@ Object::Remote::Connection - An underlying connection for L<Object::Remote>
 
 =head1 DESCRIPTION
 
-This is the class that supports connections to remote objects.
+This is the base class for connections in OR objects. Connections are present
+both in the local and remote parts of each OR pair, and handle the data
+processing for sending OR commands and responses as JSON via the appropiate
+connection mechanism.
 
 =head1 METHODS
 

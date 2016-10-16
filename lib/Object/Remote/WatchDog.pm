@@ -55,4 +55,48 @@ sub shutdown {
 
 1;
 
+=head1 NAME
+
+Object::Remote::WatchDog - alarm-based event loop timeout singleton
+
+=head1 DESCRIPTION
+
+This is a singleton class intended to be used in remote nodes to kill the
+process if the event loop seems to have stalled for longer than the timeout
+specified.
+
+=head1 METHODS
+
+The following are all class methods.
+
+=head2 instance
+
+  my $d = Object::Remote::WatchDog->instance(timeout => 10);
+
+Creates a new watch dog if there wasn't one yet, with the timeout set to the
+specified value. The timeout argument is required. The timeout is immediately
+started by calling C<alarm> with the timeout specified. The C<ALRM> signal is
+replaced with a handler that, when triggered, quits the process with an error.
+
+If there already was a watchdog it just returns that, however in that case the
+timeout value is ignored.
+
+=head2 reset
+
+  Object::Remote::WatchDog->reset;
+
+Calls C<alarm> with the timeout value of the current watch dog singleton to
+reset it. Throws an exception if there is no current singleton. Intended to be
+called repeatedly by the event loop to signal it's still running and not
+stalled.
+
+=head2 shutdown
+
+  Object::Remote::WatchDog->shutdown;
+
+Sets C<alarm> back to 0, thus preventing the C<ALRM> handler from quitting the
+process.
+
+=cut
+
 

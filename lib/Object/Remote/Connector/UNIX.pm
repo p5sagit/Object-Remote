@@ -33,11 +33,22 @@ push @Object::Remote::Connection::Guess, sub {
 
 Object::Remote::Connector::UNIX - A connector for UNIX sockets
 
+=head1 DESCRIPTION
+
+Used to create a connector that talks to a unix socket. Invoked by
+L<Object::Remote/connect> if the connection spec looks like a unix path name
+that's either absolute, or relative to C<.>.
+
 =head1 ARGUMENTS
 
 Inherits arguments from L<Object::Remote::Role::Connector> and provides the
 following:
 
 =head2 socket_path
+
+When invoked via L<Object::Remote/connect>, specified via the connection spec,
+and not overridable.
+
+The path name of the unix socket to connect to. Passed to L<IO::Socket::UNIX>.
 
 =cut

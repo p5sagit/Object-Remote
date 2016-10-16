@@ -33,11 +33,22 @@ push @Object::Remote::Connection::Guess, sub {
 
 Object::Remote::Connector::INET - A connector for INET sockets
 
+=head1 DESCRIPTION
+
+Used to create a connector that talks to an INET socket. Invoked by
+L<Object::Remote/connect> if the connection spec is in C<host:port> format.
+
 =head1 ARGUMENTS
 
 Inherits arguments from L<Object::Remote::Role::Connector> and provides the
 following:
 
 =head2 socket_path
+
+When invoked via L<Object::Remote/connect>, specified via the connection spec,
+and not overridable.
+
+The remote address to connect to. Expected to be understandable by
+L<IO::Socket::INET> for its C<PeerAddr> argument.
 
 =cut
