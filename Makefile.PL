@@ -14,6 +14,7 @@ WriteMakefile(
     'Future' => 0.29,
     'MRO::Compat' => 0, # required to fatpack Moo
     'Class::C3' => 0, # required to fatpack Moo
+    'Devel::GlobalDestruction' => 0, # required to fatpack Moo
     'String::ShellQuote' => 0, # required for ssh argument manipulation
     'Log::Contextual' => 0.005000,
     strictures => 2,
