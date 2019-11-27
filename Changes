@@ -1,5 +1,6 @@
 Revision history for Object-Remote
 
+0.004001 - 2019-11-27
   - fix working with Moo 2.003005 and newer
   - Fix LocalSudo
 
