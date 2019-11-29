@@ -32,6 +32,7 @@ my %META = (
     },
     develop   => {
       requires => {
+        'Class::Load' => 0,
       },
     },
   },
