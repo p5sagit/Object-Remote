@@ -5,7 +5,7 @@ use Object::Remote::Handle;
 use Object::Remote::Logging qw( :log );
 use Module::Runtime qw(use_module);
 
-our $VERSION = '0.004001'; # v0.4.1
+our $VERSION = '0.004002'; # v0.4.2
 
 sub new::on {
   my ($class, $on, @args) = @_;
