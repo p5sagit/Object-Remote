@@ -1,5 +1,8 @@
 Revision history for Object-Remote
 
+  - fix compatibility with Log::Contextual 0.009000+
+  - fix developer tests
+
 0.004001 - 2019-11-27
   - fix working with Moo 2.003005 and newer
   - Fix LocalSudo
