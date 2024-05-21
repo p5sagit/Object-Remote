@@ -38,9 +38,8 @@ my %META = (
   },
   resources => {
     repository => {
-      url => 'git://git.shadowcat.co.uk/scpubgit/Object-Remote.git',
-      # r/w: scpubgit@git.shadowcat.co.uk:Object-Remote.git
-      web => 'http://git.shadowcat.co.uk/gitweb/gitweb.cgi?p=scpubgit/Object-Remote.git',
+      url => 'https://github.com/p5sagit/Object-Remote.git',
+      web => 'https://github.com/p5sagit/Object-Remote',
       type => 'git',
     },
     bugtracker => {
