@@ -1,5 +1,6 @@
 Revision history for Object-Remote
 
+0.004002 - 2024-05-21
   - fix compatibility with Log::Contextual 0.009000+
   - fix developer tests
 
