@@ -242,4 +242,12 @@ sub run {
   return;
 }
 
+sub new_future {
+    return Future->new;
+}
+
+sub await_all {
+    return Future->await_all(@_);
+}
+
 1;

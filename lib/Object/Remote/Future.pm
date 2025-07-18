@@ -13,7 +13,7 @@ use Future;
 our @EXPORT = qw(future await_future await_all);
 
 sub future (&;$) {
-  my $f = $_[0]->(Future->new);
+  my $f = $_[0]->(Object::Remote->current_loop->new_future);
   return $f if ((caller(1+($_[1]||0))||'') eq 'start');
   await_future($f);
 }
@@ -48,7 +48,7 @@ sub await_future {
 
 sub await_all {
   log_trace { my $l = @_; "await_all() invoked with '$l' futures to wait on" };
-  await_future(Future->wait_all(@_));
+  await_future(Object::Remote->current_loop->wait_all(@_));
   map $_->get, @_;
 }
 
@@ -61,12 +61,12 @@ sub AUTOLOAD {
   my ($method) = our $AUTOLOAD =~ /^start::(.+)$/;
   my $res;
   unless (eval { $res = $invocant->$method(@_); 1 }) {
-    my $f = Future->new;
+    my $f = Object::Remote->current_loop->new_future;
     $f->fail($@);
     return $f;
   }
   unless (Scalar::Util::blessed($res) and $res->isa('Future')) {
-    my $f = Future->new;
+    my $f = Object::Remote->current_loop->new_future;
     $f->done($res);
     return $f;
   }
