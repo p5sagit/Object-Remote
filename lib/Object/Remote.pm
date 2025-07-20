@@ -32,7 +32,10 @@ sub connect {
 }
 
 sub current_loop {
-  our $Current_Loop ||= Object::Remote::MiniLoop->new
+  our $Current_Loop ||=
+    (eval { require IO::Async::Loop; 1 })
+      ? IO::Async::Loop->new
+      : Object::Remote::MiniLoop->new
 }
 
 1;
