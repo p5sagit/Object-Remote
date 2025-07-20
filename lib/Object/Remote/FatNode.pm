@@ -67,8 +67,8 @@ foreach(keys(%mods)) {
 }
 
 my @non_core_non_arch = ($file_names{'Devel/GlobalDestruction.pm'}
-			 ? ( $file_names{'Devel/GlobalDestruction.pm'} )
-			 : ());
+                         ? ( $file_names{'Devel/GlobalDestruction.pm'} )
+                         : ());
 push @non_core_non_arch, grep +(
   not (
     #some of the config variables can be empty which will eval as a matching regex
@@ -145,19 +145,19 @@ sub generate_fatpack_hash {
 }
 
 sub propagate_fatpacked {
-    my ($hash_name, $fat_hash) = @_;
-    warn 'Propagating fatpacked hash' . $fat_hash;
-    my @segments;
-    while (my ($orig, $data) = each %{$fat_hash}) {
-	(my $stub = $orig) =~ s/\.pm//;
-	my $name = uc join '_', split '/', $stub;
-	$data =~ s/^/  /mg;
-	$data .= "\n" unless $data =~ m/\n$/;
-	push @segments,
-	    ('$'.$hash_name.'{'.perlstring($orig).qq!} = <<'${name}';\n!
-	     .qq!${data}${name}\n!);
-    }
-    return @segments;
+  my ($hash_name, $fat_hash) = @_;
+  warn 'Propagating fatpacked hash' . $fat_hash;
+  my @segments;
+  while (my ($orig, $data) = each %{$fat_hash}) {
+    (my $stub = $orig) =~ s/\.pm//;
+    my $name = uc join '_', split '/', $stub;
+    $data =~ s/^/  /mg;
+    $data .= "\n" unless $data =~ m/\n$/;
+    push @segments,
+      ('$'.$hash_name.'{'.perlstring($orig).qq!} = <<'${name}';\n!
+       .qq!${data}${name}\n!);
+  }
+  return @segments;
 }
 
 my @segments = (
