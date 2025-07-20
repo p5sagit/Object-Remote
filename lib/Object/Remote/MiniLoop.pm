@@ -242,4 +242,42 @@ sub run {
   return;
 }
 
+sub new_future {
+    return Future->new;
+}
+
+our @await;
+
+sub await {
+  my ($self, $f) = @_;
+  log_trace { my $ir = $f->is_ready; "await_future() invoked; is_ready: $ir" };
+  return $f if $f->is_ready;
+  require Object::Remote;
+  my $loop = Object::Remote->current_loop;
+  {
+    local @await = (@await, $f);
+    $f->on_ready(sub {
+      log_trace { my $l = @await; "future has become ready, length of \@await: '$l'" };
+      if ($f == $await[-1]) {
+        log_trace { "This future is not waiting on anything so calling stop on the run loop" };
+        $loop->stop;
+      }
+    });
+    log_trace { "Starting run loop for newly created future" };
+    $loop->run;
+  }
+  if (@await and $await[-1]->is_ready) {
+    log_trace { "Last future in await list was ready, stopping run loop" };
+    $loop->stop;
+  }
+  log_trace { "await_future() returning" };
+  return $f;
+}
+
+sub await_all {
+    my $self = shift;
+    $self->await(Future->wait_all(@_));
+    return;
+}
+
 1;
