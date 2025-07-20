@@ -144,6 +144,10 @@ sub generate_fatpack_hash {
   return $ret;
 }
 
+# HAARG notes that ideally Object::Remote should use Module::Reader to
+# pass the sources of fatpacked modules to the remote. However, it has
+# some problems with more recent Perl versions, which is why we go with
+# the approach below (for now)  --  EH 2025-07-20
 sub propagate_fatpacked {
   my ($hash_name, $fat_hash) = @_;
   warn 'Propagating fatpacked hash' . $fat_hash;
