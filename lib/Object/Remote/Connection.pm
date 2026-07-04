@@ -315,6 +315,7 @@ sub register_remote {
 
 sub send_free {
   my ($self, $id) = @_;
+  $id = '' unless defined $id;
   Dlog_trace { "sending request to free object '$id' for connection $_" } $self->_id;
   #TODO this shows up some times when a remote side dies in the middle of a remote
   #method invocation - possibly only when the object is being constructed?
@@ -463,6 +464,7 @@ sub _receive {
 
 sub receive_free {
   my ($self, $id) = @_;
+  $id = '' unless defined $id;
   Dlog_trace { "got a receive_free for object '$id' for connection $_" } $self->_id;
   delete $self->local_objects_by_id->{$id}
     or warn "Free: no such object $id";
