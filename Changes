@@ -3,6 +3,7 @@ Revision history for Object-Remote
   - fix spelling errors reported by Debian
   - reap child processes when the connection object goes out of scope (RT#129951)
   - fix FatNode messing with the ARGV filehandle (RT#112426)
+  - call WatchDog->shutdown instead of alarm(0) for better semantics
 
 0.005001 - 2026-07-04
   - fix MANIFEST missing Object::Remote::Loop
