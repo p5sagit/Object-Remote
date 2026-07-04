@@ -6,7 +6,7 @@ use Object::Remote::Handle;
 use Object::Remote::Logging qw( :log );
 use Module::Runtime qw(use_module);
 
-our $VERSION = '0.004004'; # v0.4.4
+our $VERSION = '0.005000'; # v0.5.0
 
 sub new::on {
   my ($class, $on, @args) = @_;
@@ -137,6 +137,12 @@ When starting a new Perl interpreter the contents of this environment
 variable will be used as the path to the executable. If the variable
 is not set the path is 'perl'
 
+=item OBJECT_REMOTE_LOOP
+
+Forces the loop implementation to the named module. Defaults to
+C< Object::Remote::MiniLoop >; setting this value to
+C< IO::Async::Loop > integrates Object::Remote with IO::Async.
+
 =item OBJECT_REMOTE_LOG_LEVEL
 
 Setting this environment variable will enable logging and send all log messages
@@ -223,6 +229,11 @@ then connection timeouts can be delayed but will execute when load settles down 
 
 Because of the load related issues Object::Remote disables log forwarding by default.
 See C<Object::Remote::Logging> for information on log forwarding.
+
+=item IO::Async::Loop fails on nested connections
+
+The tests C< t/bridged.t > and C< t/chained.t > fail when using the IO::Async loop,
+meaning that using remote objects from the remote fails under IO::Async. (Fixes welcome!)
 
 =back
 
