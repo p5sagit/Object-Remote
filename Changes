@@ -1,5 +1,9 @@
 Revision history for Object-Remote
 
+0.005001 - 2026-07-04
+  - fix MANIFEST missing Object::Remote::Loop
+  - unbreak CPAN upload by hiding 'maybe' package from the indexer
+
 0.005000 - 2026-07-04
   - fix compatibility with non-english locales
   - make built-in loop compatible with IO::Async
