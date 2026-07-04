@@ -30,7 +30,8 @@ sub await_all {
   map $_->get, @_;
 }
 
-package start;
+package # hide from PAUSE
+    start;
 
 our $start = sub { my ($obj, $call) = (shift, shift); $obj->$call(@_); };
 
@@ -51,7 +52,8 @@ sub AUTOLOAD {
   return $res;
 }
 
-package maybe;
+package # hide from PAUSE
+    maybe;
 
 sub start {
   my ($obj, $call) = (shift, shift);
@@ -62,7 +64,8 @@ sub start {
   }
 }
 
-package maybe::start;
+package # hide from PAUSE
+    maybe::start;
 
 sub AUTOLOAD {
   my $invocant = shift;
@@ -71,7 +74,8 @@ sub AUTOLOAD {
   $invocant->$method(@_);
 }
 
-package then;
+package # hide from PAUSE
+    then;
 
 sub AUTOLOAD {
   my $invocant = shift;
