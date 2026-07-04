@@ -1,6 +1,7 @@
 Revision history for Object-Remote
 
   - fix spelling errors reported by Debian
+  - reap child processes when the connection object goes out of scope (RT#129951)
 
 0.005001 - 2026-07-04
   - fix MANIFEST missing Object::Remote::Loop
