@@ -1,5 +1,7 @@
 Revision history for Object-Remote
 
+  - fix spelling errors reported by Debian
+
 0.005001 - 2026-07-04
   - fix MANIFEST missing Object::Remote::Loop
   - unbreak CPAN upload by hiding 'maybe' package from the indexer
