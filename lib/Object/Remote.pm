@@ -1,6 +1,7 @@
 package Object::Remote;
 
 use Object::Remote::MiniLoop;
+use Object::Remote::Loop;
 use Object::Remote::Handle;
 use Object::Remote::Logging qw( :log );
 use Module::Runtime qw(use_module);
@@ -32,10 +33,7 @@ sub connect {
 }
 
 sub current_loop {
-  our $Current_Loop ||=
-    (eval { require IO::Async::Loop; 1 })
-      ? IO::Async::Loop->new
-      : Object::Remote::MiniLoop->new
+  our $Current_Loop ||= Object::Remote::Loop->new;
 }
 
 1;

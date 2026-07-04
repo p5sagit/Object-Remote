@@ -6,8 +6,6 @@ use Object::Remote::Logging qw( :log :dlog router );
 use Moo;
 
 BEGIN {
-  $SIG{PIPE} = sub { log_debug { "Got a PIPE signal" } };
-
   router()->exclude_forwarding
 }
 
@@ -24,23 +22,6 @@ has _write_watches => (is => 'ro', default => sub { {} });
 has _write_select => (is => 'ro', default => sub { IO::Select->new });
 
 has _timers => (is => 'ro', default => sub { [] });
-
-sub pass_watches_to {
-  my ($self, $new_loop) = @_;
-  log_debug { "passing watches to new run loop" };
-  foreach my $fh ($self->_read_select->handles) {
-    $new_loop->watch_io(
-      handle => $fh,
-      on_read_ready => $self->_read_watches->{$fh}
-    );
-  }
-  foreach my $fh ($self->_write_select->handles) {
-    $new_loop->watch_io(
-      handle => $fh,
-      on_write_ready => $self->_write_watches->{$fh}
-    );
-  }
-}
 
 sub watch_io {
   my ($self, %watch) = @_;
@@ -93,19 +74,17 @@ sub watch_time {
 
   Dlog_trace { "watch_time() invoked with $_" } \%watch;
 
-  if (exists($watch{every})) {
-    $at = time() + $watch{every};
-  } elsif (exists($watch{after})) {
+  if (exists($watch{after})) {
     $at = time() + $watch{after};
   } elsif (exists($watch{at})) {
     $at = $watch{at};
   } else {
-    die "watch_time requires every, after or at";
+    die "watch_time requires after or at";
   }
 
   die "watch_time requires code" unless my $code = $watch{code};
   my $timers = $self->_timers;
-  my $new = [ $at => $code, $watch{every} ];
+  my $new = [ $at => $code ];
   $self->_sort_timers($new);
   log_debug { "Created new timer with id '$new' that expires at '$at'" };
   return "$new";
@@ -188,16 +167,7 @@ sub loop_once {
   while (@$timers and $timers->[0][0] <= $now) {
     my $active = $timers->[0];
     Dlog_trace { "Found timer that needs to be executed: '$active'" };
-
-    if (defined($active->[2])) {
-      #handle the case of an 'every' timer
-      $active->[0] = time() + $active->[2];
-      Dlog_trace { "scheduling timer for repeat execution at $_"} $active->[0];
-      $self->_sort_timers;
-    } else {
-      #it doesn't repeat again so get rid of it
-      shift(@$timers);
-    }
+    shift(@$timers);
 
     #execute the timer
     $active->[1]->();
@@ -205,30 +175,6 @@ sub loop_once {
 
   log_trace { "Run loop: single loop is completed" };
   return;
-}
-
-sub want_run {
-  my ($self) = @_;
-  Dlog_debug { "Run loop: Incremeting want_running, is now $_" }
-    ++$self->{want_running};
-}
-
-sub run_while_wanted {
-  my ($self) = @_;
-  log_debug { my $wr = $self->{want_running}; "Run loop: run_while_wanted() invoked; want_running: $wr" };
-  $self->loop_once while $self->{want_running};
-  log_debug { "Run loop: run_while_wanted() completed" };
-  return;
-}
-
-sub want_stop {
-  my ($self) = @_;
-  if (! $self->{want_running}) {
-    log_debug { "Run loop: want_stop() was called but want_running was not true" };
-    return;
-  }
-  Dlog_debug { "Run loop: decrimenting want_running, is now $_" }
-    --$self->{want_running};
 }
 
 sub run {
