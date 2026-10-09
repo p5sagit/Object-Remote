@@ -1,5 +1,6 @@
 Revision history for Object-Remote
 
+0.005002 - 2026-10-09
   - fix spelling errors reported by Debian
   - reap child processes when the connection object goes out of scope (RT#129951)
   - fix FatNode messing with the ARGV filehandle (RT#112426)
