@@ -1,5 +1,7 @@
 Revision history for Object-Remote
 
+  - fix path extraction for the remote fat node on Windows
+
 0.005002 - 2026-10-09
   - fix spelling errors reported by Debian
   - reap child processes when the connection object goes out of scope (RT#129951)
