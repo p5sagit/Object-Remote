@@ -1,5 +1,6 @@
 Revision history for Object-Remote
 
+  - declare Windows unsupported due to lack of non-blocking pipes
   - fix path extraction for the remote fat node on Windows
 
 0.005002 - 2026-10-09

@@ -172,6 +172,10 @@ See L<Object::Remote::Logging>.
 
 =over 4
 
+=item Windows support
+
+Windows is not supported: it lacks support for non-blocking I/O for pipes.
+
 =item Large data structures
 
 Object::Remote communication is encapsalated with JSON and values passed to remote objects
