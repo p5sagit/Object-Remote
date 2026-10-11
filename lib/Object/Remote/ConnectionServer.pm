@@ -93,7 +93,7 @@ sub DEMOLISH {
 
 =head1 NAME
 
-Object::Remote::ConnectionServer - listen for incoming Object::Remote connections
+Object::Remote::ConnectionServer - Listen for incoming Object::Remote connections
 
 =head1 SYNOPSIS
 

@@ -31,7 +31,7 @@ push @Object::Remote::Connection::Guess, sub {
 
 =head1 NAME
 
-Object::Remote::Connector::UNIX - connect to an Object::Remote server over a Unix socket
+Object::Remote::Connector::UNIX - Connect to an Object::Remote server over a Unix socket
 
 =head1 SYNOPSIS
 
