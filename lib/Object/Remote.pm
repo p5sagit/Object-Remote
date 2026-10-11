@@ -113,6 +113,8 @@ to block until an asynchronous call completes or fails.
 
   my $conn = Object::Remote->connect('root@'); # connection over sudo
 
+  my $conn = Object::Remote->connect('/run/object-remote.sock'); # connection over Unix socket
+
 =head2 new::on
 
   my $eval = Eval::WithLexicals->new::on($conn);
