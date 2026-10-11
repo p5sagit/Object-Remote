@@ -1,5 +1,6 @@
 Revision history for Object-Remote
 
+0.005004 - 2026-10-11
   - fix Windows value for $^O (it's MSWin32, not Win32)
   - add documentation for connections over Unix sockets
 
